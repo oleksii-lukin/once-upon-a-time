@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Once Upon a Time - Game Lobby</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7f13ec",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#191022",
+                    },
+                    fontFamily: {
+                        "display": ["Epilogue", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col w-full max-w-7xl flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-white/10 px-4 sm:px-6 md:px-10 py-3">
+<div class="flex items-center gap-4 text-white">
+<div class="size-6 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h1 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Once Upon a Time</h1>
+</div>
+<div class="flex flex-1 justify-end items-center gap-4">
+<span class="truncate text-sm font-bold leading-normal tracking-[0.015em] text-white/80 hidden sm:block">HostUsername</span>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User avatar image with a colorful gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBw-2o-t3ZKm-O8CKmYORJcuS4hN9sWxYyRrBrjRUYMStU2UpLiBt3HxBzcuBRM_E49pVE888op-3FYS5NTeNKm5MugqVqpVwk1ZyOn1W9wn1x98sibc8i_nJ3qKbA4gV1FNBBUfReSAinBxtUULJoFjIsWtlw9AGUnMWMQA5nMkg-kaXozfmZlHg02yXkByEjEZNAr5_GRT8vhul52jxDQemce_qyYmGVuME7VPpxBjuWhUIGkLcp83gmL-g76xgmTHsJDHYVCFU0");'></div>
+</div>
+</header>
+<main class="flex-1 mt-8">
+<div class="flex flex-wrap justify-between gap-3 p-4">
+<p class="text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Game Setup Lobby</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white/5 p-6 rounded-xl">
+<h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Game Settings</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col gap-6">
+<div class="flex flex-col">
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-white text-base font-medium leading-normal pb-2">Room Name</p>
+<input class="form-input flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal" value="Storyteller's Grand Tale"/>
+</label>
+</div>
+<div class="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
+<div class="flex items-center justify-between py-2">
+<label class="text-white text-base font-medium leading-normal" for="allow-hot-join">Allow Hot Join</label>
+<label class="relative inline-flex cursor-pointer items-center">
+<input class="peer sr-only" id="allow-hot-join" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2">
+<label class="text-white text-base font-medium leading-normal" for="game-visibility">Public Game</label>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" id="game-visibility" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2">
+<label class="text-white text-base font-medium leading-normal" for="allow-spectators">Allow Spectators</label>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" id="allow-spectators" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="bg-white/5 p-6 rounded-xl">
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Invite Friends</h2>
+<div class="space-y-4">
+<div>
+<p class="text-white/70 text-sm font-medium leading-normal pb-2">Share Invite Link</p>
+<div class="flex items-center gap-2">
+<input class="form-input text-sm w-full rounded-lg text-white/90 border border-white/10 bg-[#211c27] h-11 px-3" readonly="" type="text" value="https://game.ouat/invite/aB3xZ9"/>
+<button class="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+<span class="material-symbols-outlined text-xl">content_copy</span>
+</button>
+</div>
+</div>
+<div>
+<p class="text-white/70 text-sm font-medium leading-normal pb-2">Or use Room Code</p>
+<div class="flex items-center gap-2">
+<div class="flex items-center justify-center w-full rounded-lg border-2 border-dashed border-white/20 h-11">
+<p class="text-white font-bold text-lg tracking-widest">AB3XZ9</p>
+</div>
+<button class="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+<span class="material-symbols-outlined text-xl">autorenew</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white/5 p-6 rounded-xl">
+<h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">Game Rules</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+<div class="flex items-center justify-between py-2">
+<div class="flex items-center gap-2">
+<label class="text-white text-base font-medium leading-normal" for="allow-interrupts">Allow Interrupts</label>
+<button class="text-white/50 hover:text-white transition-colors"><span class="material-symbols-outlined text-base">info</span></button>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" id="allow-interrupts" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2">
+<label class="text-white text-base font-medium leading-normal" for="timer-per-turn">Timer per Turn</label>
+<label class="relative inline-flex cursor-pointer items-center">
+<input class="peer sr-only" id="timer-per-turn" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2">
+<label class="text-white text-base font-medium leading-normal" for="happy-ending">Happy Ending Variant</label>
+<label class="relative inline-flex cursor-pointer items-center">
+<input class="peer sr-only" id="happy-ending" type="checkbox"/>
+<div class="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="bg-white/5 p-6 rounded-xl">
+<h2 class="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Expansions</h2>
+<div class="flex flex-col">
+<p class="text-white text-base font-medium leading-normal pb-2">Included Packs</p>
+<div class="space-y-2">
+<label class="flex items-center gap-3 p-3 rounded-lg bg-primary/20 border border-primary cursor-pointer">
+<input checked="" class="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark" type="checkbox"/>
+<span class="text-white font-medium">Core Set Only</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 cursor-pointer">
+<input class="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark" type="checkbox"/>
+<span class="text-white font-medium">Enchanted Forest</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 cursor-pointer">
+<input class="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark" type="checkbox"/>
+<span class="text-white font-medium">Seafaring Sagas</span>
+</label>
+<label class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 cursor-pointer">
+<input class="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark" type="checkbox"/>
+<span class="text-white font-medium">All Expansions</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-1 flex flex-col gap-6">
+<div class="bg-white/5 p-6 rounded-xl flex-1 flex flex-col">
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Players (5)</h2>
+<div class="flex-1 space-y-3 overflow-y-auto">
+<div class="flex items-center gap-3 p-3 bg-primary/20 border border-primary rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Host avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBsnGYaIjjaRYGUy4HVaO61DCSus_4wHLbef2-y2Mh9biVAiLCkPnuK4PeshWFibM6LkF4RlJNHR5FiG_xhOUbA5EDf70utTFwa4ttT6cD_8c_eJ5srx8KhivXm80cPOyS6i3J72zAzYW89916OSe07Wvpb40CGSk0bqe16NXBj9gSvL8dXuxQkjmOGPYMB99XvpOg3FTdn6w238AsGLnZ3rqxEOXka4jJDZpHSoZGSlMlZxJMAGUx8pJMn6NB3grPDRhkZXDG1MPc");'></div>
+<div class="flex flex-col">
+<p class="text-white font-bold truncate">HostUsername</p>
+<p class="text-primary text-xs font-semibold">Host</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Player 2 avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAgqT92blitupm-WQo1jEfTCKB3DZF_9YOZmb5lgdvNVuHDmntVcSdahr2oSXgVQ_6hjAmlyaQnG6NLzsU6m5qtqX_fzQuuiyX4zfxJTKVkCrhO2VujeBMI9tM4_zd7tIECei2q1OmIq3WKCvD-PehZsT5YU97xU7iQVM-M0nTUwkeLbS48ZYYmKr69kI618PgP_zBgjYKNwmdO-aE84Du-x4TmpoRCXW6wflCdGFMD5AxS4suvVporGAZe_WpEHYN16dnvTQ3TMhA");'></div>
+<p class="text-white font-bold truncate">BardOfAvon</p>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Player 3 avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1I9TwjFKP61UkyGajhHTCdrmHUnwagh9cCMZKnM_QOLgdOnaUbbsB2apqycKFW7-U_gpUjlYYJ8u2mRyTihgMJCVuSivIl5jrV1NytfG5eyGS6b7vhivTiB255U6V3HLpyVyK9N6pCYm6FpE3aGDUhJ7ZNn623sh7gbBeWSN1PHS0WsQ1GuLgl_vE_rAg7hL_n2pqLpM-AVhZ9nkrYimhTr0chS1cYhA_2tW4PKtMGFK2TO3Cdmpi7UyXMJPjjC-XYtlTmP35JQ4");'></div>
+<div class="flex flex-col">
+<p class="text-white font-bold truncate">GrimmReaper</p>
+<p class="text-green-400 text-xs font-semibold">Ready</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Player 4 avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2EhF_8_q5cGPE7e63UcMcJ8_3zXD5KICTeBQT1UOe-n-cB_9W2nfFW9ciEucVxQcOnKCoKTsiHWIsXELuaQCB1FxL7MvbXQKkWW3XSgYWJFCe-WeDqPkOdR1zrDWUr7PB8XnkW6S00fWeyol1DeJ4uus_QbT3_7Eev7BR4RcPVPmPqY8j-YLiOGsBsbbYlYo_FI6m4XOLXA8CdEveSEv3gl7-wV9nLPgPd3pPxfrcUulgZHL5SPGBIP_oOX0It2lPKPMZuLNSWDk");'></div>
+<div class="flex flex-col">
+<p class="text-white font-bold truncate">FableMaster</p>
+<p class="text-green-400 text-xs font-semibold">Ready</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Player 5 avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCH_tfB5x8wUUGy-tC1iOdgokY5eRDEPtf2qA_JzehYdYztUYDMBYILcTstok9HJKUeXBu_NG2yUO58nlv7_xT7sSZwscM5O-VNTJ0ToXFcTweRKa0pAzPui4FMl4IBrqUxoStJLBYduRJLYgZ0NLaIq2ed8Ryy-aAJ7DYlvxMdZhMEAGEfcM2IK4RgLw-DPcy2_HyPSGsg87CC6kEHiEWgbPkmDCVoHkM3bjqsVCuHb32VLYfhMbUXAosZptkdbzbFE9sEHAXD6lw");'></div>
+<div class="flex flex-col">
+<p class="text-white font-bold truncate">PlayerWithAVeryLongName</p>
+<p class="text-primary text-xs font-semibold">Host</p>
+</div>
+</div>
+</div>
+<div class="mt-4">
+<h3 class="text-white/70 text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-white/10">Spectators (2)</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Spectator avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD-CSnVdIB2uS5h39771cfhNsFQeJtkyspG8xu3ODSN_LGmg1iSsKMu-M2TPlky1Y4vZ-hD9jCq-PmcScqGixeURscxicEDp0hXb5ElK1ssIhKxcsQF2CLzTOCGIsrihRgOisnmfQFlyeiU_50mcnqxpdyN9knB0Di0UTXEb_cwBseww1HLdqxajxdcHyRVKLFZsx9G3p9oCTMaDjCdKw3npNMIkkAWMuVHSVV4ChkeC05IdksaTBgm1arsXNDG8nEx4aHSa14906I");'></div>
+<p class="text-white/80 font-medium truncate">BookwormSpectator</p>
+</div>
+<div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Spectator avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD-20wNPRvGHG-2aNvf9b61MR_tdkjk2-FNTlo8iRVX_qXo48_5i55BgtM0cJLPf7dW4ESgVPWoL8g78xrHNamfML84uOG_IgitIH0Lh6du0hk08yFNEkPhJpBy7JvGG4Xer5OkV0QUH83pgTYnZbR4iYK-MJL_7ccY81b8iQQk9bltyXzHzTuyXROwDpU4hVoTcHVpDt8xKBpyIs86vgO1rmXuC2uC3XWLJUZ3041JFLf_GypTZO0EwKQZ7uIRckF3HRi9TB3s5NU");'></div>
+<p class="text-white/80 font-medium truncate">SilentWatcher</p>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+<span class="truncate">Start Game</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Once Upon a Time - Game Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7f13ec",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#191022",
+                    },
+                    fontFamily: {
+                        "display": ["Epilogue"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .player-hand > * {
+            transition: transform 0.2s ease-out;
+        }
+        .player-hand > *:hover {
+            transform: translateY(-2rem) scale(1.05);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-900 dark:text-white overflow-hidden">
+<div class="relative flex h-screen w-full">
+<div class="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20" data-alt="A faint, magical forest background representing the game board." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys');"></div>
+<main class="flex-1 flex flex-col justify-between overflow-hidden">
+<div class="flex-grow flex items-start justify-center p-6 overflow-auto">
+<div class="flex flex-col gap-6 w-full max-w-7xl">
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2kM4V9bGS-2Dg2TcCrOb1xrXHTpki0HFxceUe9rRUH_KaPjQoQN0jbVpQBa2TqwdSV6mLT7goB_ZbKcYdE6HhVLSZsN0vUX6TpnJB76NgakSFqG5GPRpJfTZutG1R4MZFq1tS4aLI30MXOnXwRNwfKPVi63SRkGypJCterAJp-9W9tUENfo_WoQl8qqxnbhBBCjNdZ8_aH3QWvhQpEDB30HdC0nTZ1-goYnn0fnbZNvY8TMelwbPtjboFMgS-PPv_iCKzUJkMDPQ");'></div>
+<p class="font-bold text-white text-sm">Finn</p>
+<p class="text-xs text-white/70">Storyteller</p>
+</div>
+<div class="flex gap-2 p-2 rounded-lg bg-black/10">
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="A fantasy character card showing a knight in armor." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBO7LyI5yUPZFYBGIq2WlvNfo2BlwdY2UNPMYt8y9CyyQUFNI6FyWGVksoo3GYjnzfi6MLTD9q1oINNSFlntW7Mh3vtbImsCFpDJsi3m-46JQabLa7_0jnetSW2YQVL4cN9KweiBjfVZgIK3pjzYKuoKGxBQVfF8ITkzpmByV1IxoZmQl2IHeTfaUBDBIJeQ0xXdwtYpc0Pe5TrKxBJt6P8axzw9IwBKg4P6tXQrtEw4PcIpGPxMHaeI8o95veMNyqxJDk09_RY8c");'>
+<p class="text-white text-sm font-bold leading-tight">The Valiant Knight</p>
+<p class="text-white/80 text-xs">Character</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="A fantasy place card showing an ancient forest." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbDs30Bp56PwTZqZABDWjtmq8uI5wZRvdYe5Z3PcLFA1sQ38N9bwVPCuTjO7GlVecNDhSv5gmd8cGWzlvE1_AVYwcfgyFBKEEZ00N4YdBmhTPUflOO4HQvD7yZGt8g0GkW_S8y00pTxzS0Ux3Ta66joUQ_0-IFmn8v44MoSOS1Ed-ERj8LjzksGBgaSlShwzSXXp28hBkfnCvmlZ8Sk5UoEsltVDdaS3INwNh355Aah6oNNsXGTvAH6S9j3_ajV540_sWOPPqVw9Q");'>
+<p class="text-white text-sm font-bold leading-tight">The Whispering Woods</p>
+<p class="text-white/80 text-xs">Place</p>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14 opacity-70" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCb3iC73xVpqqMqma7RdliAPGCzG2lb3Ba14BVeUa6DRD40_WF-KJ7K5FewcGAy5MsT8ebqQIs4IRl5V9pJktofvk1x_vOeRVKb3VpxUhxyzcy6Him7FzLfu4V4SbCKdr3RcSwXKJjUUWS86T2blyEzvwgKEYIyRpD-dzfs7Ev3w_2a6lzwkfBRGDpRrZKGUNDkp9EUMnA_rrSL4oAda2KN6qpoZnm4GTrJkfYrtfYEi5SP33Zf1U75jKElDCZFvEWYPgTOlBUlN8Q");'></div>
+<p class="font-bold text-white text-sm opacity-70">Elara</p>
+</div>
+<div class="flex gap-2 p-2 rounded-lg">
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="A magical item card showing a glowing sword." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBMFXlcQhT4L9f1oTS5DBSVUc7usLOhAvo3Ox5V4RkFI4Sz_zbHoexsxYle5fswDzikCfPsRB2ucbDqtRX7OQf-PFn-AixFcCqbhZ4D7r3bpyvkfAQDw2teFge2Z9HV5-k4-0b1CNf55fxHG4MZ7g_gG1yRw6i-xFgH91e4VKxI4-iEbc_AJZ8K_QW9ldaX9_GKq7KciNzj0HO3hK9atrPQX25UMBppGVCudVRiclox3I11pGL5Vs54OfCYXu6lIVoKJPIYWhW3BVU");'>
+<p class="text-white text-sm font-bold leading-tight">The Sword of Light</p>
+<p class="text-white/80 text-xs">Thing</p>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="flex-shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14 ring-2 ring-primary" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8QczcDQhnTtN58egOU4F-Mdihf4C_anaRBcx4Ue3QWV088EQclkIUDCxtLZGEQP-IQx0vOSDTPPl6g9fNqqGZh7zXipeuQdkKHYnfDy1NK8Qbd4zw3Wg3yVsNSsr9uZSthIZS10M4jbklaLr5fC1dbJQkMw1AtHtELP94cyLXQpN20pphP4nBvRf0KxrMb22uveZVWd4GRdspqoE1qN9JEEKbWE8cX2p8iDbkXOHTvqlUlgRJyTn3HXf24tIFLtj-J5-ENLbO3ok");'></div>
+<p class="font-bold text-white text-sm">Aria (You)</p>
+<p class="text-xs text-primary">Your Turn</p>
+</div>
+<div class="flex gap-2 p-2 rounded-lg bg-primary/10 border border-primary/50">
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="A fantasy event card showing a stormy sky." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCfNSBXCQKtCeBWvVv89eAVPE1YhuaNLZzNHDRC_hp1OxY2LeICj2aHPa8DOlnLZfUd5Hm04Oqcx5l7j1fb_lqHwrI0i5A9fxh2ukUCFEBZTUkhUWWQIzlYFQkxZEjQfiQ87ofjDVDlfmcBcO94YAKlc0mGe4JYy0umpsAGq1v-SmT1DldLlpc_oV0inKe20vnyg58kDSl6wEc-xbo9wyMqToKIooA_6hSbmyyReC6kIUwdpVT-7LkH7IQ7pKM6BYvuVT06i8Ix4mk");'>
+<p class="text-white text-sm font-bold leading-tight">A Sudden Storm</p>
+<p class="text-white/80 text-xs">Event</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="An aspect card showing a crown." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBu3Xb_4ryfY3duYhzdQgdvwVXkK1pv-k4lU9AwEjIwmtModYyAwh1AWUxuPao3IicvjFn-LaDPdwj8bWKv0yOkA60FCoJX0SjC-mTbsR6FBQgIjH7IqLHUe9THCpvnHqDzmS0cjGPxeCvOrWsTrjjT9D9tnpeIJv5H37alzEi9Dr3snX82n1BCiPC5-m9uIE7k-IIpsKrBPZ0-srmq2OMFSd8LftKd0sUJNZLfS0SFo3dptkuRUeghJA7xUsdIcPU9lMsoXo9PolQ");'>
+<p class="text-white text-sm font-bold leading-tight">Became King</p>
+<p class="text-white/80 text-xs">Aspect</p>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4 opacity-60">
+<div class="flex-shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2kM4V9bGS-2Dg2TcCrOb1xrXHTpki0HFxceUe9rRUH_KaPjQoQN0jbVpQBa2TqwdSV6mLT7goB_ZbKcYdE6HhVLSZsN0vUX6TpnJB76NgakSFqG5GPRpJfTZutG1R4MZFq1tS4aLI30MXOnXwRNwfKPVi63SRkGypJCterAJp-9W9tUENfo_WoQl8qqxnbhBBCjNdZ8_aH3QWvhQpEDB30HdC0nTZ1-goYnn0fnbZNvY8TMelwbPtjboFMgS-PPv_iCKzUJkMDPQ");'></div>
+<p class="font-bold text-white text-sm">Finn</p>
+</div>
+<div class="flex gap-2 p-2 rounded-lg">
+<div class="bg-cover bg-center flex flex-col justify-end p-2 rounded-md aspect-[3/4] w-32 shadow-lg border border-white/10" data-alt="A magical item card showing a glowing sword." style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBMFXlcQhT4L9f1oTS5DBSVUc7usLOhAvo3Ox5V4RkFI4Sz_zbHoexsxYle5fswDzikCfPsRB2ucbDqtRX7OQf-PFn-AixFcCqbhZ4D7r3bpyvkfAQDw2teFge2Z9HV5-k4-0b1CNf55fxHG4MZ7g_gG1yRw6i-xFgH91e4VKxI4-iEbc_AJZ8K_QW9ldaX9_GKq7KciNzj0HO3hK9atrPQX25UMBppGVCudVRiclox3I11pGL5Vs54OfCYXu6lIVoKJPIYWhW3BVU");'>
+<p class="text-white text-sm font-bold leading-tight">The Magic Lamp</p>
+<p class="text-white/80 text-xs">Thing</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="relative w-full bg-black/20 dark:bg-black/30 backdrop-blur-md border-t border-white/10 pt-4 pb-6">
+<div class="player-hand flex justify-center items-end h-72 gap-4 px-4">
+<div class="bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] w-48 shadow-lg border border-white/10 cursor-pointer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBO7LyI5yUPZFYBGIq2WlvNfo2BlwdY2UNPMYt8y9CyyQUFNI6FyWGVksoo3GYjnzfi6MLTD9q1oINNSFlntW7Mh3vtbImsCFpDJsi3m-46JQabLa7_0jnetSW2YQVL4cN9KweiBjfVZgIK3pjzYKuoKGxBQVfF8ITkzpmByV1IxoZmQl2IHeTfaUBDBIJeQ0xXdwtYpc0Pe5TrKxBJt6P8axzw9IwBKg4P6tXQrtEw4PcIpGPxMHaeI8o95veMNyqxJDk09_RY8c");'>
+<p class="text-white text-base font-bold leading-tight">The Valiant Knight</p>
+<p class="text-white/80 text-sm">Character</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] w-48 shadow-lg border border-white/10 cursor-pointer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbDs30Bp56PwTZqZABDWjtmq8uI5wZRvdYe5Z3PcLFA1sQ38N9bwVPCuTjO7GlVecNDhSv5gmd8cGWzlvE1_AVYwcfgyFBKEEZ00N4YdBmhTPUflOO4HQvD7yZGt8g0GkW_S8y00pTxzS0Ux3Ta66joUQ_0-IFmn8v44MoSOS1Ed-ERj8LjzksGBgaSlShwzSXXp28hBkfnCvmlZ8Sk5UoEsltVDdaS3INwNh355Aah6oNNsXGTvAH6S9j3_ajV540_sWOPPqVw9Q");'>
+<p class="text-white text-base font-bold leading-tight">The Whispering Woods</p>
+<p class="text-white/80 text-sm">Place</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] w-48 shadow-lg border border-white/10 cursor-pointer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBMFXlcQhT4L9f1oTS5DBSVUc7usLOhAvo3Ox5V4RkFI4Sz_zbHoexsxYle5fswDzikCfPsRB2ucbDqtRX7OQf-PFn-AixFcCqbhZ4D7r3bpyvkfAQDw2teFge2Z9HV5-k4-0b1CNf55fxHG4MZ7g_gG1yRw6i-xFgH91e4VKxI4-iEbc_AJZ8K_QW9ldaX9_GKq7KciNzj0HO3hK9atrPQX25UMBppGVCudVRiclox3I11pGL5Vs54OfCYXu6lIVoKJPIYWhW3BVU");'>
+<p class="text-white text-base font-bold leading-tight">The Sword of Light</p>
+<p class="text-white/80 text-sm">Thing</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] w-48 shadow-lg border border-white/10 cursor-pointer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCfNSBXCQKtCeBWvVv89eAVPE1YhuaNLZzNHDRC_hp1OxY2LeICj2aHPa8DOlnLZfUd5Hm04Oqcx5l7j1fb_lqHwrI0i5A9fxh2ukUCFEBZTUkhUWWQIzlYFQkxZEjQfiQ87ofjDVDlfmcBcO94YAKlc0mGe4JYy0umpsAGq1v-SmT1DldLlpc_oV0inKe20vnyg58kDSl6wEc-xbo9wyMqToKIooA_6hSbmyyReC6kIUwdpVT-7LkH7IQ7pKM6BYvuVT06i8Ix4mk");'>
+<p class="text-white text-base font-bold leading-tight">A Sudden Storm</p>
+<p class="text-white/80 text-sm">Event</p>
+</div>
+<div class="bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] w-48 shadow-lg border border-white/10 cursor-pointer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 60%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBu3Xb_4ryfY3duYhzdQgdvwVXkK1pv-k4lU9AwEjIwmtModYyAwh1AWUxuPao3IicvjFn-LaDPdwj8bWKv0yOkA60FCoJX0SjC-mTbsR6FBQgIjH7IqLHUe9THCpvnHqDzmS0cjGPxeCvOrWsTrjjT9D9tnpeIJv5H37alzEi9Dr3snX82n1BCiPC5-m9uIE7k-IIpsKrBPZ0-srmq2OMFSd8LftKd0sUJNZLfS0SFo3dptkuRUeghJA7xUsdIcPU9lMsoXo9PolQ");'>
+<p class="text-white text-base font-bold leading-tight">Became King</p>
+<p class="text-white/80 text-sm">Aspect</p>
+</div>
+</div>
+<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
+<button class="bg-white/10 hover:bg-white/20 text-white font-bold py-3 px-6 rounded-lg backdrop-blur-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">skip_next</span> Pass Turn
+                    </button>
+<button class="bg-primary hover:bg-primary/80 text-white font-bold py-3 px-6 rounded-lg backdrop-blur-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">play_arrow</span> Play Card
+                    </button>
+</div>
+</div>
+</main>
+<aside class="w-96 bg-black/20 dark:bg-black/30 backdrop-blur-md border-l border-white/10 flex flex-col p-6 gap-6">
+<div class="relative aspect-video w-full rounded-lg overflow-hidden ring-2 ring-primary shadow-lg">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8QczcDQhnTtN58egOU4F-Mdihf4C_anaRBcx4Ue3QWV088EQclkIUDCxtLZGEQP-IQx0vOSDTPPl6g9fNqqGZh7zXipeuQdkKHYnfDy1NK8Qbd4zw3Wg3yVsNSsr9uZSthIZS10M4jbklaLr5fC1dbJQkMw1AtHtELP94cyLXQpN20pphP4nBvRf0KxrMb22uveZVWd4GRdspqoE1qN9JEEKbWE8cX2p8iDbkXOHTvqlUlgRJyTn3HXf24tIFLtj-J5-ENLbO3ok");'></div>
+<div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-bold text-white">Aria (You)</p>
+<p class="text-sm text-primary">Your Turn</p>
+</div>
+<div class="flex items-center gap-2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+<span class="material-symbols-outlined text-base">style</span>
+<span>5</span>
+</div>
+</div>
+</div>
+<div class="absolute top-2 right-2 flex gap-2">
+<div class="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-lg">mic</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-lg">videocam_off</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="relative aspect-video w-full rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2kM4V9bGS-2Dg2TcCrOb1xrXHTpki0HFxceUe9rRUH_KaPjQoQN0jbVpQBa2TqwdSV6mLT7goB_ZbKcYdE6HhVLSZsN0vUX6TpnJB76NgakSFqG5GPRpJfTZutG1R4MZFq1tS4aLI30MXOnXwRNwfKPVi63SRkGypJCterAJp-9W9tUENfo_WoQl8qqxnbhBBCjNdZ8_aH3QWvhQpEDB30HdC0nTZ1-goYnn0fnbZNvY8TMelwbPtjboFMgS-PPv_iCKzUJkMDPQ");'></div>
+<div class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-bold text-white text-sm">Finn</p>
+<p class="text-xs text-white/70">Storyteller</p>
+</div>
+<div class="flex items-center gap-1 bg-black/50 text-white px-2 py-0.5 rounded-full text-xs">
+<span class="material-symbols-outlined text-xs">style</span>
+<span>4</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative aspect-video w-full rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCb3iC73xVpqqMqma7RdliAPGCzG2lb3Ba14BVeUa6DRD40_WF-KJ7K5FewcGAy5MsT8ebqQIs4IRl5V9pJktofvk1x_vOeRVKb3VpxUhxyzcy6Him7FzLfu4V4SbCKdr3RcSwXKJjUUWS86T2blyEzvwgKEYIyRpD-dzfs7Ev3w_2a6lzwkfBRGDpRrZKGUNDkp9EUMnA_rrSL4oAda2KN6qpoZnm4GTrJkfYrtfYEi5SP33Zf1U75jKElDCZFvEWYPgTOlBUlN8Q");'></div>
+<div class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-bold text-white text-sm">Elara</p>
+</div>
+<div class="flex items-center gap-1 bg-black/50 text-white px-2 py-0.5 rounded-full text-xs">
+<span class="material-symbols-outlined text-xs">style</span>
+<span>6</span>
+</div>
+</div>
+</div>
+</div>
+<div class="relative aspect-video w-full rounded-lg overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAliH1_OkXhvOiB0HCa5lfg3BSQW7N7FTuL6jwLca72JTFxW1G9x-jTCSiL7KzymSbertHzOcOHp9qs8CZVWlH30Y4CMfojXIX9SZ6i6gL63S-hkbUHXVX1aYbooa92wBWDdoGslON_fODa7Wf9z8OTv9wOGj6ZRp_xNDC7_dhzyJj4RNI7QR-9qPcfbYfCye0PfBJAfw8jiLEYsTK6F6Y50hHt1W-JKWKVltuQA7uCMiZTVOUo5ymDQozKIcB6cBlFxf3muevc6lo");'></div>
+<div class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-bold text-white text-sm">Kael</p>
+</div>
+<div class="flex items-center gap-1 bg-black/50 text-white px-2 py-0.5 rounded-full text-xs">
+<span class="material-symbols-outlined text-xs">style</span>
+<span>5</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto text-center p-4 bg-white/5 rounded-lg">
+<p class="text-sm text-white/70">Next Player</p>
+<p class="text-lg font-bold text-white">Finn</p>
+</div>
+</aside>
+</div>
+</body></html>

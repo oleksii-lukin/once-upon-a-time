@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Once Upon a Time - Game Rules &amp; Guide</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7f13ec",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#191022",
+                    },
+                    fontFamily: {
+                        "display": ["Epilogue", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200">
+<div class="flex min-h-screen">
+<!-- Left Column: SideNavBar -->
+<aside class="w-64 flex-shrink-0 bg-[#fbfafc] dark:bg-[#141118] p-4 border-r border-gray-200 dark:border-gray-800 sticky top-0 h-screen">
+<div class="flex flex-col h-full">
+<div class="flex items-center gap-3 mb-6">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Ornate, mystical symbol for a fantasy game" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBItvpBmLysEMJ9-Q6jotq5n78UBb3fgP-ae3g2Hrg7ZY3WJ8_hlE-5tYsr8jzb3cta5i8cRaXDHNv2GLi1Nmo3NeB_4ntHWcB7ASOJG8tbLe5s-ICz0caCRnYAPqgYQb2HWKpDpXg_jcvLhfrcDAnid8t2hM_-3YovM3XQlcZ8Ky5Rc4chflWzyJ4OlyylE3tOSHfYphhvCjMlLnCNTslayNNjmID9OkAXipOFUbktoQqVIbNhrdx2qqsKK86-xY0Bs1k-3KpkZaA");'></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-medium leading-normal">Once Upon a Time</h1>
+<p class="text-gray-500 dark:text-[#ab9db9] text-sm font-normal leading-normal">Game Rules &amp; Guide</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20" href="#">
+<span class="material-symbols-outlined text-lg">import_contacts</span>
+<p class="text-sm font-medium leading-normal">Core Rules</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-white" href="#">
+<span class="material-symbols-outlined text-lg">style</span>
+<p class="text-sm font-medium leading-normal">Card Types</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-white" href="#">
+<span class="material-symbols-outlined text-lg">cached</span>
+<p class="text-sm font-medium leading-normal">Gameplay Flow</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-white" href="#">
+<span class="material-symbols-outlined text-lg">lightbulb</span>
+<p class="text-sm font-medium leading-normal">Tips &amp; Strategy</p>
+</a>
+</nav>
+</div>
+</aside>
+<div class="flex-1 flex justify-center py-8 px-4 sm:px-6 lg:px-8">
+<div class="w-full max-w-7xl grid grid-cols-12 gap-8">
+<!-- Center Column: Content Area -->
+<main class="col-span-12 lg:col-span-8 xl:col-span-7">
+<div class="flex flex-col gap-6">
+<!-- SearchBar -->
+<div class="px-4 py-3">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full">
+<div class="text-gray-500 dark:text-[#ab9db9] flex border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#302839] items-center justify-center pl-4 rounded-l-xl border-r-0">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#302839] focus:border-primary h-full placeholder:text-gray-400 dark:placeholder:text-[#ab9db9] px-4 border-l-0 text-base font-normal leading-normal" placeholder="Search for a rule or card..." value=""/>
+</div>
+</label>
+</div>
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 px-4">
+<a class="text-gray-500 dark:text-[#ab9db9] text-sm font-medium leading-normal hover:text-primary dark:hover:text-white" href="#">Home</a>
+<span class="text-gray-500 dark:text-[#ab9db9] text-sm font-medium leading-normal">/</span>
+<span class="text-gray-900 dark:text-white text-sm font-medium leading-normal">Core Rules</span>
+</div>
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between gap-3 p-4">
+<div class="flex min-w-72 flex-col gap-3">
+<h1 class="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-tight">Core Rules</h1>
+<p class="text-gray-500 dark:text-[#ab9db9] text-base font-normal leading-normal">Learn the fundamentals of how to play 'Once Upon a Time'.</p>
+</div>
+<button class="flex items-center gap-2 self-start px-4 py-2 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-base">print</span>
+<span class="text-sm font-medium">Print Rules</span>
+</button>
+</div>
+<!-- BodyText Content -->
+<div class="space-y-6 px-4">
+<div class="prose prose-base dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+<p class="leading-relaxed">
+                                    Welcome, Storyteller, to the enchanted world of Once Upon a Time. The goal is to guide the story to your secret ending. This guide will walk you through setting up the game, understanding your turn, and ultimately, how to claim victory by telling the best tale.
+                                </p>
+</div>
+<!-- Accordion Sections -->
+<div class="space-y-4">
+<!-- Game Objective -->
+<details class="group p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800" open="">
+<summary class="flex items-center justify-between cursor-pointer list-none">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Game Objective</h3>
+<div class="transition-transform duration-300 group-open:rotate-180">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</summary>
+<div class="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        Each player has a secret "Happily Ever After" card. The first player to play all of their Story cards and guide the narrative to the conclusion on their Ending card wins the game. This requires creativity, strategy, and a little bit of luck.
+                                    </div>
+</details>
+<!-- Game Setup -->
+<details class="group p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800">
+<summary class="flex items-center justify-between cursor-pointer list-none">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Game Setup</h3>
+<div class="transition-transform duration-300 group-open:rotate-180">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</summary>
+<div class="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+<ol class="list-decimal pl-5 space-y-2">
+<li>Shuffle the Story cards and deal them out according to the number of players.</li>
+<li>Shuffle the Ending cards and deal one to each player, face down. This is their secret ending.</li>
+<li>Place the remaining cards in draw piles in the center of the table.</li>
+<li>The player who most recently told a story goes first.</li>
+</ol>
+</div>
+</details>
+<!-- Winning & Losing -->
+<details class="group p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800">
+<summary class="flex items-center justify-between cursor-pointer list-none">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Winning &amp; Losing</h3>
+<div class="transition-transform duration-300 group-open:rotate-180">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</summary>
+<div class="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        You win the game by playing your final Story card and then playing your Ending card, successfully concluding the tale. There is no traditional "losing," but the story continues until one player achieves their goal.
+                                    </div>
+</details>
+</div>
+</div>
+</div>
+</main>
+<!-- Right Column: Contextual Elements -->
+<aside class="hidden lg:block lg:col-span-4 xl:col-span-5">
+<div class="sticky top-8 p-6 rounded-xl bg-gray-50 dark:bg-[#141118] border border-gray-200 dark:border-gray-800">
+<h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Reference</h2>
+<div class="space-y-4">
+<div class="relative group">
+<h3 class="font-semibold text-gray-800 dark:text-gray-100">Story Cards</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Cards used to build the narrative. Include characters, items, and events.</p>
+<!-- Tooltip Card Image -->
+<div class="absolute invisible group-hover:visible bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-48 transition-opacity opacity-0 group-hover:opacity-100 duration-200">
+<img class="rounded-md w-full" data-alt="A fantastical game card depicting a magical forest." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsxauvWZ2aQsCZ7McKjSidAWdhAcHMNHSrf4i4HJFHj1SWK-moBsBC73ex14876G_ZuqdhkXxOLNN_YXGfTluSgW_a72xv-62CUOHvdkQRknbpVtCpsebyo44N1XGDzUAvbzFAyW__syMaaYCtbh1EC5JwESMjFRPd775UFfwbW62nANb3WHQsR5OzaMfIyDM1Yci7jWLlFdg5MMHtR6vUPYb-1Za02D9lYHUBxp3xZ77_hYLBkVMChp6fbdEGKElPMKX-OpYUwqA"/>
+<p class="text-center text-xs font-bold mt-2 text-gray-900 dark:text-white">Example: The Dark Forest</p>
+</div>
+</div>
+<div class="relative group">
+<h3 class="font-semibold text-gray-800 dark:text-gray-100">Ending Cards</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Your secret goal. Concludes the story in a specific way.</p>
+<div class="absolute invisible group-hover:visible bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-48 transition-opacity opacity-0 group-hover:opacity-100 duration-200">
+<img class="rounded-md w-full" data-alt="A fantastical game card depicting a royal wedding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD185WksKlAGlDDOPYV6cd9C4knY0BsReuts7wpGeyqdPlrBF2evfOAvVaOHwxzFSbCSDEl0ui2bXs9Mu6d0M2ZZZY_PftMMG8aRuUoA50-eg3fZGYEA0Ak9xAYVrEy2SJtpBqls6_O4XCRvm-753Cjf7RtBvA0iaf0jtiXV4dRZZUCpk9lShmY5Dz3VDGx4fn9nL6gLZj2olfo0lUBb-iDd-PHOp_Q8Q45P9JTAczNgruAvzh5NglD8s3YvbxZn1lpzEmkDjtL0-0"/>
+<p class="text-center text-xs font-bold mt-2 text-gray-900 dark:text-white">Example: They Married</p>
+</div>
+</div>
+<div class="relative group">
+<h3 class="font-semibold text-gray-800 dark:text-gray-100">Interrupt Cards</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">Played to take over storytelling from another player.</p>
+<div class="absolute invisible group-hover:visible bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-48 transition-opacity opacity-0 group-hover:opacity-100 duration-200">
+<img class="rounded-md w-full" data-alt="A fantastical game card showing a dramatic plot twist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBawhJsMOEyNRJymZWP7pAVChtVIYYt3qtHqIBlJTJ-XdLFmbp4dqzXt_DvlEFXJu6TUTHeuk0AovWC6cZIap_OC6hVJGXvFZzW36ptyqPLXMjJezPxh1qcnfr7BHI46kk6viZigHghzLvyNU2wvAhoJ2L-JI4C_71MU_NxON8I_Bmloy9ZJJNcuM06Fp18FUasWCdXMTfH8QAOF9wGnC2s2pzVi8m7NIKRRSS2lHozJYgxa4cCBV9Wf59dFr0jsSkjnaUYZaI5UaM"/>
+<p class="text-center text-xs font-bold mt-2 text-gray-900 dark:text-white">Example: A Different Path</p>
+</div>
+</div>
+</div>
+<hr class="my-6 border-gray-200 dark:border-gray-700"/>
+<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Related Topics</h3>
+<div class="flex flex-col gap-2">
+<a class="text-primary hover:underline text-sm font-medium" href="#">Understanding Card Types</a>
+<a class="text-primary hover:underline text-sm font-medium" href="#">How to Use Interrupts</a>
+<a class="text-primary hover:underline text-sm font-medium" href="#">Advanced Strategy</a>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</body></html>

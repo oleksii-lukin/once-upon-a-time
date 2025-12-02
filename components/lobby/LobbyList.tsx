@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/supabase/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { getGuestId } from '@/lib/auth/guest';
+import { useTranslation } from '@/app/i18n/client';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
     players: { count: number }[];
@@ -14,6 +15,9 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
     const [lobbies, setLobbies] = useState<Lobby[]>(initialLobbies);
     const supabase = createClient();
     const router = useRouter();
+    const params = useParams();
+    const lng = params.lng as string;
+    const { t } = useTranslation(lng, 'common');
 
     useEffect(() => {
         const channel = supabase
@@ -74,7 +78,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
             }
         }
 
-        router.push(`/lobbies/${lobbyId}?view=user`);
+        router.push(`/${lng}/lobbies/${lobbyId}?view=user`);
     };
 
     return (
@@ -82,10 +86,10 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
             <table className="flex-1">
                 <thead>
                     <tr className="bg-gray-100/50 dark:bg-white/10">
-                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[40%] text-sm font-medium leading-normal">Room Name</th>
-                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">Players</th>
-                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">Status</th>
-                        <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 w-[20%] text-sm font-medium leading-normal">Action</th>
+                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[40%] text-sm font-medium leading-normal">{t('room_name')}</th>
+                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">{t('players')}</th>
+                        <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">{t('status')}</th>
+                        <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 w-[20%] text-sm font-medium leading-normal">{t('action')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -93,14 +97,14 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                         <tr key={lobby.id} className="border-t border-t-gray-200/20 dark:border-t-white/20 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                             <td className="h-[72px] px-4 py-2 text-gray-800 dark:text-white text-sm font-normal leading-normal">{lobby.name}</td>
                             <td className="h-[72px] px-4 py-2 text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
-                                {lobby.players?.[0]?.count || 0} Players
+                                {lobby.players?.[0]?.count || 0} {t('players')}
                             </td>
                             <td className="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
                                 <div className={`flex items-center gap-2 ${lobby.status === 'playing' ? 'text-green-500' : 'text-yellow-500'}`}>
                                     <span className="material-symbols-outlined text-base">
                                         {lobby.status === 'playing' ? 'swords' : 'hourglass_top'}
                                     </span>
-                                    <span className="capitalize">{lobby.status}</span>
+                                    <span className="capitalize">{t(lobby.status as 'waiting' | 'playing' | 'finished')}</span>
                                 </div>
                             </td>
                             <td className="h-[72px] px-4 py-2">
@@ -108,7 +112,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                                     onClick={() => handleJoin(lobby.id)}
                                     className="flex w-full min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-primary/20 text-primary text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/30 transition-colors"
                                 >
-                                    {lobby.status === 'playing' ? 'Spectate' : 'Join'}
+                                    {lobby.status === 'playing' ? t('spectate') : t('join')}
                                 </button>
                             </td>
                         </tr>
@@ -116,7 +120,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                     {lobbies.length === 0 && (
                         <tr>
                             <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                No active lobbies found. Create one to start!
+                                {t('no_active_lobbies')}
                             </td>
                         </tr>
                     )}

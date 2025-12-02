@@ -1,8 +1,11 @@
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import NewDeckButton from '@/components/admin/NewDeckButton';
+import { useTranslation } from '@/app/i18n/server';
 
-export default async function DecksPage() {
+export default async function DecksPage({ params }: { params: Promise<{ lng: string }> }) {
+    const { lng } = await params;
+    const { t } = await useTranslation(lng, 'common');
     const supabase = await createClient();
     const { data: decks } = await supabase
         .from('decks')
@@ -12,7 +15,7 @@ export default async function DecksPage() {
     return (
         <div className="flex flex-col h-full">
             <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
-                <h1 className="text-white text-2xl font-bold">Decks</h1>
+                <h1 className="text-white text-2xl font-bold">{t('decks')}</h1>
                 <NewDeckButton />
             </div>
 
@@ -21,11 +24,11 @@ export default async function DecksPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#211c27] text-left">
-                                <th className="px-6 py-3 text-sm font-medium text-white/70">Deck Name</th>
-                                <th className="px-6 py-3 text-sm font-medium text-white/70">Cards</th>
-                                <th className="px-6 py-3 text-sm font-medium text-white/70">Status</th>
-                                <th className="px-6 py-3 text-sm font-medium text-white/70">Last Updated</th>
-                                <th className="px-6 py-3 text-sm font-medium text-white/70">Actions</th>
+                                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('deck_name')}</th>
+                                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('cards')}</th>
+                                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('status')}</th>
+                                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('last_updated')}</th>
+                                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/10">
@@ -38,7 +41,7 @@ export default async function DecksPage() {
                                             ? 'bg-green-500/20 text-green-400'
                                             : 'bg-white/10 text-white/50'
                                             }`}>
-                                            {deck.is_active ? 'Active' : 'Inactive'}
+                                            {deck.is_active ? t('active') : t('inactive')}
                                         </button>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-white/60">
@@ -46,10 +49,10 @@ export default async function DecksPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <Link
-                                            href={`/admin/decks/${deck.id}`}
+                                            href={`/${lng}/admin/decks/${deck.id}`}
                                             className="text-primary hover:text-primary/80 text-sm font-medium"
                                         >
-                                            Edit
+                                            {t('edit')}
                                         </Link>
                                     </td>
                                 </tr>
@@ -57,7 +60,7 @@ export default async function DecksPage() {
                             {(!decks || decks.length === 0) && (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-8 text-center text-white/40">
-                                        No decks found. Create one to get started.
+                                        {t('no_decks_found')}
                                     </td>
                                 </tr>
                             )}

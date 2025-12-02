@@ -7,17 +7,30 @@ import { Database } from '@/supabase/types';
 import ImageUpload from './ImageUpload';
 
 type Deck = Database['public']['Tables']['decks']['Row'];
-type Card = Database['public']['Tables']['cards']['Row'];
+type Card = Database['public']['Tables']['cards']['Row'] & {
+    translations?: {
+        [key: string]: {
+            name: string;
+            description: string;
+            usage_examples: string;
+        };
+    };
+};
 
 export default function DeckEditor({ deck }: { deck: Deck }) {
     const { getToken } = useAuth();
     const [cards, setCards] = useState<Card[]>([]);
     const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+    const [activeLang, setActiveLang] = useState('en');
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         usage_examples: '',
-        image_url: ''
+        image_url: '',
+        translations: {
+            ru: { name: '', description: '', usage_examples: '' },
+            ua: { name: '', description: '', usage_examples: '' }
+        }
     });
     const [loading, setLoading] = useState(true);
 
@@ -34,21 +47,43 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
             .select('*')
             .eq('deck_id', deck.id)
             .order('created_at', { ascending: true });
-        if (data) setCards(data);
+        if (data) setCards(data as any);
         setLoading(false);
     };
 
     const handleCardSelect = (card: Card | null) => {
         setSelectedCard(card);
+        setActiveLang('en');
         if (card) {
             setFormData({
                 name: card.name,
                 description: card.description || '',
                 usage_examples: card.usage_examples || '',
-                image_url: card.image_url || ''
+                image_url: card.image_url || '',
+                translations: {
+                    ru: {
+                        name: card.translations?.ru?.name || '',
+                        description: card.translations?.ru?.description || '',
+                        usage_examples: card.translations?.ru?.usage_examples || ''
+                    },
+                    ua: {
+                        name: card.translations?.ua?.name || '',
+                        description: card.translations?.ua?.description || '',
+                        usage_examples: card.translations?.ua?.usage_examples || ''
+                    }
+                }
             });
         } else {
-            setFormData({ name: '', description: '', usage_examples: '', image_url: '' });
+            setFormData({
+                name: '',
+                description: '',
+                usage_examples: '',
+                image_url: '',
+                translations: {
+                    ru: { name: '', description: '', usage_examples: '' },
+                    ua: { name: '', description: '', usage_examples: '' }
+                }
+            });
         }
     };
 
@@ -62,15 +97,18 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
         }
         const supabase = createClient(token);
 
+        const cardData = {
+            name: formData.name,
+            description: formData.description,
+            usage_examples: formData.usage_examples,
+            image_url: formData.image_url,
+            translations: formData.translations
+        };
+
         if (selectedCard) {
             const { error } = await supabase
                 .from('cards')
-                .update({
-                    name: formData.name,
-                    description: formData.description,
-                    usage_examples: formData.usage_examples,
-                    image_url: formData.image_url
-                })
+                .update(cardData)
                 .eq('id', selectedCard.id);
 
             if (error) {
@@ -78,17 +116,13 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                 alert(`Failed to update card: ${error.message}`);
             } else {
                 fetchCards();
-                // Keep selected to allow further edits or clear? Let's keep.
             }
         } else {
             const { error } = await supabase
                 .from('cards')
                 .insert({
                     deck_id: deck.id,
-                    name: formData.name,
-                    description: formData.description,
-                    usage_examples: formData.usage_examples,
-                    image_url: formData.image_url
+                    ...cardData
                 });
 
             if (error) {
@@ -116,6 +150,30 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
             fetchCards();
             if (selectedCard?.id === id) handleCardSelect(null);
         }
+    };
+
+    const updateField = (field: string, value: string) => {
+        if (activeLang === 'en') {
+            setFormData({ ...formData, [field]: value });
+        } else {
+            setFormData({
+                ...formData,
+                translations: {
+                    ...formData.translations,
+                    [activeLang]: {
+                        ...(formData.translations as any)[activeLang],
+                        [field]: value
+                    }
+                }
+            });
+        }
+    };
+
+    const getValue = (field: string) => {
+        if (activeLang === 'en') {
+            return (formData as any)[field];
+        }
+        return (formData.translations as any)[activeLang]?.[field] || '';
     };
 
     return (
@@ -177,14 +235,29 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                     )}
                 </div>
 
+                <div className="flex gap-2 mb-6 border-b border-white/10 pb-2">
+                    {['en', 'ru', 'ua'].map((lang) => (
+                        <button
+                            key={lang}
+                            onClick={() => setActiveLang(lang)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
+                                ? 'bg-primary text-white'
+                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            {lang.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                         <label className="block">
-                            <span className="text-white/70 text-sm font-medium">Card Name</span>
+                            <span className="text-white/70 text-sm font-medium">Card Name ({activeLang.toUpperCase()})</span>
                             <input
                                 type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                value={getValue('name')}
+                                onChange={(e) => updateField('name', e.target.value)}
                                 className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
                                 placeholder="e.g. The Magic Sword"
                             />
@@ -209,19 +282,19 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                     </div>
                     <div className="space-y-4">
                         <label className="block">
-                            <span className="text-white/70 text-sm font-medium">Description</span>
+                            <span className="text-white/70 text-sm font-medium">Description ({activeLang.toUpperCase()})</span>
                             <textarea
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                value={getValue('description')}
+                                onChange={(e) => updateField('description', e.target.value)}
                                 className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary h-24"
                                 placeholder="Card description..."
                             />
                         </label>
                         <label className="block">
-                            <span className="text-white/70 text-sm font-medium">Usage Examples</span>
+                            <span className="text-white/70 text-sm font-medium">Usage Examples ({activeLang.toUpperCase()})</span>
                             <textarea
-                                value={formData.usage_examples}
-                                onChange={(e) => setFormData({ ...formData, usage_examples: e.target.value })}
+                                value={getValue('usage_examples')}
+                                onChange={(e) => updateField('usage_examples', e.target.value)}
                                 className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary h-24"
                                 placeholder="Examples of how to use this card..."
                             />

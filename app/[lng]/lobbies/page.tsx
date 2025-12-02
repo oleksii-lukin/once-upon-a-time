@@ -2,8 +2,11 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import LobbyList from '@/components/lobby/LobbyList';
 import CreateLobbyButton from '@/components/lobby/CreateLobbyButton';
+import { useTranslation } from '@/app/i18n/server';
 
-export default async function LobbiesPage() {
+export default async function LobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
+    const { lng } = await params;
+    const { t } = await useTranslation(lng, 'common');
     const supabase = await createClient();
     const { data: lobbies } = await supabase
         .from('lobbies')
@@ -20,13 +23,13 @@ export default async function LobbiesPage() {
                                 <path clipRule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fillRule="evenodd"></path>
                             </svg>
                         </div>
-                        <h2 className="text-gray-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Once Upon a Time</h2>
+                        <h2 className="text-gray-800 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">{t('title')}</h2>
                     </div>
                     <div className="flex flex-1 justify-end items-center gap-4 md:gap-8">
                         <div className="hidden md:flex items-center gap-9">
-                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Lobby</Link>
-                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Rules</Link>
-                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Profile</Link>
+                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">{t('lobby_nav')}</Link>
+                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">{t('rules_nav')}</Link>
+                            <Link className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">{t('profile_nav')}</Link>
                         </div>
                         <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCLjMNnIlFsl13nBUCg4K6TsmL_GQXWVw7ZVYiGdHLxEcsgSwYA2raqQ8iC3j3_TGZXC7m88NoZ5e__kWcuwcsawmkqAovv7yeuczyXQpDhPGsvmyyLcEhQgtd4vJ05ploqkTY7gwUjV3uk971d3hNZJg3fxuAm1Mm3-QC9cM3p6IzR741ZQ4dipOGpz3mcWUaKhYspl0l3k78pEhEenISfq60OpxKDw125nnse8YJISRlIsQzxGUXeirnNgBvCcz1lzLyyJwfmgE4")' }}></div>
                     </div>
@@ -36,8 +39,8 @@ export default async function LobbiesPage() {
                         <div className="lg:col-span-2 flex flex-col gap-6">
                             <div className="flex flex-wrap justify-between items-center gap-4">
                                 <div className="flex flex-col gap-2">
-                                    <h1 className="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Game Lobby</h1>
-                                    <p className="text-gray-500 dark:text-gray-400 text-base font-normal leading-normal">Join an existing story or create your own.</p>
+                                    <h1 className="text-gray-900 dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">{t('game_lobby')}</h1>
+                                    <p className="text-gray-500 dark:text-gray-400 text-base font-normal leading-normal">{t('lobby_subtitle')}</p>
                                 </div>
                                 <CreateLobbyButton />
                             </div>
@@ -47,13 +50,13 @@ export default async function LobbiesPage() {
                                         <div className="text-gray-400 flex border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 items-center justify-center pl-4 rounded-l-lg border-r-0">
                                             <span className="material-symbols-outlined text-gray-500 dark:text-gray-400">search</span>
                                         </div>
-                                        <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder="Search by room name or host..." />
+                                        <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder={t('search_placeholder')} />
                                     </div>
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-12 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-base font-normal leading-normal" placeholder="Enter join code..." />
+                                    <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-12 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-base font-normal leading-normal" placeholder={t('enter_join_code')} />
                                     <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-gray-200 dark:bg-white/20 text-gray-800 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-300 dark:hover:bg-white/30 transition-colors">
-                                        <span className="truncate">Join</span>
+                                        <span className="truncate">{t('join')}</span>
                                     </button>
                                 </div>
                             </div>
@@ -65,21 +68,21 @@ export default async function LobbiesPage() {
                             <div className="bg-gray-50 dark:bg-white/5 border border-gray-200/20 dark:border-white/20 rounded-xl p-6 flex flex-col items-center text-center">
                                 <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-24 mb-4" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfOcnWFece1f9jqLZn49-SyxGRlPeKFeCoxMut4qG_kGADjNWETlfQxQ-EfOho1UO4N2xhsvKRCDDGdZ-w4TYJIaGZtKzHttHhZkr26SB88aBTdqHkNP36IfEaBDG8lpmVW5Hzw2FVfm91BHVQ_zkA2LxQrJQD3Lu8UWhKODndJ45mFLX4QTHG4ReOlHg9CS-3rHbyKmVy1x9iUMD8AbbJH2Egedss5BeGukR8ywRmpQeyPx1d5CwVEGKtDXW26ko_MmfZTnbRQ5s")' }}></div>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">AlexDoe</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Storyteller Extraordinaire</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{t('storyteller_extraordinaire')}</p>
                                 <div className="w-full h-px bg-gray-200/20 dark:bg-white/20 my-4"></div>
                                 <div className="grid grid-cols-2 gap-4 w-full">
                                     <div className="flex flex-col">
                                         <span className="text-lg font-bold text-primary">42</span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">Games Played</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('games_played')}</span>
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-lg font-bold text-primary">15</span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">Games Won</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('games_won')}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="bg-gray-50 dark:bg-white/5 border border-gray-200/20 dark:border-white/20 rounded-xl p-6">
-                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Online Friends</h4>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('online_friends')}</h4>
                                 <div className="flex flex-col gap-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -89,7 +92,7 @@ export default async function LobbiesPage() {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-sm text-gray-800 dark:text-white">JaneSmith</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">In Lobby</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{t('in_lobby')}</p>
                                             </div>
                                         </div>
                                         <button className="text-primary hover:text-primary/80 transition-colors">
@@ -104,7 +107,7 @@ export default async function LobbiesPage() {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-sm text-gray-800 dark:text-white">MikeP</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">In Game</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{t('in_game')}</p>
                                             </div>
                                         </div>
                                         <button className="text-primary hover:text-primary/80 transition-colors">
@@ -119,7 +122,7 @@ export default async function LobbiesPage() {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-sm text-gray-800 dark:text-white">StoryMaster</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Offline</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">{t('offline')}</p>
                                             </div>
                                         </div>
                                         <button className="text-primary hover:text-primary/80 transition-colors">

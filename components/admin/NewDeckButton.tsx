@@ -2,11 +2,15 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useState } from 'react';
+import { useTranslation } from '@/app/i18n/client';
 
 export default function NewDeckButton() {
     const router = useRouter();
+    const params = useParams();
+    const lng = params.lng as string;
+    const { t } = useTranslation(lng, 'common');
     const { getToken } = useAuth();
     const [loading, setLoading] = useState(false);
 
@@ -29,8 +33,8 @@ export default function NewDeckButton() {
             const { data, error } = await supabase
                 .from('decks')
                 .insert({
-                    name: 'New Draft Deck',
-                    description: 'Description of your new deck',
+                    name: t('new_draft_deck'),
+                    description: t('deck_description'),
                     is_active: false
                 })
                 .select()
@@ -41,7 +45,7 @@ export default function NewDeckButton() {
                 alert(`Failed to create deck: ${error.message}`);
                 setLoading(false);
             } else if (data) {
-                router.push(`/admin/decks/${data.id}`);
+                router.push(`/${lng}/admin/decks/${data.id}`);
             }
         } catch (err) {
             console.error('Unexpected error:', err);
@@ -56,7 +60,7 @@ export default function NewDeckButton() {
             disabled={loading}
             className="flex items-center justify-center h-9 px-4 rounded-lg bg-[#302839] hover:bg-[#3d3247] text-white text-sm font-medium transition-colors disabled:opacity-50"
         >
-            {loading ? 'Creating...' : 'New Deck'}
+            {loading ? t('creating_deck') : t('new_deck')}
         </button>
     );
 }

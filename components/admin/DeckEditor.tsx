@@ -88,7 +88,11 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
     };
 
     const handleSave = async () => {
-        if (!formData.name) return;
+        console.log('handleSave called', { formData, selectedCard });
+        if (!formData.name) {
+            console.log('Name is missing');
+            return;
+        }
 
         const token = await getToken({ template: 'supabase' });
         if (!token) {
@@ -97,39 +101,56 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
         }
         const supabase = createClient(token);
 
+        // Include 'en' in translations to match seed data structure
+        const translationsToSave = {
+            ...formData.translations,
+            en: {
+                name: formData.name,
+                description: formData.description,
+                usage_examples: formData.usage_examples
+            }
+        };
+
         const cardData = {
             name: formData.name,
             description: formData.description,
             usage_examples: formData.usage_examples,
-            image_url: formData.image_url,
-            translations: formData.translations
+            image_url: formData.image_url || null, // Send null if empty
+            translations: translationsToSave
         };
 
+        console.log('Sending card data:', cardData);
+
         if (selectedCard) {
-            const { error } = await supabase
+            const { error, data } = await supabase
                 .from('cards')
                 .update(cardData)
-                .eq('id', selectedCard.id);
+                .eq('id', selectedCard.id)
+                .select();
 
             if (error) {
                 console.error('Error updating card:', error);
                 alert(`Failed to update card: ${error.message}`);
             } else {
-                fetchCards();
+                console.log('Update success:', data);
+                await fetchCards();
+                // Keep the form as is, but maybe show a success indicator?
             }
         } else {
-            const { error } = await supabase
+            const { error, data } = await supabase
                 .from('cards')
                 .insert({
                     deck_id: deck.id,
                     ...cardData
-                });
+                })
+                .select();
 
             if (error) {
                 console.error('Error creating card:', error);
                 alert(`Failed to create card: ${error.message}`);
             } else {
-                fetchCards();
+                console.log('Create success:', data);
+                await fetchCards();
                 handleCardSelect(null); // Clear form after add
             }
         }
@@ -177,10 +198,10 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
     };
 
     return (
-        <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-4">
+        <div className="h-full grid grid-rows-2 gap-8">
+            <div className="flex flex-col gap-4 min-h-0">
                 <h2 className="text-white text-xl font-bold">Cards ({cards.length})</h2>
-                <div className="overflow-hidden rounded-lg border border-white/10 bg-[#141118]">
+                <div className="flex-1 overflow-auto rounded-lg border border-white/10 bg-[#141118]">
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#211c27] text-left">
@@ -220,7 +241,7 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                 </div>
             </div>
 
-            <div className="bg-[#211c27] p-6 rounded-xl border border-white/10">
+            <div className="bg-[#211c27] p-6 rounded-xl border border-white/10 overflow-auto">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-white text-lg font-bold">
                         {selectedCard ? 'Edit Card' : 'Add New Card'}

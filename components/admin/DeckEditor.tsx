@@ -8,6 +8,8 @@ import ImageUpload from './ImageUpload';
 
 type Deck = Database['public']['Tables']['decks']['Row'];
 type Card = Database['public']['Tables']['cards']['Row'] & {
+    type: 'story' | 'ending';
+    category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null;
     translations?: {
         [key: string]: {
             name: string;
@@ -27,6 +29,8 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
         description: '',
         usage_examples: '',
         image_url: '',
+        type: 'story' as 'story' | 'ending',
+        category: 'protagonist' as 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null,
         translations: {
             ru: { name: '', description: '', usage_examples: '' },
             ua: { name: '', description: '', usage_examples: '' }
@@ -46,7 +50,9 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
             .from('cards')
             .select('*')
             .eq('deck_id', deck.id)
-            .order('created_at', { ascending: true });
+            .order('type', { ascending: true })
+            .order('category', { ascending: true })
+            .order('name', { ascending: true });
         if (data) setCards(data as any);
         setLoading(false);
     };
@@ -60,6 +66,8 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                 description: card.description || '',
                 usage_examples: card.usage_examples || '',
                 image_url: card.image_url || '',
+                type: card.type || 'story',
+                category: card.category || 'protagonist',
                 translations: {
                     ru: {
                         name: card.translations?.ru?.name || '',
@@ -79,6 +87,8 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                 description: '',
                 usage_examples: '',
                 image_url: '',
+                type: 'story',
+                category: 'protagonist',
                 translations: {
                     ru: { name: '', description: '', usage_examples: '' },
                     ua: { name: '', description: '', usage_examples: '' }
@@ -116,6 +126,8 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
             description: formData.description,
             usage_examples: formData.usage_examples,
             image_url: formData.image_url || null, // Send null if empty
+            type: formData.type,
+            category: formData.type === 'story' ? formData.category : null,
             translations: translationsToSave
         };
 
@@ -205,6 +217,7 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                     <table className="w-full">
                         <thead>
                             <tr className="bg-[#211c27] text-left">
+                                <th className="px-4 py-3 text-sm font-medium text-white/70">Type</th>
                                 <th className="px-4 py-3 text-sm font-medium text-white/70">Name</th>
                                 <th className="px-4 py-3 text-sm font-medium text-white/70">Description</th>
                                 <th className="px-4 py-3 text-sm font-medium text-white/70">Actions</th>
@@ -217,6 +230,11 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                                     className={`hover:bg-white/5 transition-colors cursor-pointer ${selectedCard?.id === card.id ? 'bg-white/10' : ''}`}
                                     onClick={() => handleCardSelect(card)}
                                 >
+                                    <td className="px-4 py-3 text-sm text-white/60">
+                                        {card.type === 'ending'
+                                            ? 'Ending'
+                                            : (card.category ? card.category.charAt(0).toUpperCase() + card.category.slice(1) : 'Story')}
+                                    </td>
                                     <td className="px-4 py-3 text-sm text-white font-medium">{card.name}</td>
                                     <td className="px-4 py-3 text-sm text-white/60 truncate max-w-xs">{card.description}</td>
                                     <td className="px-4 py-3">
@@ -283,6 +301,36 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                                 placeholder="e.g. The Magic Sword"
                             />
                         </label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <label className="block">
+                                <span className="text-white/70 text-sm font-medium">Type</span>
+                                <select
+                                    value={formData.type}
+                                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                                    className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
+                                >
+                                    <option value="story">Story</option>
+                                    <option value="ending">Ending</option>
+                                </select>
+                            </label>
+                            {formData.type === 'story' && (
+                                <label className="block">
+                                    <span className="text-white/70 text-sm font-medium">Category</span>
+                                    <select
+                                        value={formData.category || 'protagonist'}
+                                        onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                                        className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
+                                    >
+                                        <option value="protagonist">Protagonist</option>
+                                        <option value="antagonist">Antagonist</option>
+                                        <option value="setting">Setting</option>
+                                        <option value="object">Object</option>
+                                        <option value="catalyst">Catalyst</option>
+                                        <option value="trait">Trait</option>
+                                    </select>
+                                </label>
+                            )}
+                        </div>
                         <div className="space-y-2">
                             <span className="text-white/70 text-sm font-medium">Card Image</span>
                             <ImageUpload

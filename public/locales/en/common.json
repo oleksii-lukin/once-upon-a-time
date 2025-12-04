@@ -70,5 +70,12 @@
     "spectate": "Spectate",
     "waiting": "Waiting",
     "playing": "Playing",
-    "finished": "Finished"
+    "finished": "Finished",
+    "lobby_not_found": "Lobby not found",
+    "failed_to_join": "Failed to join lobby",
+    "unexpected_error": "An unexpected error occurred",
+    "error": "Error",
+    "back_to_home": "Back to Home",
+    "joining_lobby": "Joining lobby...",
+    "finding_lobby": "Finding lobby..."
 }

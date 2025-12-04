@@ -70,5 +70,12 @@
     "spectate": "Спостерігати",
     "waiting": "Очікування",
     "playing": "Грає",
-    "finished": "Завершено"
+    "finished": "Завершено",
+    "lobby_not_found": "Лобі не знайдено",
+    "failed_to_join": "Не вдалося приєднатися до лобі",
+    "unexpected_error": "Сталася неочікувана помилка",
+    "error": "Помилка",
+    "back_to_home": "Повернутися на головну",
+    "joining_lobby": "Приєднання до лобі...",
+    "finding_lobby": "Пошук лобі..."
 }

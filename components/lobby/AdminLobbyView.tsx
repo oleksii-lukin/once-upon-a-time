@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/supabase/types';
+import { useParams } from 'next/navigation';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -14,34 +15,127 @@ interface AdminLobbyViewProps {
 
 export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyViewProps) {
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
+    const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby);
     const supabase = createClient();
+    const params = useParams();
+    const lng = params.lng as string;
 
-    // Settings state
     const [roomName, setRoomName] = useState(lobby.name);
-    // ... other settings can be derived from lobby.settings if we had them structured
-    // For now, keep local state for UI demo, but ideally sync with DB
-    const [allowHotJoin, setAllowHotJoin] = useState(true);
-    const [publicGame, setPublicGame] = useState(true);
-    const [allowSpectators, setAllowSpectators] = useState(true);
-    const [allowInterrupts, setAllowInterrupts] = useState(true);
-    const [timerPerTurn, setTimerPerTurn] = useState(false);
-    const [happyEnding, setHappyEnding] = useState(false);
+
+    // Default settings
+    const defaultSettings = {
+        allowHotJoin: true,
+        publicGame: true,
+        allowSpectators: true,
+        allowInterrupts: true,
+        timerPerTurn: false,
+        happyEnding: false,
+        expansions: {
+            core: true,
+            enchanted: false,
+            seafaring: false,
+            all: false
+        }
+    };
+
+    // Initialize settings from lobby data or defaults
+    const [settings, setSettings] = useState(() => {
+        if (lobby.settings && typeof lobby.settings === 'object') {
+            return { ...defaultSettings, ...(lobby.settings as any) };
+        }
+        return defaultSettings;
+    });
+
+    const [copiedLink, setCopiedLink] = useState(false);
+    const [copiedCode, setCopiedCode] = useState(false);
+
+    // Generate invite link based on current URL
+    const inviteLink = typeof window !== 'undefined'
+        ? `${window.location.origin}/${lng}/invite/${currentLobby.code}`
+        : '';
+
+    const copyToClipboard = async (text: string, type: 'link' | 'code') => {
+        try {
+            await navigator.clipboard.writeText(text);
+            if (type === 'link') {
+                setCopiedLink(true);
+                setTimeout(() => setCopiedLink(false), 2000);
+            } else {
+                setCopiedCode(true);
+                setTimeout(() => setCopiedCode(false), 2000);
+            }
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
+
+    // Update lobby name in database
+    const updateLobbyName = async (newName: string) => {
+        const { error } = await supabase
+            .from('lobbies')
+            .update({ name: newName })
+            .eq('id', lobby.id);
+
+        if (error) {
+            console.error('Error updating lobby name:', error);
+        }
+    };
+
+    // Update settings in database
+    const updateSettings = async (newSettings: Partial<typeof defaultSettings>) => {
+        const updated = { ...settings, ...newSettings };
+        setSettings(updated);
+
+        const { error } = await supabase
+            .from('lobbies')
+            .update({ settings: updated as any })
+            .eq('id', lobby.id);
+
+        if (error) {
+            console.error('Error updating settings:', error);
+        }
+    };
+
+    const toggleExpansion = (key: keyof typeof settings.expansions) => {
+        const newExpansions = { ...settings.expansions, [key]: !settings.expansions[key] };
+        updateSettings({ expansions: newExpansions });
+    };
 
     useEffect(() => {
-        const channel = supabase
-            .channel(`lobby:${lobby.id}`)
+        // Subscribe to player changes
+        const playersChannel = supabase
+            .channel(`lobby:${lobby.id}:players`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'players', filter: `lobby_id=eq.${lobby.id}` },
                 (payload) => {
-                    // Refresh players
                     fetchPlayers();
                 }
             )
             .subscribe();
 
+        // Subscribe to lobby changes
+        const lobbyChannel = supabase
+            .channel(`lobby:${lobby.id}:settings`)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'lobbies', filter: `id=eq.${lobby.id}` },
+                (payload) => {
+                    if (payload.new) {
+                        const updatedLobby = payload.new as Lobby;
+                        setCurrentLobby(updatedLobby);
+                        setRoomName(updatedLobby.name);
+                        if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
+                            setSettings({ ...defaultSettings, ...(updatedLobby.settings as any) });
+                        }
+                    }
+                }
+            )
+            .subscribe();
+
         return () => {
-            supabase.removeChannel(channel);
+            supabase.removeChannel(playersChannel);
+            supabase.removeChannel(lobbyChannel);
         };
     }, [lobby.id, supabase]);
 
@@ -51,16 +145,6 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
             .select('*')
             .eq('lobby_id', lobby.id);
         if (data) setPlayers(data);
-    };
-    const [expansions, setExpansions] = useState({
-        core: true,
-        enchanted: false,
-        seafaring: false,
-        all: false
-    });
-
-    const toggleExpansion = (key: keyof typeof expansions) => {
-        setExpansions(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     return (
@@ -99,45 +183,46 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                             className="form-input flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal"
                                                             value={roomName}
                                                             onChange={(e) => setRoomName(e.target.value)}
+                                                            onBlur={() => updateLobbyName(roomName)}
                                                         />
                                                     </label>
                                                 </div>
                                                 <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">Allow Hot Join</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">Allow Hot Join</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
                                                                 id="allow-hot-join"
                                                                 type="checkbox"
-                                                                checked={allowHotJoin}
-                                                                onChange={(e) => setAllowHotJoin(e.target.checked)}
+                                                                checked={settings.allowHotJoin}
+                                                                onChange={(e) => updateSettings({ allowHotJoin: e.target.checked })}
                                                             />
                                                             <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                         </label>
                                                     </div>
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">Public Game</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">Public Game</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
                                                                 id="game-visibility"
                                                                 type="checkbox"
-                                                                checked={publicGame}
-                                                                onChange={(e) => setPublicGame(e.target.checked)}
+                                                                checked={settings.publicGame}
+                                                                onChange={(e) => updateSettings({ publicGame: e.target.checked })}
                                                             />
                                                             <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                         </label>
                                                     </div>
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">Allow Spectators</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">Allow Spectators</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
                                                                 id="allow-spectators"
                                                                 type="checkbox"
-                                                                checked={allowSpectators}
-                                                                onChange={(e) => setAllowSpectators(e.target.checked)}
+                                                                checked={settings.allowSpectators}
+                                                                onChange={(e) => updateSettings({ allowSpectators: e.target.checked })}
                                                             />
                                                             <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                         </label>
@@ -150,9 +235,22 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                     <div>
                                                         <p className="text-white/70 text-sm font-medium leading-normal pb-2">Share Invite Link</p>
                                                         <div className="flex items-center gap-2">
-                                                            <input className="form-input text-sm w-full rounded-lg text-white/90 border border-white/10 bg-[#211c27] h-11 px-3" readOnly type="text" defaultValue="https://game.ouat/invite/aB3xZ9" />
-                                                            <button className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                                                                <span className="material-symbols-outlined text-xl">content_copy</span>
+                                                            <input
+                                                                className="form-input text-sm w-full rounded-lg text-white/90 border border-white/10 bg-[#211c27] h-11 px-3"
+                                                                readOnly
+                                                                type="text"
+                                                                value={inviteLink}
+                                                            />
+                                                            <button
+                                                                onClick={() => copyToClipboard(inviteLink, 'link')}
+                                                                className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors relative"
+                                                                title="Copy invite link"
+                                                            >
+                                                                {copiedLink ? (
+                                                                    <span className="material-symbols-outlined text-xl text-green-400">check</span>
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-xl">content_copy</span>
+                                                                )}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -160,10 +258,18 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         <p className="text-white/70 text-sm font-medium leading-normal pb-2">Or use Room Code</p>
                                                         <div className="flex items-center gap-2">
                                                             <div className="flex items-center justify-center w-full rounded-lg border-2 border-dashed border-white/20 h-11">
-                                                                <p className="text-white font-bold text-lg tracking-widest">AB3XZ9</p>
+                                                                <p className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</p>
                                                             </div>
-                                                            <button className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                                                                <span className="material-symbols-outlined text-xl">autorenew</span>
+                                                            <button
+                                                                onClick={() => copyToClipboard(currentLobby.code || '', 'code')}
+                                                                className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                                                title="Copy room code"
+                                                            >
+                                                                {copiedCode ? (
+                                                                    <span className="material-symbols-outlined text-xl text-green-400">check</span>
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-xl">content_copy</span>
+                                                                )}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -176,7 +282,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                                             <div className="flex items-center justify-between py-2">
                                                 <div className="flex items-center gap-2">
-                                                    <label className={`text-base font-medium leading-normal transition-colors ${allowInterrupts ? 'text-white' : 'text-white/40'}`} htmlFor="allow-interrupts">Allow Interrupts</label>
+                                                    <label className={`text-base font-medium leading-normal transition-colors ${settings.allowInterrupts ? 'text-white' : 'text-white/40'}`} htmlFor="allow-interrupts">Allow Interrupts</label>
                                                     <button className="text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-base">info</span></button>
                                                 </div>
                                                 <label className="relative inline-flex cursor-pointer items-center">
@@ -184,34 +290,34 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         className="peer sr-only"
                                                         id="allow-interrupts"
                                                         type="checkbox"
-                                                        checked={allowInterrupts}
-                                                        onChange={(e) => setAllowInterrupts(e.target.checked)}
+                                                        checked={settings.allowInterrupts}
+                                                        onChange={(e) => updateSettings({ allowInterrupts: e.target.checked })}
                                                     />
                                                     <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                 </label>
                                             </div>
                                             <div className="flex items-center justify-between py-2">
-                                                <label className={`text-base font-medium leading-normal transition-colors ${timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">Timer per Turn</label>
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">Timer per Turn</label>
                                                 <label className="relative inline-flex cursor-pointer items-center">
                                                     <input
                                                         className="peer sr-only"
                                                         id="timer-per-turn"
                                                         type="checkbox"
-                                                        checked={timerPerTurn}
-                                                        onChange={(e) => setTimerPerTurn(e.target.checked)}
+                                                        checked={settings.timerPerTurn}
+                                                        onChange={(e) => updateSettings({ timerPerTurn: e.target.checked })}
                                                     />
                                                     <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                 </label>
                                             </div>
                                             <div className="flex items-center justify-between py-2">
-                                                <label className={`text-base font-medium leading-normal transition-colors ${happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">Happy Ending Variant</label>
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">Happy Ending Variant</label>
                                                 <label className="relative inline-flex cursor-pointer items-center">
                                                     <input
                                                         className="peer sr-only"
                                                         id="happy-ending"
                                                         type="checkbox"
-                                                        checked={happyEnding}
-                                                        onChange={(e) => setHappyEnding(e.target.checked)}
+                                                        checked={settings.happyEnding}
+                                                        onChange={(e) => updateSettings({ happyEnding: e.target.checked })}
                                                     />
                                                     <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                 </label>
@@ -223,41 +329,41 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                         <div className="flex flex-col">
                                             <p className="text-white text-base font-medium leading-normal pb-2">Included Packs</p>
                                             <div className="space-y-2">
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${expansions.core ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
+                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.core ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
                                                     <input
                                                         className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
                                                         type="checkbox"
-                                                        checked={expansions.core}
+                                                        checked={settings.expansions.core}
                                                         onChange={() => toggleExpansion('core')}
                                                     />
-                                                    <span className={`font-medium transition-colors ${expansions.core ? 'text-white' : 'text-white/60'}`}>Core Set Only</span>
+                                                    <span className={`font-medium transition-colors ${settings.expansions.core ? 'text-white' : 'text-white/60'}`}>Core Set Only</span>
                                                 </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${expansions.enchanted ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
+                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.enchanted ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
                                                     <input
                                                         className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
                                                         type="checkbox"
-                                                        checked={expansions.enchanted}
+                                                        checked={settings.expansions.enchanted}
                                                         onChange={() => toggleExpansion('enchanted')}
                                                     />
-                                                    <span className={`font-medium transition-colors ${expansions.enchanted ? 'text-white' : 'text-white/60'}`}>Enchanted Forest</span>
+                                                    <span className={`font-medium transition-colors ${settings.expansions.enchanted ? 'text-white' : 'text-white/60'}`}>Enchanted Forest</span>
                                                 </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${expansions.seafaring ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
+                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.seafaring ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
                                                     <input
                                                         className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
                                                         type="checkbox"
-                                                        checked={expansions.seafaring}
+                                                        checked={settings.expansions.seafaring}
                                                         onChange={() => toggleExpansion('seafaring')}
                                                     />
-                                                    <span className={`font-medium transition-colors ${expansions.seafaring ? 'text-white' : 'text-white/60'}`}>Seafaring Sagas</span>
+                                                    <span className={`font-medium transition-colors ${settings.expansions.seafaring ? 'text-white' : 'text-white/60'}`}>Seafaring Sagas</span>
                                                 </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${expansions.all ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
+                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.all ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
                                                     <input
                                                         className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
                                                         type="checkbox"
-                                                        checked={expansions.all}
+                                                        checked={settings.expansions.all}
                                                         onChange={() => toggleExpansion('all')}
                                                     />
-                                                    <span className={`font-medium transition-colors ${expansions.all ? 'text-white' : 'text-white/60'}`}>All Expansions</span>
+                                                    <span className={`font-medium transition-colors ${settings.expansions.all ? 'text-white' : 'text-white/60'}`}>All Expansions</span>
                                                 </label>
                                             </div>
                                         </div>

@@ -41,32 +41,41 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          category: string | null
           created_at: string
           deck_id: string
           description: string | null
           id: string
           image_url: string | null
           name: string
+          translations: Json
+          type: string
           updated_at: string
           usage_examples: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           deck_id: string
           description?: string | null
           id?: string
           image_url?: string | null
           name: string
+          translations?: Json
+          type?: string
           updated_at?: string
           usage_examples?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           deck_id?: string
           description?: string | null
           id?: string
           image_url?: string | null
           name?: string
+          translations?: Json
+          type?: string
           updated_at?: string
           usage_examples?: string | null
         }
@@ -79,6 +88,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      debug_auth_logs: {
+        Row: {
+          auth_role: string | null
+          auth_uid: string | null
+          id: string
+          jwt_claims: Json | null
+          timestamp: string | null
+        }
+        Insert: {
+          auth_role?: string | null
+          auth_uid?: string | null
+          id?: string
+          jwt_claims?: Json | null
+          timestamp?: string | null
+        }
+        Update: {
+          auth_role?: string | null
+          auth_uid?: string | null
+          id?: string
+          jwt_claims?: Json | null
+          timestamp?: string | null
+        }
+        Relationships: []
       }
       decks: {
         Row: {
@@ -110,12 +143,112 @@ export type Database = {
         }
         Relationships: []
       }
+      draw_pile: {
+        Row: {
+          card_id: string
+          created_at: string
+          game_session_id: string
+          id: string
+          position: number
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          game_session_id: string
+          id?: string
+          position?: number
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          game_session_id?: string
+          id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draw_pile_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draw_pile_game_session_id_fkey"
+            columns: ["game_session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_sessions: {
+        Row: {
+          created_at: string
+          current_turn_player_id: string | null
+          deck_id: string
+          id: string
+          lobby_id: string
+          storyteller_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_turn_player_id?: string | null
+          deck_id: string
+          id?: string
+          lobby_id: string
+          storyteller_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_turn_player_id?: string | null
+          deck_id?: string
+          id?: string
+          lobby_id?: string
+          storyteller_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_current_turn_player_id_fkey"
+            columns: ["current_turn_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_sessions_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_sessions_lobby_id_fkey"
+            columns: ["lobby_id"]
+            isOneToOne: false
+            referencedRelation: "lobbies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_sessions_storyteller_id_fkey"
+            columns: ["storyteller_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lobbies: {
         Row: {
           code: string
           created_at: string
           created_by: string
+          deck_id: string | null
           id: string
+          language: string
           name: string
           settings: Json
           status: string
@@ -124,7 +257,9 @@ export type Database = {
           code: string
           created_at?: string
           created_by: string
+          deck_id?: string | null
           id?: string
+          language?: string
           name: string
           settings?: Json
           status?: string
@@ -133,12 +268,120 @@ export type Database = {
           code?: string
           created_at?: string
           created_by?: string
+          deck_id?: string | null
           id?: string
+          language?: string
           name?: string
           settings?: Json
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lobbies_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      played_cards: {
+        Row: {
+          card_id: string
+          game_session_id: string
+          id: string
+          played_at: string
+          player_id: string
+          position: number
+        }
+        Insert: {
+          card_id: string
+          game_session_id: string
+          id?: string
+          played_at?: string
+          player_id: string
+          position?: number
+        }
+        Update: {
+          card_id?: string
+          game_session_id?: string
+          id?: string
+          played_at?: string
+          player_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "played_cards_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "played_cards_game_session_id_fkey"
+            columns: ["game_session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "played_cards_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_hands: {
+        Row: {
+          card_id: string
+          created_at: string
+          game_session_id: string
+          id: string
+          player_id: string
+          position: number
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          game_session_id: string
+          id?: string
+          player_id: string
+          position?: number
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          game_session_id?: string
+          id?: string
+          player_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_hands_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_hands_game_session_id_fkey"
+            columns: ["game_session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_hands_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       players: {
         Row: {
@@ -183,7 +426,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_current_auth_state: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/supabase/types';
 import { useParams } from 'next/navigation';
+import { initializeGame } from '@/app/actions/game';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
+type Deck = Database['public']['Tables']['decks']['Row'];
 
 interface AdminLobbyViewProps {
     lobby: Lobby;
@@ -21,6 +23,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
     const lng = params.lng as string;
 
     const [roomName, setRoomName] = useState(lobby.name);
+    const [decks, setDecks] = useState<Deck[]>([]);
 
     // Default settings
     const defaultSettings = {
@@ -30,12 +33,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
         allowInterrupts: true,
         timerPerTurn: false,
         happyEnding: false,
-        expansions: {
-            core: true,
-            enchanted: false,
-            seafaring: false,
-            all: false
-        }
+        selectedDecks: [] as string[],
     };
 
     // Initialize settings from lobby data or defaults
@@ -96,10 +94,67 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
         }
     };
 
-    const toggleExpansion = (key: keyof typeof settings.expansions) => {
-        const newExpansions = { ...settings.expansions, [key]: !settings.expansions[key] };
-        updateSettings({ expansions: newExpansions });
+    const [isStarting, setIsStarting] = useState(false);
+    const [selectedDecks, setSelectedDecks] = useState<string[]>(
+        (lobby.settings && typeof lobby.settings === 'object' && (lobby.settings as any).selectedDecks) || []
+    );
+
+    // Update selected decks in settings
+    const updateSelectedDecks = async (newSelectedDecks: string[]) => {
+        setSelectedDecks(newSelectedDecks);
+        await updateSettings({ selectedDecks: newSelectedDecks });
     };
+
+    const startGame = async () => {
+        if (selectedDecks.length === 0) {
+            alert('Please select at least one deck before starting the game');
+            return;
+        }
+
+        setIsStarting(true);
+
+        // Combine all selected decks into one for the game
+        // For now, we'll use the first selected deck as the primary deck
+        const primaryDeckId = selectedDecks[0];
+
+        // Update lobby with primary deck
+        await supabase
+            .from('lobbies')
+            .update({ deck_id: primaryDeckId })
+            .eq('id', lobby.id);
+
+        // Initialize game state (create session, deal cards, etc.)
+        const result = await initializeGame(lobby.id);
+
+        if (result.error) {
+            alert(`Failed to start game: ${result.error}`);
+            setIsStarting(false);
+            return;
+        }
+
+        // Update lobby status to playing
+        const { error } = await supabase
+            .from('lobbies')
+            .update({ status: 'playing' })
+            .eq('id', lobby.id);
+
+        if (error) {
+            console.error('Error starting game:', error);
+            setIsStarting(false);
+        }
+    };
+
+    // Fetch available decks
+    useEffect(() => {
+        const fetchDecks = async () => {
+            const { data } = await supabase
+                .from('decks')
+                .select('*')
+                .eq('is_active', true);
+            if (data) setDecks(data);
+        };
+        fetchDecks();
+    }, [supabase]);
 
     useEffect(() => {
         // Subscribe to player changes
@@ -126,7 +181,12 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         setCurrentLobby(updatedLobby);
                         setRoomName(updatedLobby.name);
                         if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
-                            setSettings({ ...defaultSettings, ...(updatedLobby.settings as any) });
+                            const newSettings = { ...defaultSettings, ...(updatedLobby.settings as any) };
+                            setSettings(newSettings);
+                            // Sync selected decks
+                            if ((updatedLobby.settings as any).selectedDecks) {
+                                setSelectedDecks((updatedLobby.settings as any).selectedDecks);
+                            }
                         }
                     }
                 }
@@ -325,46 +385,35 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                         </div>
                                     </div>
                                     <div className="bg-white/5 p-6 rounded-xl">
-                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Expansions</h2>
+                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Decks</h2>
                                         <div className="flex flex-col">
-                                            <p className="text-white text-base font-medium leading-normal pb-2">Included Packs</p>
+                                            <p className="text-white text-base font-medium leading-normal pb-2">Select Decks to Include</p>
                                             <div className="space-y-2">
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.core ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
-                                                    <input
-                                                        className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
-                                                        type="checkbox"
-                                                        checked={settings.expansions.core}
-                                                        onChange={() => toggleExpansion('core')}
-                                                    />
-                                                    <span className={`font-medium transition-colors ${settings.expansions.core ? 'text-white' : 'text-white/60'}`}>Core Set Only</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.enchanted ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
-                                                    <input
-                                                        className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
-                                                        type="checkbox"
-                                                        checked={settings.expansions.enchanted}
-                                                        onChange={() => toggleExpansion('enchanted')}
-                                                    />
-                                                    <span className={`font-medium transition-colors ${settings.expansions.enchanted ? 'text-white' : 'text-white/60'}`}>Enchanted Forest</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.seafaring ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
-                                                    <input
-                                                        className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
-                                                        type="checkbox"
-                                                        checked={settings.expansions.seafaring}
-                                                        onChange={() => toggleExpansion('seafaring')}
-                                                    />
-                                                    <span className={`font-medium transition-colors ${settings.expansions.seafaring ? 'text-white' : 'text-white/60'}`}>Seafaring Sagas</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${settings.expansions.all ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}>
-                                                    <input
-                                                        className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
-                                                        type="checkbox"
-                                                        checked={settings.expansions.all}
-                                                        onChange={() => toggleExpansion('all')}
-                                                    />
-                                                    <span className={`font-medium transition-colors ${settings.expansions.all ? 'text-white' : 'text-white/60'}`}>All Expansions</span>
-                                                </label>
+                                                {decks.map((deck) => (
+                                                    <label
+                                                        key={deck.id}
+                                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedDecks.includes(deck.id) ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}
+                                                    >
+                                                        <input
+                                                            className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
+                                                            type="checkbox"
+                                                            checked={selectedDecks.includes(deck.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    updateSelectedDecks([...selectedDecks, deck.id]);
+                                                                } else {
+                                                                    updateSelectedDecks(selectedDecks.filter(id => id !== deck.id));
+                                                                }
+                                                            }}
+                                                        />
+                                                        <span className={`font-medium transition-colors ${selectedDecks.includes(deck.id) ? 'text-white' : 'text-white/60'}`}>
+                                                            {deck.name}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                                {decks.length === 0 && (
+                                                    <p className="text-white/40 text-sm italic">No decks available. Create a deck in the admin panel first.</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -405,8 +454,12 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                             </div>
                                         </div>
                                         <div className="mt-6">
-                                            <button className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
-                                                <span className="truncate">Start Game</span>
+                                            <button
+                                                onClick={startGame}
+                                                disabled={isStarting}
+                                                className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <span className="truncate">{isStarting ? 'Starting...' : 'Start Game'}</span>
                                             </button>
                                         </div>
                                     </div>

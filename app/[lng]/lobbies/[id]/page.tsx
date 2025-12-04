@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import AdminLobbyView from '@/components/lobby/AdminLobbyView';
 import UserLobbyView from '@/components/lobby/UserLobbyView';
+import LobbyManager from '@/components/lobby/LobbyManager';
 import { notFound } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
@@ -46,11 +47,13 @@ export default async function LobbyDetailsPage({
 
     return (
         <div className="min-h-screen bg-[#141118]">
-            {isHost ? (
-                <AdminLobbyView lobby={lobby} initialPlayers={players || []} />
-            ) : (
-                <UserLobbyView lobby={lobby} initialPlayers={players || []} />
-            )}
+            <LobbyManager
+                initialLobby={lobby}
+                initialPlayers={players || []}
+                isHost={isHost}
+                userId={userId}
+                guestId={guestId}
+            />
         </div>
     );
 }

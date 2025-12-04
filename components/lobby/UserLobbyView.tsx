@@ -6,6 +6,7 @@ import { Database } from '@/supabase/types';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
+type Deck = Database['public']['Tables']['decks']['Row'];
 
 interface UserLobbyViewProps {
     lobby: Lobby;
@@ -16,6 +17,8 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby);
     const [selectedRole, setSelectedRole] = useState('Storyteller');
+    const [decks, setDecks] = useState<Deck[]>([]);
+    const [selectedDeckIds, setSelectedDeckIds] = useState<string[]>([]);
     const supabase = createClient();
 
     // Default settings
@@ -26,17 +29,32 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
         allowInterrupts: true,
         timerPerTurn: false,
         happyEnding: false,
-        expansions: {
-            core: true,
-            enchanted: false,
-            seafaring: false,
-            all: false
-        }
     };
 
     const settings = currentLobby.settings && typeof currentLobby.settings === 'object'
         ? { ...defaultSettings, ...(currentLobby.settings as any) }
         : defaultSettings;
+
+    // Fetch decks on mount
+    useEffect(() => {
+        const fetchDecks = async () => {
+            const { data } = await supabase
+                .from('decks')
+                .select('*')
+                .eq('is_active', true);
+            if (data) {
+                setDecks(data);
+                // Get selected decks from lobby settings
+                if (currentLobby.settings && typeof currentLobby.settings === 'object') {
+                    const lobbySelectedDecks = (currentLobby.settings as any).selectedDecks;
+                    if (lobbySelectedDecks && Array.isArray(lobbySelectedDecks)) {
+                        setSelectedDeckIds(lobbySelectedDecks);
+                    }
+                }
+            }
+        };
+        fetchDecks();
+    }, [supabase, currentLobby.settings]);
 
     useEffect(() => {
         // Subscribe to player changes
@@ -59,7 +77,15 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                 { event: 'UPDATE', schema: 'public', table: 'lobbies', filter: `id=eq.${lobby.id}` },
                 (payload) => {
                     if (payload.new) {
-                        setCurrentLobby(payload.new as Lobby);
+                        const updatedLobby = payload.new as Lobby;
+                        setCurrentLobby(updatedLobby);
+                        // Update selected decks when host changes them
+                        if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
+                            const lobbySelectedDecks = (updatedLobby.settings as any).selectedDecks;
+                            if (lobbySelectedDecks && Array.isArray(lobbySelectedDecks)) {
+                                setSelectedDeckIds(lobbySelectedDecks);
+                            }
+                        }
                     }
                 }
             )
@@ -177,26 +203,30 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                                         </div>
                                     </div>
                                     <div className="bg-white/5 p-6 rounded-xl opacity-70">
-                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Expansions</h2>
+                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Decks</h2>
                                         <div className="flex flex-col">
-                                            <p className="text-white text-base font-medium leading-normal pb-2">Included Packs</p>
+                                            <p className="text-white text-base font-medium leading-normal pb-2">Selected Decks</p>
                                             <div className="space-y-2">
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${settings.expansions.core ? 'bg-primary/20 border-primary' : 'border-transparent'}`}>
-                                                    <input className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50" disabled type="checkbox" checked={settings.expansions.core} />
-                                                    <span className="text-white font-medium">Core Set Only</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg pointer-events-none ${settings.expansions.enchanted ? 'bg-primary/20 border-primary' : 'border-transparent'}`}>
-                                                    <input className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50" disabled type="checkbox" checked={settings.expansions.enchanted} />
-                                                    <span className="text-white font-medium">Enchanted Forest</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg pointer-events-none ${settings.expansions.seafaring ? 'bg-primary/20 border-primary' : 'border-transparent'}`}>
-                                                    <input className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50" disabled type="checkbox" checked={settings.expansions.seafaring} />
-                                                    <span className="text-white font-medium">Seafaring Sagas</span>
-                                                </label>
-                                                <label className={`flex items-center gap-3 p-3 rounded-lg pointer-events-none ${settings.expansions.all ? 'bg-primary/20 border-primary' : 'border-transparent'}`}>
-                                                    <input className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50" disabled type="checkbox" checked={settings.expansions.all} />
-                                                    <span className="text-white font-medium">All Expansions</span>
-                                                </label>
+                                                {decks.map((deck) => (
+                                                    <label
+                                                        key={deck.id}
+                                                        className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${selectedDeckIds.includes(deck.id)
+                                                            ? 'bg-primary/20 border-primary'
+                                                            : 'border-transparent'
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50"
+                                                            disabled
+                                                            type="checkbox"
+                                                            checked={selectedDeckIds.includes(deck.id)}
+                                                        />
+                                                        <span className="text-white font-medium">{deck.name}</span>
+                                                    </label>
+                                                ))}
+                                                {decks.length === 0 && (
+                                                    <p className="text-white/40 text-sm italic">No decks selected yet.</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { getGuestId } from '@/lib/auth/guest';
+import { getGuestIdentity } from '@/lib/auth/guestIdentity';
 import { useTranslation } from '@/app/i18n/client';
 import { languages } from '@/app/i18n/settings';
 
@@ -14,7 +15,8 @@ export default function CreateLobbyButton() {
     const params = useParams();
     const lng = params.lng as string;
     const { t } = useTranslation(lng, 'common');
-    const { getToken } = useAuth();
+    const { getToken, userId } = useAuth();
+    const { user } = useUser();
     const [selectedLanguage, setSelectedLanguage] = useState(lng);
 
     const handleCreate = async () => {
@@ -25,13 +27,29 @@ export default function CreateLobbyButton() {
         const supabase = createClient(token || undefined);
         const guestId = getGuestId();
 
+        // Determine display info
+        let displayName: string;
+        let avatarUrl: string | null = null;
+
+        if (user) {
+            // Logged-in user - use Clerk info
+            displayName = user.fullName || user.username || 'Player';
+            avatarUrl = user.imageUrl || null;
+        } else {
+            // Guest - generate fun identity
+            const identity = getGuestIdentity(guestId);
+            displayName = identity.name;
+            // For guests, we'll use emoji as avatar (stored as special prefix)
+            avatarUrl = `emoji:${identity.emoji}:${identity.color}`;
+        }
+
         // Create lobby
         const { data: lobby, error: lobbyError } = await supabase
             .from('lobbies')
             .insert({
                 name: `Story ${Math.floor(Math.random() * 1000)}`, // Random name for now
                 code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                created_by: guestId, // Using guest ID as creator for now
+                created_by: userId || guestId,
                 status: 'waiting',
                 language: selectedLanguage
             })
@@ -50,9 +68,12 @@ export default function CreateLobbyButton() {
             .from('players')
             .insert({
                 lobby_id: lobby.id,
-                guest_id: guestId,
+                user_id: userId || null,
+                guest_id: userId ? null : guestId,
                 role: 'host',
-                status: 'ready'
+                status: 'ready',
+                display_name: displayName,
+                avatar_url: avatarUrl
             });
 
         if (playerError) {

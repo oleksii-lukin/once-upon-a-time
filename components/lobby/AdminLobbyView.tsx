@@ -5,6 +5,8 @@ import { createClient } from '@/utils/supabase/client';
 import { Database } from '@/supabase/types';
 import { useParams } from 'next/navigation';
 import { initializeGame } from '@/app/actions/game';
+import { useUser, UserButton } from '@clerk/nextjs';
+import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -16,6 +18,7 @@ interface AdminLobbyViewProps {
 }
 
 export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyViewProps) {
+    const { user } = useUser();
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby);
     const supabase = createClient();
@@ -199,6 +202,61 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
         };
     }, [lobby.id, supabase]);
 
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+    const [channel, setChannel] = useState<ReturnType<typeof supabase.channel> | null>(null);
+
+    // 1. Setup channel (run once)
+    useEffect(() => {
+        const newChannel = supabase.channel(`lobby:${lobby.id}`)
+            .on('presence', { event: 'sync' }, () => {
+                const newState = newChannel.presenceState();
+                const onlineIds = new Set<string>();
+                for (const key in newState) {
+                    newState[key].forEach((presence: any) => {
+                        if (presence.player_id) onlineIds.add(presence.player_id);
+                    });
+                }
+                setOnlineUsers(onlineIds);
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                setOnlineUsers(prev => {
+                    const next = new Set(prev);
+                    newPresences.forEach((p: any) => {
+                        if (p.player_id) next.add(p.player_id);
+                    });
+                    return next;
+                });
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                setOnlineUsers(prev => {
+                    const next = new Set(prev);
+                    leftPresences.forEach((p: any) => {
+                        if (p.player_id) next.delete(p.player_id);
+                    });
+                    return next;
+                });
+            })
+            .subscribe();
+
+        setChannel(newChannel);
+
+        return () => {
+            supabase.removeChannel(newChannel);
+        };
+    }, [lobby.id, supabase]);
+
+    // 2. Track presence when player ID is available
+    useEffect(() => {
+        if (!channel || !user) return;
+
+        const currentPlayer = players.find(p => p.user_id === user.id);
+        const playerId = currentPlayer?.id;
+
+        if (playerId) {
+            channel.track({ player_id: playerId, user_id: user.id });
+        }
+    }, [channel, user, players]);
+
     const fetchPlayers = async () => {
         const { data } = await supabase
             .from('players')
@@ -206,6 +264,11 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
             .eq('lobby_id', lobby.id);
         if (data) setPlayers(data);
     };
+
+    // Filter players to only show online ones (plus self if not yet synced)
+    const displayedPlayers = players.filter(p =>
+        onlineUsers.has(p.id) || p.user_id === user?.id // Always show self
+    );
 
     return (
         <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
@@ -222,8 +285,10 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                 <h1 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Once Upon a Time</h1>
                             </div>
                             <div className="flex flex-1 justify-end items-center gap-4">
-                                <span className="truncate text-sm font-bold leading-normal tracking-[0.015em] text-white/80 hidden sm:block">HostUsername</span>
-                                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBw-2o-t3ZKm-O8CKmYORJcuS4hN9sWxYyRrBrjRUYMStU2UpLiBt3HxBzcuBRM_E49pVE888op-3FYS5NTeNKm5MugqVqpVwk1ZyOn1W9wn1x98sibc8i_nJ3qKbA4gV1FNBBUfReSAinBxtUULJoFjIsWtlw9AGUnMWMQA5nMkg-kaXozfmZlHg02yXkByEjEZNAr5_GRT8vhul52jxDQemce_qyYmGVuME7VPpxBjuWhUIGkLcp83gmL-g76xgmTHsJDHYVCFU0")' }}></div>
+                                <span className="truncate text-sm font-bold leading-normal tracking-[0.015em] text-white/80 hidden sm:block">
+                                    {user?.fullName || user?.username || 'Host'}
+                                </span>
+                                <UserButton afterSignOutUrl="/" />
                             </div>
                         </header>
                         <main className="flex-1 mt-8">
@@ -420,35 +485,35 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                 </div>
                                 <div className="lg:col-span-1 flex flex-col gap-6">
                                     <div className="bg-white/5 p-6 rounded-xl flex-1 flex flex-col">
-                                        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Players ({players.filter(p => p.role !== 'spectator').length})</h2>
+                                        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Players ({displayedPlayers.filter(p => p.role !== 'spectator').length})</h2>
                                         <div className="flex-1 space-y-3 overflow-y-auto">
-                                            {players.filter(p => p.role !== 'spectator').map((player) => (
+                                            {displayedPlayers.filter(p => p.role !== 'spectator').map((player) => (
                                                 <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-white/10'}`}>
-                                                    <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gray-600"></div>
+                                                    <PlayerAvatar player={player} />
                                                     <div className="flex flex-col">
-                                                        <p className="text-white font-bold truncate">{player.user_id || 'Guest'}</p>
+                                                        <p className="text-white font-bold truncate">{getPlayerDisplayName(player)}</p>
                                                         <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-green-400' : 'text-white/50'}`}>
                                                             {player.role === 'host' ? 'Host' : player.status === 'ready' ? 'Ready' : 'Not Ready'}
                                                         </p>
                                                     </div>
                                                 </div>
                                             ))}
-                                            {players.filter(p => p.role !== 'spectator').length === 0 && (
+                                            {displayedPlayers.filter(p => p.role !== 'spectator').length === 0 && (
                                                 <p className="text-white/40 text-sm">No players yet.</p>
                                             )}
                                         </div>
                                         <div className="mt-4">
                                             <h3 className="text-white/70 text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-white/10">
-                                                Spectators ({players.filter(p => p.role === 'spectator').length})
+                                                Spectators ({displayedPlayers.filter(p => p.role === 'spectator').length})
                                             </h3>
                                             <div className="space-y-3">
-                                                {players.filter(p => p.role === 'spectator').map((player) => (
+                                                {displayedPlayers.filter(p => p.role === 'spectator').map((player) => (
                                                     <div key={player.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                                                        <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 bg-gray-600"></div>
-                                                        <p className="text-white/80 font-medium truncate">{player.user_id || 'Guest Spectator'}</p>
+                                                        <PlayerAvatar player={player} />
+                                                        <p className="text-white/80 font-medium truncate">{getPlayerDisplayName(player)}</p>
                                                     </div>
                                                 ))}
-                                                {players.filter(p => p.role === 'spectator').length === 0 && (
+                                                {displayedPlayers.filter(p => p.role === 'spectator').length === 0 && (
                                                     <p className="text-white/40 text-sm">No spectators.</p>
                                                 )}
                                             </div>

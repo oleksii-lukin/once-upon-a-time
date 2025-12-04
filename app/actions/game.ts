@@ -8,13 +8,28 @@ export async function initializeGame(lobbyId: string) {
     // Get lobby with deck info
     const { data: lobby, error: lobbyError } = await supabase
         .from('lobbies')
-        .select('*, deck_id')
+        .select('*')
         .eq('id', lobbyId)
         .single();
 
-    if (lobbyError || !lobby || !lobby.deck_id) {
-        console.error('Error fetching lobby or no deck selected:', lobbyError);
-        return { error: 'Lobby not found or no deck selected' };
+    if (lobbyError || !lobby) {
+        console.error('Error fetching lobby:', lobbyError);
+        return { error: 'Lobby not found' };
+    }
+
+    // Determine which decks to use
+    let deckIds: string[] = [];
+    if (lobby.settings && typeof lobby.settings === 'object' && (lobby.settings as any).selectedDecks) {
+        deckIds = (lobby.settings as any).selectedDecks;
+    }
+
+    // Fallback to lobby.deck_id if no settings or empty selectedDecks
+    if (deckIds.length === 0 && lobby.deck_id) {
+        deckIds = [lobby.deck_id];
+    }
+
+    if (deckIds.length === 0) {
+        return { error: 'No decks selected' };
     }
 
     // Get all players in the lobby
@@ -29,15 +44,15 @@ export async function initializeGame(lobbyId: string) {
         return { error: 'No players found' };
     }
 
-    // Get all cards from the selected deck
+    // Get all cards from the selected decks
     const { data: cards, error: cardsError } = await supabase
         .from('cards')
         .select('*')
-        .eq('deck_id', lobby.deck_id);
+        .in('deck_id', deckIds);
 
     if (cardsError || !cards || cards.length === 0) {
         console.error('Error fetching cards:', cardsError);
-        return { error: 'No cards found in deck' };
+        return { error: 'No cards found in selected decks' };
     }
 
     // Create game session
@@ -45,7 +60,7 @@ export async function initializeGame(lobbyId: string) {
         .from('game_sessions')
         .insert({
             lobby_id: lobbyId,
-            deck_id: lobby.deck_id,
+            deck_id: deckIds[0], // Use first selected deck as primary
             current_turn_player_id: players[0].id, // First player starts
             storyteller_id: players[0].id, // First player is storyteller
         })

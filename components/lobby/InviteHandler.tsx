@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { getGuestId } from '@/lib/auth/guest';
+import { getGuestIdentity } from '@/lib/auth/guestIdentity';
 import { useTranslation } from '@/app/i18n/client';
 
 interface InviteHandlerProps {
@@ -16,30 +17,39 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
     const [status, setStatus] = useState<'loading' | 'error' | 'joining'>('loading');
     const [errorMessage, setErrorMessage] = useState('');
     const router = useRouter();
-    const { getToken, userId } = useAuth();
+    const { getToken, userId, isLoaded: isAuthLoaded } = useAuth();
+    const { user, isLoaded: isUserLoaded } = useUser();
     const { t } = useTranslation(lng, 'common');
+    const joiningRef = useRef(false);
 
     useEffect(() => {
+        // Wait for Clerk to finish loading before attempting to join
+        if (!isAuthLoaded || !isUserLoaded) {
+            return;
+        }
+
         const joinLobby = async () => {
+            if (joiningRef.current) return;
+            joiningRef.current = true;
+
             try {
                 const token = await getToken({ template: 'supabase' }).catch(() => null);
                 const supabase = createClient(token || undefined);
                 const guestId = getGuestId();
 
-                console.log('Searching for lobby with code:', code);
+                console.log('Joining lobby - userId:', userId, 'user:', user?.fullName);
 
                 // 1. Find lobby by code (case-insensitive)
                 const { data: lobby, error: lobbyError } = await supabase
                     .from('lobbies')
                     .select('id')
-                    .ilike('code', code) // Case-insensitive search
+                    .ilike('code', code)
                     .single();
-
-                console.log('Lobby search result:', { lobby, lobbyError });
 
                 if (lobbyError || !lobby) {
                     setStatus('error');
                     setErrorMessage(t('lobby_not_found', 'Lobby not found'));
+                    joiningRef.current = false;
                     return;
                 }
 
@@ -58,21 +68,41 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
                     return;
                 }
 
+                // Determine display info - now Clerk is definitely loaded
+                let displayName: string;
+                let avatarUrl: string | null = null;
+
+                if (user) {
+                    // Logged-in user - use Clerk info
+                    displayName = user.fullName || user.username || 'Player';
+                    avatarUrl = user.imageUrl || null;
+                    console.log('Using Clerk user info:', displayName, avatarUrl);
+                } else {
+                    // Guest - generate fun identity
+                    const identity = getGuestIdentity(guestId);
+                    displayName = identity.name;
+                    avatarUrl = `emoji:${identity.emoji}:${identity.color}`;
+                    console.log('Using guest identity:', displayName);
+                }
+
                 // 3. Join lobby
                 const { error: joinError } = await supabase
                     .from('players')
                     .insert({
                         lobby_id: lobby.id,
                         user_id: userId || null,
-                        guest_id: userId ? null : guestId, // Only use guest_id if not logged in
-                        role: 'player', // Default role
-                        status: 'not_ready'
+                        guest_id: userId ? null : guestId,
+                        role: 'player',
+                        status: 'not_ready',
+                        display_name: displayName,
+                        avatar_url: avatarUrl
                     });
 
                 if (joinError) {
                     console.error('Error joining lobby:', joinError);
                     setStatus('error');
                     setErrorMessage(t('failed_to_join', 'Failed to join lobby'));
+                    joiningRef.current = false;
                     return;
                 }
 
@@ -82,11 +112,12 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
                 console.error('Unexpected error:', error);
                 setStatus('error');
                 setErrorMessage(t('unexpected_error', 'An unexpected error occurred'));
+                joiningRef.current = false;
             }
         };
 
         joinLobby();
-    }, [code, lng, getToken, userId, router, t]);
+    }, [code, lng, getToken, userId, user, router, t, isAuthLoaded, isUserLoaded]);
 
     if (status === 'error') {
         return (

@@ -32,6 +32,11 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
     const peersRef = useRef<Record<string, Instance>>({});
     const supabase = createClient();
 
+    // Derived state for the current player's persistent ID (database UUID)
+    // We use this for all signaling equality checks, rather than the auth ID (currentPlayerId)
+    const myPlayer = players.find(p => p.user_id === currentPlayerId || p.guest_id === currentPlayerId);
+    const myPlayerId = myPlayer?.id;
+
     // Keep track of mounted state to prevent state updates after unmount
     const isMounted = useRef(true);
 
@@ -101,17 +106,17 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
     }, [localStream]);
 
     const sendSignal = useCallback(async (to: string, signal: SignalData) => {
-        if (!currentPlayerId) return;
+        if (!myPlayerId) return;
         await supabase.channel(`game_signaling:${roomId}`).send({
             type: 'broadcast',
             event: 'signal',
             payload: {
-                from: currentPlayerId,
+                from: myPlayerId, // Send my DB UUID, not my Auth ID
                 to,
                 signal
             }
         });
-    }, [currentPlayerId, roomId, supabase]);
+    }, [myPlayerId, roomId, supabase]);
 
     const createPeer = useCallback(async (targetId: string, initiator: boolean, stream: MediaStream) => {
         const SimplePeer = (await import('simple-peer')).default;
@@ -157,17 +162,19 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
 
     // Handle Signaling Channel
     useEffect(() => {
-        if (!currentPlayerId || !localStream) return;
+        if (!myPlayerId || !localStream) return;
 
         const channel = supabase.channel(`game_signaling:${roomId}`)
             .on(
                 'broadcast',
                 { event: 'signal' },
                 async ({ payload }: { payload: SignalPayload }) => {
-                    // Only handle signals meant for me
-                    if (payload.to !== currentPlayerId) return;
+                    // Only handle signals meant for me (checking UUID)
+                    if (payload.to !== myPlayerId) return;
 
                     const senderId = payload.from;
+                    // senderId is now guaranteed to be a UUID because we changed sendSignal above
+
                     let peer = peersRef.current[senderId];
 
                     if (!peer) {
@@ -185,31 +192,24 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [currentPlayerId, roomId, localStream, createPeer, supabase]);
+    }, [myPlayerId, roomId, localStream, createPeer, supabase]);
 
     // Manage Connections based on Players list
     useEffect(() => {
-        if (!currentPlayerId || !localStream) return;
+        if (!myPlayerId || !localStream) return;
 
         const managePeers = async () => {
             for (const player of players) {
                 const playerId = player.id; // normalized ID (could be uuid)
+
                 // Skip self
-                if (player.user_id === currentPlayerId || player.guest_id === currentPlayerId) continue;
-                // Also need stable unique ID for comparison. player.id is uuid, that works.
-                // Wait, currentPlayerId passed in might be user_id OR guest_id. 
-                // We need to compare specific unique IDs.
-                // Let's resolve "My Player Object" ID.
-
-                const myPlayer = players.find(p => p.user_id === currentPlayerId || p.guest_id === currentPlayerId);
-                const myPlayerId = myPlayer?.id;
-
-                if (!myPlayerId || playerId === myPlayerId) continue;
+                if (playerId === myPlayerId) continue;
 
                 // Check if we already have a peer
                 if (peersRef.current[playerId]) continue;
 
                 // Decide who initiates: simpler ID initiates
+                // Using localized UUID comparison for consistent behavior
                 if (myPlayerId < playerId) {
                     console.log(`Initiating connection to ${playerId}`);
                     await createPeer(playerId, true, localStream);
@@ -233,7 +233,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
             }
         });
 
-    }, [players, currentPlayerId, localStream, createPeer]);
+    }, [players, myPlayerId, localStream, createPeer]);
 
     const toggleAudio = (enabled: boolean) => {
         if (localStream) {

@@ -45,6 +45,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
         const { data } = await supabase
             .from('lobbies')
             .select('*, players(count)')
+            .is('deleted_at', null)  // Only show active (non-deleted) lobbies
             .order('created_at', { ascending: false });
 
         if (data) {

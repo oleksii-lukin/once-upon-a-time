@@ -11,6 +11,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
     const { data: lobbies } = await supabase
         .from('lobbies')
         .select('*, players(count)')
+        .is('deleted_at', null)  // Only show active (non-deleted) lobbies
         .order('created_at', { ascending: false });
 
     return (

@@ -25,9 +25,9 @@ export default async function AdminLayout({ children, params }: { children: Reac
                         <span className="material-symbols-outlined">group</span>
                         <span className="text-sm font-medium">{t('players')}</span>
                     </Link>
-                    <Link href={`/${lng}/admin/games`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
-                        <span className="material-symbols-outlined">casino</span>
-                        <span className="text-sm font-medium">{t('games')}</span>
+                    <Link href={`/${lng}/admin/lobbies`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
+                        <span className="material-symbols-outlined">meeting_room</span>
+                        <span className="text-sm font-medium">{t('lobbies')}</span>
                     </Link>
                     <Link href={`/${lng}/admin/settings`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
                         <span className="material-symbols-outlined">settings</span>

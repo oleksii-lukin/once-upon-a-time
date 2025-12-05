@@ -247,6 +247,7 @@ export type Database = {
           created_at: string
           created_by: string
           deck_id: string | null
+          deleted_at: string | null
           id: string
           language: string
           name: string
@@ -258,6 +259,7 @@ export type Database = {
           created_at?: string
           created_by: string
           deck_id?: string | null
+          deleted_at?: string | null
           id?: string
           language?: string
           name: string
@@ -269,6 +271,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           deck_id?: string | null
+          deleted_at?: string | null
           id?: string
           language?: string
           name?: string
@@ -390,6 +393,7 @@ export type Database = {
           guest_id: string | null
           id: string
           joined_at: string
+          last_seen_at: string
           lobby_id: string
           role: string
           status: string
@@ -401,6 +405,7 @@ export type Database = {
           guest_id?: string | null
           id?: string
           joined_at?: string
+          last_seen_at?: string
           lobby_id: string
           role?: string
           status?: string
@@ -412,6 +417,7 @@ export type Database = {
           guest_id?: string | null
           id?: string
           joined_at?: string
+          last_seen_at?: string
           lobby_id?: string
           role?: string
           status?: string

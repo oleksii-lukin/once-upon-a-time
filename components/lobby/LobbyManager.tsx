@@ -6,6 +6,7 @@ import { Database } from '@/supabase/types';
 import AdminLobbyView from './AdminLobbyView';
 import UserLobbyView from './UserLobbyView';
 import GameView from '../game/GameView';
+import usePlayerHeartbeat from '../game/usePlayerHeartbeat';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -28,6 +29,16 @@ export default function LobbyManager({
     const [lobby, setLobby] = useState<Lobby>(initialLobby);
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const supabase = createClient();
+
+    // Find current player's record for heartbeat
+    const currentPlayer = players.find(p =>
+        (userId && p.user_id === userId) ||
+        (guestId && p.guest_id === guestId)
+    );
+
+    // Send periodic heartbeats to track player activity
+    // This is used by server-side cleanup to detect inactive lobbies
+    usePlayerHeartbeat(currentPlayer?.id);
 
     useEffect(() => {
         // Subscribe to lobby changes (e.g., status change to 'in_game')

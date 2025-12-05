@@ -206,6 +206,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
                 players={players}
                 currentPlayerId={currentPlayerId}
                 currentTurnPlayerId={gameSession?.current_turn_player_id || ''}
+                lobbyId={lobby.id}
             />
         </div>
     );

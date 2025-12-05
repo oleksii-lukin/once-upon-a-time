@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 import LobbyList from '@/components/lobby/LobbyList';
 import CreateLobbyButton from '@/components/lobby/CreateLobbyButton';
+import UserProfileCard from '@/components/profile/UserProfileCard';
 import { useTranslation } from '@/app/i18n/server';
 
 export default async function LobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
@@ -66,22 +67,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
 
                         </div>
                         <div className="flex flex-col gap-8">
-                            <div className="bg-gray-50 dark:bg-white/5 border border-gray-200/20 dark:border-white/20 rounded-xl p-6 flex flex-col items-center text-center">
-                                <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-24 mb-4" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfOcnWFece1f9jqLZn49-SyxGRlPeKFeCoxMut4qG_kGADjNWETlfQxQ-EfOho1UO4N2xhsvKRCDDGdZ-w4TYJIaGZtKzHttHhZkr26SB88aBTdqHkNP36IfEaBDG8lpmVW5Hzw2FVfm91BHVQ_zkA2LxQrJQD3Lu8UWhKODndJ45mFLX4QTHG4ReOlHg9CS-3rHbyKmVy1x9iUMD8AbbJH2Egedss5BeGukR8ywRmpQeyPx1d5CwVEGKtDXW26ko_MmfZTnbRQ5s")' }}></div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">AlexDoe</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{t('storyteller_extraordinaire')}</p>
-                                <div className="w-full h-px bg-gray-200/20 dark:bg-white/20 my-4"></div>
-                                <div className="grid grid-cols-2 gap-4 w-full">
-                                    <div className="flex flex-col">
-                                        <span className="text-lg font-bold text-primary">42</span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('games_played')}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-lg font-bold text-primary">15</span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">{t('games_won')}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <UserProfileCard />
                             <div className="bg-gray-50 dark:bg-white/5 border border-gray-200/20 dark:border-white/20 rounded-xl p-6">
                                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('online_friends')}</h4>
                                 <div className="flex flex-col gap-4">

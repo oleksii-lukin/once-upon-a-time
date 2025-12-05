@@ -160,7 +160,12 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         if (!gameSession || !currentPlayer) return;
 
         // Sort players to ensure consistent order
-        const sortedPlayers = [...players].sort((a, b) => new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime());
+        const sortedPlayers = [...players].sort((a, b) => {
+            if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
+                return a.turn_order - b.turn_order;
+            }
+            return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+        });
         const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id);
 
         if (currentIndex === -1) return;

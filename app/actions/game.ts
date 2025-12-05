@@ -33,15 +33,31 @@ export async function initializeGame(lobbyId: string) {
     }
 
     // Get all players in the lobby
-    const { data: players, error: playersError } = await supabase
+    const { data: playersData, error: playersError } = await supabase
         .from('players')
         .select('*')
         .eq('lobby_id', lobbyId)
         .neq('role', 'spectator');
 
-    if (playersError || !players || players.length === 0) {
+    if (playersError || !playersData || playersData.length === 0) {
         console.error('Error fetching players:', playersError);
         return { error: 'No players found' };
+    }
+
+    // Shuffle players for random turn order
+    const players = [...playersData].sort(() => Math.random() - 0.5);
+
+    // Assign turn order to players
+    for (let i = 0; i < players.length; i++) {
+        const { error: updateError } = await supabase
+            .from('players')
+            .update({ turn_order: i })
+            .eq('id', players[i].id);
+
+        if (updateError) {
+            console.error(`Error updating turn order for player ${players[i].id}:`, updateError);
+            // Continue best effort
+        }
     }
 
     // Get all cards from the selected decks
@@ -61,7 +77,7 @@ export async function initializeGame(lobbyId: string) {
         .insert({
             lobby_id: lobbyId,
             deck_id: deckIds[0], // Use first selected deck as primary
-            current_turn_player_id: players[0].id, // First player starts
+            current_turn_player_id: players[0].id, // First player in shuffled order starts
             storyteller_id: players[0].id, // First player is storyteller
         })
         .select()

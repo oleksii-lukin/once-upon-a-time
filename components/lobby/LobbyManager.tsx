@@ -65,7 +65,9 @@ export default function LobbyManager({
                     const { data } = await supabase
                         .from('players')
                         .select('*')
-                        .eq('lobby_id', lobby.id);
+                        .eq('lobby_id', lobby.id)
+                        .order('turn_order', { ascending: true })
+                        .order('joined_at', { ascending: true });
                     if (data) setPlayers(data);
                 }
             )

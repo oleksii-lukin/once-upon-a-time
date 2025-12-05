@@ -193,7 +193,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                             </div>
                             <div className="flex flex-1 justify-end items-center gap-4">
                                 <span className="truncate text-sm font-bold leading-normal tracking-[0.015em] text-white/80 hidden sm:block">
-                                    {user?.fullName || user?.username || 'Guest'}
+                                    {players.find(p => (user && p.user_id === user.id) || (!user && p.guest_id === getGuestId()))?.display_name || user?.fullName || user?.username || 'Guest'}
                                 </span>
                                 <UserButton afterSignOutUrl="/" />
                             </div>

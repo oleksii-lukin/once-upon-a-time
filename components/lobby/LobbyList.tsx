@@ -11,6 +11,11 @@ type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
     players: { count: number }[];
 };
 
+import { useUser } from '@clerk/nextjs';
+import { getGuestIdentity } from '@/lib/auth/guestIdentity';
+
+
+
 export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] }) {
     const [lobbies, setLobbies] = useState<Lobby[]>(initialLobbies);
     const supabase = createClient();
@@ -18,19 +23,33 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
     const params = useParams();
     const lng = params.lng as string;
     const { t } = useTranslation(lng, 'common');
+    const { user } = useUser();
+
+    const fetchLobbies = async () => {
+        const { data } = await supabase
+            .from('lobbies')
+            .select('*, players(count)')
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
+
+        if (data) {
+            setLobbies(data as unknown as Lobby[]);
+        }
+    };
 
     useEffect(() => {
+        fetchLobbies();
+
         const channel = supabase
-            .channel('lobbies_list')
+            .channel('public:lobbies')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'lobbies' },
-                (payload) => {
-                    // Simple refresh for now, or we could merge changes
-                    router.refresh();
-                    // Actually router.refresh() refreshes server components. 
-                    // For client state, we might want to fetch again or update manually.
-                    // Let's just fetch again for simplicity in this demo.
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'lobbies'
+                },
+                () => {
                     fetchLobbies();
                 }
             )
@@ -39,20 +58,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [supabase, router]);
-
-    const fetchLobbies = async () => {
-        const { data } = await supabase
-            .from('lobbies')
-            .select('*, players(count)')
-            .is('deleted_at', null)  // Only show active (non-deleted) lobbies
-            .order('created_at', { ascending: false });
-
-        if (data) {
-            // Cast to match the type structure if needed, though Supabase types should align
-            setLobbies(data as unknown as Lobby[]);
-        }
-    };
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleJoin = async (lobbyId: string) => {
         const guestId = getGuestId();
@@ -62,15 +68,33 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
             .from('players')
             .select('*')
             .eq('lobby_id', lobbyId)
-            .eq('guest_id', guestId)
-            .single();
+            .or(user ? `user_id.eq.${user.id},guest_id.eq.${guestId}` : `guest_id.eq.${guestId}`)
+            .maybeSingle();
 
         if (!existingPlayer) {
+            // Determine display info
+            let displayName: string;
+            let avatarUrl: string | null = null;
+
+            if (user) {
+                // Logged-in user - use Clerk info as fallback (DB trigger will override if profile exists)
+                displayName = user.fullName || user.username || 'Player';
+                avatarUrl = user.imageUrl || null;
+            } else {
+                // Guest - generate fun identity
+                const identity = getGuestIdentity(guestId);
+                displayName = identity.name;
+                avatarUrl = `emoji:${identity.emoji}:${identity.color}`;
+            }
+
             const { error } = await supabase.from('players').insert({
                 lobby_id: lobbyId,
-                guest_id: guestId,
+                user_id: user?.id || null,
+                guest_id: user ? null : guestId,
                 role: 'player', // Default to player
-                status: 'not_ready'
+                status: 'not_ready',
+                display_name: displayName,
+                avatar_url: avatarUrl
             });
 
             if (error) {

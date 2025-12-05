@@ -286,7 +286,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                             </div>
                             <div className="flex flex-1 justify-end items-center gap-4">
                                 <span className="truncate text-sm font-bold leading-normal tracking-[0.015em] text-white/80 hidden sm:block">
-                                    {user?.fullName || user?.username || 'Host'}
+                                    {players.find(p => p.user_id === user?.id)?.display_name || user?.fullName || user?.username || 'Host'}
                                 </span>
                                 <UserButton afterSignOutUrl="/" />
                             </div>

@@ -198,7 +198,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             ></div>
 
             <main className="flex-1 flex flex-col justify-between overflow-hidden relative z-10">
-                <TableArea playedCards={playedCards} storyteller={storyteller} players={players} />
+                <TableArea playedCards={playedCards} storytellerPlayer={storytellerPlayer} players={players} />
                 <PlayerHand cards={hand} onPlayCard={handlePlayCard} onPassTurn={handlePassTurn} isMyTurn={gameSession?.current_turn_player_id === currentPlayer?.id} />
             </main>
 

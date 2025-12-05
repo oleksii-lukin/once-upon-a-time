@@ -11,6 +11,12 @@ interface WebRTCState {
     remoteStreams: Record<string, MediaStream>; // playerId -> MediaStream
 }
 
+export interface DeviceInfo {
+    deviceId: string;
+    label: string;
+    kind: MediaDeviceKind;
+}
+
 interface SignalPayload {
     from: string;
     to: string;
@@ -20,6 +26,9 @@ interface SignalPayload {
 export default function useWebRTC(roomId: string, currentPlayerId: string | null, players: Player[]) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+    const [devices, setDevices] = useState<DeviceInfo[]>([]);
+    const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('');
+    const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string>('');
     const peersRef = useRef<Record<string, Instance>>({});
     const supabase = createClient();
 
@@ -41,8 +50,23 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
                     video: true,
                     audio: true
                 });
+
                 if (isMounted.current) {
                     setLocalStream(stream);
+
+                    // Set initial selected devices
+                    const audioTrack = stream.getAudioTracks()[0];
+                    const videoTrack = stream.getVideoTracks()[0];
+                    if (audioTrack) setSelectedAudioDeviceId(audioTrack.getSettings().deviceId || 'default');
+                    if (videoTrack) setSelectedVideoDeviceId(videoTrack.getSettings().deviceId || 'default');
+
+                    // Enumerate devices
+                    const deviceInfos = await navigator.mediaDevices.enumerateDevices();
+                    setDevices(deviceInfos.map(d => ({
+                        deviceId: d.deviceId,
+                        label: d.label,
+                        kind: d.kind
+                    })));
                 }
             } catch (err) {
                 console.error('Error accessing media devices:', err);
@@ -223,10 +247,73 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         }
     };
 
+    const switchDevice = async (kind: 'audio' | 'video', deviceId: string) => {
+        if (!localStream) return;
+
+        try {
+            const constraints: MediaStreamConstraints = {
+                audio: kind === 'audio' ? { deviceId: { exact: deviceId } } : false,
+                video: kind === 'video' ? { deviceId: { exact: deviceId } } : false
+            };
+
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+            const newTrack = kind === 'audio'
+                ? newStream.getAudioTracks()[0]
+                : newStream.getVideoTracks()[0];
+
+            if (!newTrack) return;
+
+            // Replace track in local stream
+            const oldTrack = kind === 'audio'
+                ? localStream.getAudioTracks()[0]
+                : localStream.getVideoTracks()[0];
+
+            if (oldTrack) {
+                localStream.removeTrack(oldTrack);
+                oldTrack.stop();
+            }
+            localStream.addTrack(newTrack);
+
+            // Update state
+            if (kind === 'audio') setSelectedAudioDeviceId(deviceId);
+            else setSelectedVideoDeviceId(deviceId);
+
+            // Replace track in all peers
+            Object.values(peersRef.current).forEach(peer => {
+                // simple-peer internal check: needs mapped old track to replace
+                // actually simple-peer's replaceTrack takes (oldTrack, newTrack, stream)
+                // We need to be careful. SimplePeer types might vary but generally:
+                // peer.replaceTrack(oldTrack, newTrack, localStream)
+
+                try {
+                    // @ts-ignore - simple-peer types can be finicky with replaceTrack
+                    peer.replaceTrack(oldTrack, newTrack, localStream);
+                } catch (e) {
+                    console.error('Error replacing track in peer:', e);
+                }
+            });
+
+            // Note: We deliberately do NOT create a new MediaStream here.
+            // Mutating the existing `localStream` (via addTrack/removeTrack above) is sufficient
+            // because the `<video>` element's `srcObject` reference remains valid.
+            // Creating a new MediaStream object would reset `srcObject`, potentially causing 
+            // a black screen or requiring a play() call.
+            // The state updates for `selectedDevice` (above) will provoke a re-render 
+            // of the consuming component, ensuring the UI reflects the change.
+
+        } catch (err) {
+            console.error(`Error switching ${kind} device:`, err);
+        }
+    };
+
     return {
         localStream,
         remoteStreams,
+        devices,
+        selectedAudioDeviceId,
+        selectedVideoDeviceId,
         toggleAudio,
-        toggleVideo
+        toggleVideo,
+        switchDevice
     };
 }

@@ -212,6 +212,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
                 currentPlayerId={currentPlayerId}
                 currentTurnPlayerId={gameSession?.current_turn_player_id || ''}
                 lobbyId={lobby.id}
+                enableVideoChat={(lobby.settings as any)?.enableVideoChat !== false}
             />
         </div>
     );

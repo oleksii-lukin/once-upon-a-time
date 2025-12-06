@@ -36,6 +36,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
         allowInterrupts: true,
         timerPerTurn: false,
         happyEnding: false,
+        enableVideoChat: true,
         selectedDecks: [] as string[],
     };
 
@@ -444,6 +445,19 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         type="checkbox"
                                                         checked={settings.happyEnding}
                                                         onChange={(e) => updateSettings({ happyEnding: e.target.checked })}
+                                                    />
+                                                    <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center justify-between py-2">
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-white' : 'text-white/40'}`} htmlFor="enable-video-chat">Enable Video Chat</label>
+                                                <label className="relative inline-flex cursor-pointer items-center">
+                                                    <input
+                                                        className="peer sr-only"
+                                                        id="enable-video-chat"
+                                                        type="checkbox"
+                                                        checked={settings.enableVideoChat}
+                                                        onChange={(e) => updateSettings({ enableVideoChat: e.target.checked })}
                                                     />
                                                     <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                 </label>

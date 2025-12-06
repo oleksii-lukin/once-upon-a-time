@@ -13,9 +13,10 @@ interface GameSidebarProps {
     currentPlayerId: string | null;
     currentTurnPlayerId: string;
     lobbyId: string;
+    enableVideoChat?: boolean;
 }
 
-export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId }: GameSidebarProps) {
+export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true }: GameSidebarProps) {
     const {
         localStream,
         remoteStreams,
@@ -25,7 +26,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
         selectedAudioDeviceId,
         selectedVideoDeviceId,
         switchDevice
-    } = useWebRTC(lobbyId, currentPlayerId, players);
+    } = useWebRTC(lobbyId, currentPlayerId, players, enableVideoChat);
 
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [videoEnabled, setVideoEnabled] = useState(true);
@@ -53,65 +54,69 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
     const [showSettings, setShowSettings] = useState(false);
 
     // Helper to render controls for me
-    const Controls = () => (
-        <div className="absolute top-2 right-2 flex gap-2">
-            <button
-                onClick={handleToggleAudio}
-                className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-                title={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
-            >
-                <span className="material-symbols-outlined text-lg">{audioEnabled ? 'mic' : 'mic_off'}</span>
-            </button>
-            <button
-                onClick={handleToggleVideo}
-                className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-                title={videoEnabled ? "Turn Off Camera" : "Turn On Camera"}
-            >
-                <span className="material-symbols-outlined text-lg">{videoEnabled ? 'videocam' : 'videocam_off'}</span>
-            </button>
-            <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
-                title="Device Settings"
-            >
-                <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
+    const Controls = () => {
+        if (!enableVideoChat) return null;
 
-            {/* Device Settings Popover */}
-            {showSettings && (
-                <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl z-50 flex flex-col gap-3">
-                    <div>
-                        <label className="text-xs text-white/50 mb-1 block">Microphone</label>
-                        <select
-                            className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
-                            value={selectedAudioDeviceId}
-                            onChange={(e) => switchDevice('audio', e.target.value)}
-                        >
-                            {devices.filter(d => d.kind === 'audioinput').map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                    {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
-                                </option>
-                            ))}
-                        </select>
+        return (
+            <div className="absolute top-2 right-2 flex gap-2">
+                <button
+                    onClick={handleToggleAudio}
+                    className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
+                    title={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
+                >
+                    <span className="material-symbols-outlined text-lg">{audioEnabled ? 'mic' : 'mic_off'}</span>
+                </button>
+                <button
+                    onClick={handleToggleVideo}
+                    className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
+                    title={videoEnabled ? "Turn Off Camera" : "Turn On Camera"}
+                >
+                    <span className="material-symbols-outlined text-lg">{videoEnabled ? 'videocam' : 'videocam_off'}</span>
+                </button>
+                <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
+                    title="Device Settings"
+                >
+                    <span className="material-symbols-outlined text-lg">settings</span>
+                </button>
+
+                {/* Device Settings Popover */}
+                {showSettings && (
+                    <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl z-50 flex flex-col gap-3">
+                        <div>
+                            <label className="text-xs text-white/50 mb-1 block">Microphone</label>
+                            <select
+                                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
+                                value={selectedAudioDeviceId}
+                                onChange={(e) => switchDevice('audio', e.target.value)}
+                            >
+                                {devices.filter(d => d.kind === 'audioinput').map(device => (
+                                    <option key={device.deviceId} value={device.deviceId}>
+                                        {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs text-white/50 mb-1 block">Camera</label>
+                            <select
+                                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
+                                value={selectedVideoDeviceId}
+                                onChange={(e) => switchDevice('video', e.target.value)}
+                            >
+                                {devices.filter(d => d.kind === 'videoinput').map(device => (
+                                    <option key={device.deviceId} value={device.deviceId}>
+                                        {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label className="text-xs text-white/50 mb-1 block">Camera</label>
-                        <select
-                            className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
-                            value={selectedVideoDeviceId}
-                            onChange={(e) => switchDevice('video', e.target.value)}
-                        >
-                            {devices.filter(d => d.kind === 'videoinput').map(device => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                    {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+                )}
+            </div>
+        );
+    } // End Controls wrapper
 
     return (
         <aside className="w-96 bg-black/20 dark:bg-black/30 backdrop-blur-md border-l border-white/10 flex flex-col p-6 gap-6 h-full overflow-y-auto flex-shrink-0">
@@ -119,7 +124,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
             {activePlayer && (
                 <div className="relative aspect-video w-full rounded-lg overflow-hidden ring-2 shadow-lg ring-primary shadow-primary/20">
                     <VideoPlayer
-                        stream={activePlayer.id === me?.id ? localStream : (remoteStreams[activePlayer.id] || null)}
+                        stream={enableVideoChat ? (activePlayer.id === me?.id ? localStream : (remoteStreams[activePlayer.id] || null)) : null}
                         player={activePlayer}
                         isLocal={activePlayer.id === me?.id}
                         styleCount={5}
@@ -142,7 +147,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                                 <div className="absolute inset-0 rounded-lg overflow-hidden">
                                     <VideoPlayer
                                         // If active, show avatar (stream=null). Else show video.
-                                        stream={isActive ? null : (player.id === me?.id ? localStream : (remoteStreams[player.id] || null))}
+                                        stream={enableVideoChat && !isActive ? (player.id === me?.id ? localStream : (remoteStreams[player.id] || null)) : null}
                                         player={player}
                                         isLocal={player.id === me?.id}
                                         styleCount={4} // Placeholder

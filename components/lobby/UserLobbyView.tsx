@@ -33,6 +33,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
         allowInterrupts: true,
         timerPerTurn: false,
         happyEnding: false,
+        enableVideoChat: true,
     };
 
     const settings = currentLobby.settings && typeof currentLobby.settings === 'object'
@@ -273,6 +274,13 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                                                 <label className="text-white text-base font-medium leading-normal" htmlFor="happy-ending">Happy Ending Variant</label>
                                                 <label className="relative inline-flex items-center opacity-50 pointer-events-none">
                                                     <input className="peer sr-only" disabled id="happy-ending" type="checkbox" checked={settings.happyEnding} />
+                                                    <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center justify-between py-2">
+                                                <label className="text-white text-base font-medium leading-normal" htmlFor="enable-video-chat">Enable Video Chat</label>
+                                                <label className="relative inline-flex items-center opacity-50 pointer-events-none">
+                                                    <input className="peer sr-only" disabled id="enable-video-chat" type="checkbox" checked={settings.enableVideoChat} />
                                                     <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
                                                 </label>
                                             </div>

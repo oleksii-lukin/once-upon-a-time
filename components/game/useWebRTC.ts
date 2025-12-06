@@ -23,7 +23,7 @@ interface SignalPayload {
     signal: SignalData;
 }
 
-export default function useWebRTC(roomId: string, currentPlayerId: string | null, players: Player[]) {
+export default function useWebRTC(roomId: string, currentPlayerId: string | null, players: Player[], enabled: boolean = true) {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
     const [devices, setDevices] = useState<DeviceInfo[]>([]);
@@ -47,9 +47,19 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         };
     }, []);
 
+    // Clean up local stream
+    const cleanupLocalStream = useCallback(() => {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            setLocalStream(null);
+        }
+    }, [localStream]);
+
     // Initialize Local Media
     useEffect(() => {
         const initMedia = async () => {
+            if (!enabled) return;
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: true,
@@ -72,26 +82,26 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
                         label: d.label,
                         kind: d.kind
                     })));
+                } else {
+                    // If unmounted during init, stop tracks immediately
+                    stream.getTracks().forEach(track => track.stop());
                 }
             } catch (err) {
                 console.error('Error accessing media devices:', err);
             }
         };
 
-        if (!localStream) {
+        if (enabled && !localStream) {
             initMedia();
+        } else if (!enabled && localStream) {
+            cleanupLocalStream();
         }
 
         return () => {
-            // Cleanup local stream on unmount
-            // Note: We might want to keep it if we persist across views, but for sidebar it's fine.
-            // Actually, usually better NOT to stop tracks so re-renders don't kill camera light, 
-            // but here we want to stop if we leave the specific context. 
-            // Let's rely on standard garbage collection or explicit cleanup if needed.
-            // For now, let's strictly stop it to be clean.
-            // EDIT: React StrictMode calls this twice. Careful.
+            // No cleanup here to avoid flickering on re-renders,
+            // cleanup is handled by separate effects or component unmount
         };
-    }, []);
+    }, [enabled, localStream, cleanupLocalStream]);
 
     // Cleanup tracks on real unmount
     useEffect(() => {
@@ -162,7 +172,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
 
     // Handle Signaling Channel
     useEffect(() => {
-        if (!myPlayerId || !localStream) return;
+        if (!enabled || !myPlayerId || !localStream) return;
 
         const channel = supabase.channel(`game_signaling:${roomId}`)
             .on(
@@ -196,7 +206,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
 
     // Manage Connections based on Players list
     useEffect(() => {
-        if (!myPlayerId || !localStream) return;
+        if (!enabled || !myPlayerId || !localStream) return;
 
         const managePeers = async () => {
             for (const player of players) {

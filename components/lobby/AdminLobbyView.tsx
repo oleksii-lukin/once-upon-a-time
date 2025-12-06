@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { initializeGame } from '@/app/actions/game';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay';
+import { useTranslation } from '@/app/i18n/client';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -24,6 +25,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
     const supabase = createClient();
     const params = useParams();
     const lng = params.lng as string;
+    const { t } = useTranslation(lng, 'common');
 
     const [roomName, setRoomName] = useState(lobby.name);
     const [decks, setDecks] = useState<Deck[]>([]);
@@ -111,7 +113,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
 
     const startGame = async () => {
         if (selectedDecks.length === 0) {
-            alert('Please select at least one deck before starting the game');
+            alert(t('no_decks_selected'));
             return;
         }
 
@@ -295,17 +297,17 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         </header>
                         <main className="flex-1 mt-8">
                             <div className="flex flex-wrap justify-between gap-3 p-4">
-                                <p className="text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Game Setup Lobby</p>
+                                <p className="text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">{t('game_lobby')}</p>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
                                 <div className="lg:col-span-2 space-y-6">
                                     <div className="bg-white/5 p-6 rounded-xl">
-                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Game Settings</h2>
+                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('game_settings')}</h2>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="flex flex-col gap-6">
                                                 <div className="flex flex-col">
                                                     <label className="flex flex-col min-w-40 flex-1">
-                                                        <p className="text-white text-base font-medium leading-normal pb-2">Room Name</p>
+                                                        <p className="text-white text-base font-medium leading-normal pb-2">{t('room_name')}</p>
                                                         <input
                                                             className="form-input flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal"
                                                             value={roomName}
@@ -316,7 +318,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 </div>
                                                 <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">Allow Hot Join</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">{t('allow_hot_join')}</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
@@ -329,7 +331,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         </label>
                                                     </div>
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">Public Game</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">{t('public_game')}</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
@@ -342,7 +344,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         </label>
                                                     </div>
                                                     <div className="flex items-center justify-between py-2">
-                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">Allow Spectators</label>
+                                                        <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">{t('allow_spectators')}</label>
                                                         <label className="relative inline-flex cursor-pointer items-center">
                                                             <input
                                                                 className="peer sr-only"
@@ -357,10 +359,10 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 </div>
                                             </div>
                                             <div className="bg-white/5 p-6 rounded-xl">
-                                                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Invite Friends</h2>
+                                                <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">{t('invite_friends')}</h2>
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <p className="text-white/70 text-sm font-medium leading-normal pb-2">Share Invite Link</p>
+                                                        <p className="text-white/70 text-sm font-medium leading-normal pb-2">{t('share_invite_link')}</p>
                                                         <div className="flex items-center gap-2">
                                                             <input
                                                                 className="form-input text-sm w-full rounded-lg text-white/90 border border-white/10 bg-[#211c27] h-11 px-3"
@@ -382,7 +384,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p className="text-white/70 text-sm font-medium leading-normal pb-2">Or use Room Code</p>
+                                                        <p className="text-white/70 text-sm font-medium leading-normal pb-2">{t('or_use_room_code')}</p>
                                                         <div className="flex items-center gap-2">
                                                             <div className="flex items-center justify-center w-full rounded-lg border-2 border-dashed border-white/20 h-11">
                                                                 <p className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</p>
@@ -405,11 +407,11 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                         </div>
                                     </div>
                                     <div className="bg-white/5 p-6 rounded-xl">
-                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">Game Rules</h2>
+                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                                             <div className="flex items-center justify-between py-2">
                                                 <div className="flex items-center gap-2">
-                                                    <label className={`text-base font-medium leading-normal transition-colors ${settings.allowInterrupts ? 'text-white' : 'text-white/40'}`} htmlFor="allow-interrupts">Allow Interrupts</label>
+                                                    <label className={`text-base font-medium leading-normal transition-colors ${settings.allowInterrupts ? 'text-white' : 'text-white/40'}`} htmlFor="allow-interrupts">{t('allow_interrupts')}</label>
                                                     <button className="text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-base">info</span></button>
                                                 </div>
                                                 <label className="relative inline-flex cursor-pointer items-center">
@@ -424,7 +426,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 </label>
                                             </div>
                                             <div className="flex items-center justify-between py-2">
-                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">Timer per Turn</label>
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">{t('timer_per_turn')}</label>
                                                 <label className="relative inline-flex cursor-pointer items-center">
                                                     <input
                                                         className="peer sr-only"
@@ -437,7 +439,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 </label>
                                             </div>
                                             <div className="flex items-center justify-between py-2">
-                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">Happy Ending Variant</label>
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">{t('happy_ending_variant')}</label>
                                                 <label className="relative inline-flex cursor-pointer items-center">
                                                     <input
                                                         className="peer sr-only"
@@ -450,7 +452,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 </label>
                                             </div>
                                             <div className="flex items-center justify-between py-2">
-                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-white' : 'text-white/40'}`} htmlFor="enable-video-chat">Enable Video Chat</label>
+                                                <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-white' : 'text-white/40'}`} htmlFor="enable-video-chat">{t('enable_video_chat')}</label>
                                                 <label className="relative inline-flex cursor-pointer items-center">
                                                     <input
                                                         className="peer sr-only"
@@ -465,9 +467,9 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                         </div>
                                     </div>
                                     <div className="bg-white/5 p-6 rounded-xl">
-                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Card Decks</h2>
+                                        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('decks')}</h2>
                                         <div className="flex flex-col">
-                                            <p className="text-white text-base font-medium leading-normal pb-2">Select Decks to Include</p>
+                                            <p className="text-white text-base font-medium leading-normal pb-2">{t('select_decks_to_include')}</p>
                                             <div className="space-y-2">
                                                 {decks.map((deck) => (
                                                     <label
@@ -492,7 +494,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                     </label>
                                                 ))}
                                                 {decks.length === 0 && (
-                                                    <p className="text-white/40 text-sm italic">No decks available. Create a deck in the admin panel first.</p>
+                                                    <p className="text-white/40 text-sm italic">{t('no_decks_available')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -500,7 +502,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                 </div>
                                 <div className="lg:col-span-1 flex flex-col gap-6">
                                     <div className="bg-white/5 p-6 rounded-xl flex-1 flex flex-col">
-                                        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">Players ({displayedPlayers.filter(p => p.role !== 'spectator').length})</h2>
+                                        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">{t('players')} ({displayedPlayers.filter(p => p.role !== 'spectator').length})</h2>
                                         <div className="flex-1 space-y-3 overflow-y-auto">
                                             {displayedPlayers.filter(p => p.role !== 'spectator').map((player) => (
                                                 <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-white/10'}`}>
@@ -508,18 +510,18 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                     <div className="flex flex-col">
                                                         <p className="text-white font-bold truncate">{getPlayerDisplayName(player)}</p>
                                                         <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-green-400' : 'text-white/50'}`}>
-                                                            {player.role === 'host' ? 'Host' : player.status === 'ready' ? 'Ready' : 'Not Ready'}
+                                                            {player.role === 'host' ? t('host') : player.status === 'ready' ? t('ready') : t('not_ready')}
                                                         </p>
                                                     </div>
                                                 </div>
                                             ))}
                                             {displayedPlayers.filter(p => p.role !== 'spectator').length === 0 && (
-                                                <p className="text-white/40 text-sm">No players yet.</p>
+                                                <p className="text-white/40 text-sm">{t('no_players_yet')}</p>
                                             )}
                                         </div>
                                         <div className="mt-4">
                                             <h3 className="text-white/70 text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-white/10">
-                                                Spectators ({displayedPlayers.filter(p => p.role === 'spectator').length})
+                                                {t('spectators')} ({displayedPlayers.filter(p => p.role === 'spectator').length})
                                             </h3>
                                             <div className="space-y-3">
                                                 {displayedPlayers.filter(p => p.role === 'spectator').map((player) => (
@@ -529,7 +531,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                     </div>
                                                 ))}
                                                 {displayedPlayers.filter(p => p.role === 'spectator').length === 0 && (
-                                                    <p className="text-white/40 text-sm">No spectators.</p>
+                                                    <p className="text-white/40 text-sm">{t('no_spectators')}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -539,7 +541,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                                 disabled={isStarting}
                                                 className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <span className="truncate">{isStarting ? 'Starting...' : 'Start Game'}</span>
+                                                <span className="truncate">{isStarting ? t('starting') : t('start_game')}</span>
                                             </button>
                                         </div>
                                     </div>

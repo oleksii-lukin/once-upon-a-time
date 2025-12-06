@@ -1,0 +1,1 @@
+A broken sword lying on the ground

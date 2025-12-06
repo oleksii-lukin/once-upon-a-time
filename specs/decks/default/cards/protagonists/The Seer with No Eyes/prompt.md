@@ -1,0 +1,1 @@
+A blindfolded mystic with hands hovering over a swirling crystal ball, purple magical aura

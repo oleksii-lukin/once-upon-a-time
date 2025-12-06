@@ -1,0 +1,1 @@
+A faithful wolf-dog standing guard beside a sleeping traveler, warm campfire lighting

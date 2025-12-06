@@ -1,0 +1,1 @@
+A heart symbol carved into a tree bark

@@ -1,0 +1,1 @@
+A loose floorboard prying open to reveal a hidden box

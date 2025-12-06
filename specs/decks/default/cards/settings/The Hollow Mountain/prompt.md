@@ -1,0 +1,1 @@
+A mountain cross-section showing a city inside a massive cavern

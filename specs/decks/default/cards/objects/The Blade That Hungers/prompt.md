@@ -1,0 +1,1 @@
+A jagged sword with teeth along the edge, organic texture

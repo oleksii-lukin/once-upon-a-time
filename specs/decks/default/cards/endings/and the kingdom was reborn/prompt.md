@@ -1,0 +1,1 @@
+Scaffolding around a castle being rebuilt, bright light

@@ -1,0 +1,1 @@
+A large stone hand held out palm up

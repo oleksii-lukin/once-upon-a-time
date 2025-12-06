@@ -1,0 +1,1 @@
+A person looking into a dark cave entrance

@@ -1,0 +1,1 @@
+A lantern glowing with spooky green flame, mist inside

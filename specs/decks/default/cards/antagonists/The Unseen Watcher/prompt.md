@@ -1,0 +1,1 @@
+Many glowing eyes peering out from the darkness of a dense forest

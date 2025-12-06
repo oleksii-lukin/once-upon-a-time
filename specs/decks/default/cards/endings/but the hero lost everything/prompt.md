@@ -1,0 +1,1 @@
+A hero standing alone in a ruined city

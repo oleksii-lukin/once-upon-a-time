@@ -1,0 +1,1 @@
+Venetian-style city streets with people traversing in gondolas wearing masks

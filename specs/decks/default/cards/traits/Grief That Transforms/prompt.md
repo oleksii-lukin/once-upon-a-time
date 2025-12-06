@@ -1,0 +1,1 @@
+A caterpillar cocoon hanging from a branch

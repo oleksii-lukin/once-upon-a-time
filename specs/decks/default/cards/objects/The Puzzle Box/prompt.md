@@ -1,0 +1,1 @@
+An intricate wooden cube with sliding panels

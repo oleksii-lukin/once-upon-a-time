@@ -1,0 +1,1 @@
+A jester's mask lying on the ground, surrounded by green toxic mist

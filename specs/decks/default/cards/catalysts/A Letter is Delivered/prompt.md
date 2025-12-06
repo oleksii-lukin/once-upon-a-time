@@ -1,0 +1,1 @@
+A hand handing a sealed envelope to another hand

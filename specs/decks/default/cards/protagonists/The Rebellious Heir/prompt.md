@@ -1,0 +1,1 @@
+A young noble tearing a royal decree in half, wearing fine clothes but messy hair, defiant expression

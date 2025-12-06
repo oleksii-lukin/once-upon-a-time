@@ -1,0 +1,1 @@
+A fist raising a glowing scepter

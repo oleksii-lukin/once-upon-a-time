@@ -1,0 +1,1 @@
+A hand reaching down to grab another hand from a ledge

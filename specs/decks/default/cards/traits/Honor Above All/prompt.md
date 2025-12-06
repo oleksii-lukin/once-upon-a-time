@@ -1,0 +1,1 @@
+A pristine white shield with a heraldic crest

@@ -1,0 +1,1 @@
+A charismatic leader preaching to a crowd, but their shadow cast on the wall has horns

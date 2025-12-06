@@ -1,0 +1,1 @@
+A snake eating its own tail (Ouroboros)

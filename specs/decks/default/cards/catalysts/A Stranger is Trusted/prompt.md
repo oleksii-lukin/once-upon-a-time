@@ -1,0 +1,1 @@
+Two hands shaking, one gloved, one bare

@@ -1,0 +1,1 @@
+A single candle burning in a dark room

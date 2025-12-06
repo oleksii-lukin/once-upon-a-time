@@ -1,0 +1,1 @@
+A hesitant young farmhand holding a rusty sword loosely, looking back at a peaceful village, simple tunic lighting

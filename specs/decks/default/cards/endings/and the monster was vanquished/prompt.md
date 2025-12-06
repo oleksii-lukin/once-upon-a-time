@@ -1,0 +1,1 @@
+A giant beast lying defeated on the ground

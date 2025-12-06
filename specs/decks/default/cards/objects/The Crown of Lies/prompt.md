@@ -1,0 +1,1 @@
+A gold crown that appears to be melting or dripping, distorted shape

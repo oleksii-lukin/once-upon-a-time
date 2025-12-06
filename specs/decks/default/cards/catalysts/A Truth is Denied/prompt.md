@@ -1,0 +1,1 @@
+A person covering their ears with their hands

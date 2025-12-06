@@ -1,0 +1,1 @@
+An hourglass with sand flowing upwards so gravity is reversed

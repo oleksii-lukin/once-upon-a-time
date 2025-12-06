@@ -1,0 +1,1 @@
+A flower left on a doorstep

@@ -1,0 +1,1 @@
+An empty chair at a dinner table

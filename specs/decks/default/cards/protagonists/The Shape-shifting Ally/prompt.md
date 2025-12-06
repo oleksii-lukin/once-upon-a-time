@@ -1,0 +1,1 @@
+A figure mid-transformation between human and fox, magical sparkles, dreamlike quality

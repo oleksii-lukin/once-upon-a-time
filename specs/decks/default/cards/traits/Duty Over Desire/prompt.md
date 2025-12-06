@@ -1,0 +1,1 @@
+A helmet resting on top of a love letter

@@ -1,0 +1,1 @@
+A sleeping baby in a basket with a glowing geometric mark on their forehead

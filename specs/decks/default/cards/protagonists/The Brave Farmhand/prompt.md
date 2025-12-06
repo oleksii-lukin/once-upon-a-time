@@ -1,0 +1,1 @@
+A sturdy peasant gripping a pitchfork, standing defiantly against a looming shadow, sunrise background

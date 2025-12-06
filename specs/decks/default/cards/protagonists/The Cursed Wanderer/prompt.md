@@ -1,0 +1,1 @@
+A traveler walking down a dusty road, a dark spectral shadow physically attached to their feet, ominous atmosphere

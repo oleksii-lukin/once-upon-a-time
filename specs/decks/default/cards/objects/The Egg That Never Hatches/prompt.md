@@ -1,0 +1,1 @@
+A stone egg with cracks that glow but never break

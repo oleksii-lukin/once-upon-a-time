@@ -1,0 +1,1 @@
+A lit torch setting fire to a pile of wood

@@ -1,0 +1,1 @@
+A heavily armored knight standing motionless in a stone archway, face completely hidden by a visor, stoic mood

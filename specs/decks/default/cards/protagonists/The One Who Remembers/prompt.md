@@ -1,0 +1,1 @@
+An ancient historian writing in a massive book, surrounded by floating memory bubbles

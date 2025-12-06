@@ -1,0 +1,1 @@
+An open hand offering help

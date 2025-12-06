@@ -1,0 +1,1 @@
+A tornado taking the shape of a humanoid upper body, lightning crackling

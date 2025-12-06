@@ -1,0 +1,1 @@
+A dark purple gem absorbing light around it

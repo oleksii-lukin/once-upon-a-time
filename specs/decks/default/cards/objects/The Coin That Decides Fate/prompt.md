@@ -1,0 +1,1 @@
+A gold coin spinning in the air, heads is a sun, tails is a skull

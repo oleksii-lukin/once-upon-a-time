@@ -1,0 +1,1 @@
+A transparent bridge spanning a starry void, galaxy background

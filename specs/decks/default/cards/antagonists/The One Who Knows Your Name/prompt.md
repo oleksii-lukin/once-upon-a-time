@@ -1,0 +1,1 @@
+A figure writing names in a black book, face hidden by hood

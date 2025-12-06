@@ -1,0 +1,1 @@
+Two pistols lying crossed on the grass at sunrise

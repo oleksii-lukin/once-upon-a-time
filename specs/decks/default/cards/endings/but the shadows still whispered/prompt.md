@@ -1,0 +1,1 @@
+Long shadows stretching in a lit room

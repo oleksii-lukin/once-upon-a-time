@@ -1,0 +1,1 @@
+An ancient scroll unrolling to reveal glowing text

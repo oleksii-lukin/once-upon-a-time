@@ -1,0 +1,1 @@
+A puzzle piece fitting into a missing spot in a picture

@@ -1,0 +1,1 @@
+A smoking crater with glowing meteor rocks inside

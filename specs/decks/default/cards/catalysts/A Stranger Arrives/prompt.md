@@ -1,0 +1,1 @@
+A silhouette standing in a doorway with a walking stick

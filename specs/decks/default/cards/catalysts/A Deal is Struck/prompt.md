@@ -1,0 +1,1 @@
+Two hands shaking over a contract signed in blood

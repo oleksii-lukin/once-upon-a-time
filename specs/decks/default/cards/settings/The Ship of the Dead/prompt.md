@@ -1,0 +1,1 @@
+A tattered ghostly pirate ship sailing on mist, green glow

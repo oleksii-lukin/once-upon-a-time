@@ -1,0 +1,1 @@
+A figure illuminated by a vertical beam of light from the heavens, holding a glowing artifact, ethereal atmosphere

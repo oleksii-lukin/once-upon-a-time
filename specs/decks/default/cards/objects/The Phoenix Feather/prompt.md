@@ -1,0 +1,1 @@
+A brilliant red and orange feather glowing with heat

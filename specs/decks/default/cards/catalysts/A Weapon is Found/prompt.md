@@ -1,0 +1,1 @@
+A sword half-buried in dirt being discovered

@@ -1,0 +1,1 @@
+A beautiful red rose with excessively large sharp thorns

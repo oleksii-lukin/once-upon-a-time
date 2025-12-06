@@ -1,0 +1,1 @@
+A dark mark on a hand that won't wash off

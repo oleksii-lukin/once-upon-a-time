@@ -1,0 +1,1 @@
+A wizard's wand exploding with sparks

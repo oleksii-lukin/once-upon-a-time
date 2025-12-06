@@ -1,0 +1,1 @@
+A peacock admiring itself in a mirror

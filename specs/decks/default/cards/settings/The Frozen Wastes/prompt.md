@@ -1,0 +1,1 @@
+An expansive barren landscape of ice and snow mountains, blizzard conditions

@@ -1,0 +1,1 @@
+A face forming in the fire of a hearth, speaking

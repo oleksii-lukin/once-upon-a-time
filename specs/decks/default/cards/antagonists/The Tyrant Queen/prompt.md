@@ -1,0 +1,1 @@
+A stern queen holding a scepter, sitting on a high iron throne, imposing perspective

@@ -1,0 +1,1 @@
+A canyon with multiple translucent reflections of a shouter

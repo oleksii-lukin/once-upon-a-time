@@ -1,0 +1,1 @@
+A black cloak that seems to dissolve into smoke at the edges

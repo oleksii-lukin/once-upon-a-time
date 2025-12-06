@@ -1,0 +1,1 @@
+A porcelain mask floating in the dark, whispering smoke coming from the mouth

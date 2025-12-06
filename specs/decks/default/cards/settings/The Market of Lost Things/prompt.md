@@ -1,0 +1,1 @@
+A chaotic bazaar stall filled with random mismatched items and trinkets

@@ -1,0 +1,1 @@
+A skeleton dog sitting by a grave

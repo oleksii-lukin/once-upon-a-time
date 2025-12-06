@@ -1,0 +1,1 @@
+A dusty letter sealed with wax found in a bottle

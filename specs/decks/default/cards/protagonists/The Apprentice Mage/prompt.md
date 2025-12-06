@@ -1,0 +1,1 @@
+A young student struggling to control a ball of chaotic sparking magic in their hands, library background

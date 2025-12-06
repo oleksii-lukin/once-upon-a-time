@@ -1,0 +1,1 @@
+A cradle glowing with warm light

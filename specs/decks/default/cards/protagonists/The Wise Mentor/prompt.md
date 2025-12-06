@@ -1,0 +1,1 @@
+An elderly scholar with a long white beard pointing the way with a gnarled staff, ancient ruins background

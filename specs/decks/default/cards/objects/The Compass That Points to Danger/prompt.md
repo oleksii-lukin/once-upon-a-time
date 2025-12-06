@@ -1,0 +1,1 @@
+A compass with the needle pointing at a red skull symbol

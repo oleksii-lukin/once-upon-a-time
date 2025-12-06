@@ -1,0 +1,1 @@
+A dark stain spreading on a white cloth

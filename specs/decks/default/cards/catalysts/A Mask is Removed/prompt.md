@@ -1,0 +1,1 @@
+A hand holding a mask away from a face

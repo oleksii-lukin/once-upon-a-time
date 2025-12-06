@@ -1,0 +1,1 @@
+A hand offering bread to a beggar in an alley

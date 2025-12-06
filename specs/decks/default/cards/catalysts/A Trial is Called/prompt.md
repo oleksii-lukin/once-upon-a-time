@@ -1,0 +1,1 @@
+A wooden gavel resting on a sound block

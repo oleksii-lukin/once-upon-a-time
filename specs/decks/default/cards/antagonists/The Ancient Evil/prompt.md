@@ -1,0 +1,1 @@
+A massive eldritch eye opening in a dark void, cosmic horror style

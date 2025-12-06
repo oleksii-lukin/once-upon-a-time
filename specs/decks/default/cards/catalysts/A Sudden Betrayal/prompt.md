@@ -1,0 +1,1 @@
+A dagger stabbing into a map on a table

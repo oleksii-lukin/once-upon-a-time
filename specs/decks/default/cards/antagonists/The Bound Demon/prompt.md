@@ -1,0 +1,1 @@
+A demon chained to a rock, struggling to break free, fiery background

@@ -1,0 +1,1 @@
+A glowing mechanical core with gears and pipes, cyberpunk

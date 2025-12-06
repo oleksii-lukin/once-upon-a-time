@@ -1,0 +1,1 @@
+A red moon in the night sky, with silhouettes transforming below

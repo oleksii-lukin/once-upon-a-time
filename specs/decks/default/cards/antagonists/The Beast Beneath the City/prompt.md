@@ -1,0 +1,1 @@
+A giant reptilian eye looking up from a sewer grate in a cobblestone street

@@ -1,0 +1,1 @@
+A heavy iron ring with chains hanging from it

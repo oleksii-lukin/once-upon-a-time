@@ -1,0 +1,1 @@
+An old warrior polishing a pristine sword by a fireplace, cozy interior lighting

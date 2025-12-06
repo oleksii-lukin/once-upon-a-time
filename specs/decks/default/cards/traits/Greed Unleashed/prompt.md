@@ -1,0 +1,1 @@
+Hands overflowing with gold coins

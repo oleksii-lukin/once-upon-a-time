@@ -1,0 +1,1 @@
+A person looking in a mirror, but the reflection is smiling evilly while the person is not

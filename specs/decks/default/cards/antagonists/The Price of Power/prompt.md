@@ -1,0 +1,1 @@
+A hand reaching for a glowing gem, the fingers turning to stone

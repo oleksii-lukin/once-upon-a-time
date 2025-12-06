@@ -1,0 +1,1 @@
+An open book with a quill writing on it by itself, magical aura

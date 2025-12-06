@@ -1,0 +1,1 @@
+A dusty untouched room

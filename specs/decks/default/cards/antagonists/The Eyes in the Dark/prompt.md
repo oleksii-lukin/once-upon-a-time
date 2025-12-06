@@ -1,0 +1,1 @@
+A pair of sharp glowing yellow eyes in pitch blackness

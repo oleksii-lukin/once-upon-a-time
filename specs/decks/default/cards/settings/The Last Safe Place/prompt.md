@@ -1,0 +1,1 @@
+A warm lit cabin surrounded by a dark scary forest

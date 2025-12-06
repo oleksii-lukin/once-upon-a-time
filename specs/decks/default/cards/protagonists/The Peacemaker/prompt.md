@@ -1,0 +1,1 @@
+A figure standing calmly between two crossing swords, holding up a white flower

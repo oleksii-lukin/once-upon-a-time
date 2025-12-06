@@ -1,0 +1,1 @@
+A sealed envelope being thrown into a fire

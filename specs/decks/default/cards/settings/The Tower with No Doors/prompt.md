@@ -1,0 +1,1 @@
+A smooth tall black stone tower with no windows or doors, monolith style

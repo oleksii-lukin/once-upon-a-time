@@ -1,0 +1,1 @@
+Infinite rows of bookshelves spiraling upwards, magical floating books

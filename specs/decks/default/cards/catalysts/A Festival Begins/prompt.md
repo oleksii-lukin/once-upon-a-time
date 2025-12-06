@@ -1,0 +1,1 @@
+Flags and banners flying over a town square, confetti

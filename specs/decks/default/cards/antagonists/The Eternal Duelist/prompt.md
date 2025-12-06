@@ -1,0 +1,1 @@
+A skeletal warrior in armor waiting with a drawn sword, foggy battlefield

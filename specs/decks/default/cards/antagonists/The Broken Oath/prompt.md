@@ -1,0 +1,1 @@
+A shattered stone tablet with runes, bleeding red liquid

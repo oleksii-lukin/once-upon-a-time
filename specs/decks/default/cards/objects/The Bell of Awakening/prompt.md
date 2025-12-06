@@ -1,0 +1,1 @@
+A silver hand bell radiating sound waves visually

@@ -1,0 +1,1 @@
+A shining silver sword reflecting a clear blue sky, pristine condition

@@ -1,0 +1,1 @@
+A hooded rogue crouching on a rooftop, holding a stolen jeweled purse, winking, moonlight

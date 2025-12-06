@@ -1,0 +1,1 @@
+A scarred veteran sharpening a large battleaxe, sitting on a wooden crate, gritty texture

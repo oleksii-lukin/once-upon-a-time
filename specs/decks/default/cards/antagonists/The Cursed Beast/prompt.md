@@ -1,0 +1,1 @@
+A werewolf-like creature howling at the moon, looking in pain rather than rage

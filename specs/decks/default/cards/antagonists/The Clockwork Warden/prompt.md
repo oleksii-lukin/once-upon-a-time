@@ -1,0 +1,1 @@
+A massive mechanical golem with a glowing red eye standing guard

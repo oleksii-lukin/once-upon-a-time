@@ -1,0 +1,1 @@
+A sun breaking through storm clouds

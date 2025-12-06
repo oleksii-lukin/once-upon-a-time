@@ -1,0 +1,1 @@
+A large yellow eye opening in the dark

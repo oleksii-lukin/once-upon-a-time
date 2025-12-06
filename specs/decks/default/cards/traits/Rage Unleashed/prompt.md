@@ -1,0 +1,1 @@
+A fist smashing a table, motion blur

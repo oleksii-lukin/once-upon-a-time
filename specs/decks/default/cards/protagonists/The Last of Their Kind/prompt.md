@@ -1,0 +1,1 @@
+A unique solitary creature looking sadly at a fossil of its own kind, sunset lighting

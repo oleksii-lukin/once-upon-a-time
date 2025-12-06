@@ -1,0 +1,1 @@
+Two identical figures standing side by side, one solid and colorful, the other faded and gray

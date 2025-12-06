@@ -1,0 +1,1 @@
+A friendly-looking ally holding a dagger behind their back, their reflection in a mirror shows a monster

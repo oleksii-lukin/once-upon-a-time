@@ -1,0 +1,1 @@
+A perfectly still lake reflecting the night sky and a second different moon

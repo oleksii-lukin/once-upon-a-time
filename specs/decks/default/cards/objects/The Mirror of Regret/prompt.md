@@ -1,0 +1,1 @@
+A hand mirror showing a crying face in reflection

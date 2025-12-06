@@ -1,0 +1,1 @@
+A ruined stone castle on a cliff, missing towers, overgrowth

@@ -1,0 +1,1 @@
+A person looking up at the stars, beginning to climb a ladder that extends into the clouds

@@ -1,0 +1,1 @@
+A magical glowing door standing freestanding in a field

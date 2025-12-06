@@ -1,0 +1,1 @@
+A well-dressed courtier offering a poisoned goblet with a warm smile

@@ -1,0 +1,1 @@
+A white castle floating on a cloud island, blue sky

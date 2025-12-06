@@ -1,0 +1,1 @@
+A thought bubble showing a castle burning

@@ -1,0 +1,1 @@
+A gaunt mouthless figure with a gaping maw explicitly on its stomach

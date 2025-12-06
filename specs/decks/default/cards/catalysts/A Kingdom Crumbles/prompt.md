@@ -1,0 +1,1 @@
+A stone tower collapsing, dust

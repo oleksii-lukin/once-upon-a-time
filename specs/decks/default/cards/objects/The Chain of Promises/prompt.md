@@ -1,0 +1,1 @@
+A chain made of golden links, unbreakable, glowing

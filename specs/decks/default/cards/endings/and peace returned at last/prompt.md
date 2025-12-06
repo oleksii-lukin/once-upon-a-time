@@ -1,0 +1,1 @@
+A dove flying over a battlefield with flowers growing

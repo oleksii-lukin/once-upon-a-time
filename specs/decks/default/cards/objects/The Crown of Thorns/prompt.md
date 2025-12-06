@@ -1,0 +1,1 @@
+A wreath made of dry thorny vines

@@ -1,0 +1,1 @@
+A jester in colorful motley juggling balls, with a knowing and serious expression contrasting the outfit

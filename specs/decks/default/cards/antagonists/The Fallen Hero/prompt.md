@@ -1,0 +1,1 @@
+A knight in black armor holding a broken shield with a noble crest, rain falling

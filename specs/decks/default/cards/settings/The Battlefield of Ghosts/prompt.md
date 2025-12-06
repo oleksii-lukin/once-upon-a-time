@@ -1,0 +1,1 @@
+A misty field with spectral soldiers fighting, translucent figures

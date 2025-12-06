@@ -1,0 +1,1 @@
+A dark ruler sitting on an obsidian throne, shrouded in living shadows, red eyes glowing

@@ -1,0 +1,1 @@
+Small thatched cottages nestled in a deep green valley, peaceful morning

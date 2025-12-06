@@ -1,0 +1,1 @@
+A gold necklace left on a stone altar

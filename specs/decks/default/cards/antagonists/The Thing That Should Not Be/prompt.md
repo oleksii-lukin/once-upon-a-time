@@ -1,0 +1,1 @@
+A writhing mass of tentacles and eyes in a geometric shape, abstract horror

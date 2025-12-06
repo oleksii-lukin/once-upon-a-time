@@ -1,0 +1,1 @@
+A glass vial containing swirling blue liquid, sparkles

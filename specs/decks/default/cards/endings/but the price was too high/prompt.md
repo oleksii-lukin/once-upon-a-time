@@ -1,0 +1,1 @@
+A pile of gold next to a skeleton

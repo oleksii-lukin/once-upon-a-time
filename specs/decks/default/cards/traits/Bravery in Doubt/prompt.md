@@ -1,0 +1,1 @@
+A shaking hand gripping a sword handle tightly

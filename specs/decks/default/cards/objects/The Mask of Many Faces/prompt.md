@@ -1,0 +1,1 @@
+A white mask with shifting facial features, blur effect

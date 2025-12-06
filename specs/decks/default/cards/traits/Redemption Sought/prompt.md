@@ -1,0 +1,1 @@
+A person kneeling in prayer, silhouette

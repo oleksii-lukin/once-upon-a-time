@@ -1,0 +1,1 @@
+A figure in the shadows holding strings attached to people walking below

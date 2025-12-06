@@ -1,0 +1,1 @@
+Broken metal bars of a jail cell

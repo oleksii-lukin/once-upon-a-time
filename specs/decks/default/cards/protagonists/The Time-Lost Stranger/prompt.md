@@ -1,0 +1,1 @@
+A person in futuristic clothing looking confused at a medieval market stall

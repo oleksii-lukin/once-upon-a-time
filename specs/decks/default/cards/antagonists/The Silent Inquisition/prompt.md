@@ -1,0 +1,1 @@
+Three robed figures with featureless white masks standing in a row

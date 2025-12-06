@@ -1,0 +1,1 @@
+A bookshelf swinging open like a door

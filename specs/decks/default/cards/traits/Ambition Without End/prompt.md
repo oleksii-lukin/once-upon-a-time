@@ -1,0 +1,1 @@
+A ladder reaching up into the sky endlessly

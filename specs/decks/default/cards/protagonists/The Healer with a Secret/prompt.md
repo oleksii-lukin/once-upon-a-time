@@ -1,0 +1,1 @@
+A medic mixing a potion in a vial, hiding a dagger behind their back, candlelit room

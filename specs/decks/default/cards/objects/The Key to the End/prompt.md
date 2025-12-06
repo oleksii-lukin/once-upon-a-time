@@ -1,0 +1,1 @@
+A skull-shaped skeleton key made of black bone

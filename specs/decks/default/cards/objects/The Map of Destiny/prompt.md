@@ -1,0 +1,1 @@
+A parchment map with glowing footsteps moving on it

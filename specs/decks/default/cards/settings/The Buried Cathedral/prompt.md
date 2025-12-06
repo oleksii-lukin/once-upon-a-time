@@ -1,0 +1,1 @@
+Stained glass windows sticking out of a sand dune

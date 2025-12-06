@@ -1,0 +1,1 @@
+A lantern emitting blue icy light, frosting the glass

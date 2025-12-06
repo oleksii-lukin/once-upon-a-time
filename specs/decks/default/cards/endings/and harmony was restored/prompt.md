@@ -1,0 +1,1 @@
+A yin-yang symbol made of nature and water elements

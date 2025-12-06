@@ -1,0 +1,1 @@
+A dropped teddy bear in a puddle

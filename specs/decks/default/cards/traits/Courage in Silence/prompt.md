@@ -1,0 +1,1 @@
+A person with tape over their mouth standing tall

@@ -1,0 +1,1 @@
+A small lonely child sitting on a stone step in a busy marketplace, clutching a worn wooden toy, soft melancholic lighting

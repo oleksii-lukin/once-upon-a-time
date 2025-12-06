@@ -1,0 +1,1 @@
+An open locket with a picture of a ghost inside

@@ -1,0 +1,1 @@
+A person looking anxiously at a heavy gold crown resting on a simple table

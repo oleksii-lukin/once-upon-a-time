@@ -1,0 +1,1 @@
+A cloaked figure looking at a distant castle on a hill, wearing a tarnished royal ring, dramatic lighting

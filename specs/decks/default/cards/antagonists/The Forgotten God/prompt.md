@@ -1,0 +1,1 @@
+A crumbling stone idol half-buried in sand, glowing faintly with remaining power

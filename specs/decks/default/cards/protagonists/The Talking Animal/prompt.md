@@ -1,0 +1,1 @@
+A wise-looking owl wearing small spectacles and reading an open book, magical library background

@@ -1,0 +1,1 @@
+A spiral stone staircase going up into clouds and down into darkness, Escher style

@@ -1,0 +1,1 @@
+A minstrel playing a lute, with gold musical notes and truth runes floating from their mouth

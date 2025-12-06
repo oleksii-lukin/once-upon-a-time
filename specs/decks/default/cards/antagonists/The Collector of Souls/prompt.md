@@ -1,0 +1,1 @@
+A cloaked figure holding a lantern containing glowing blue spirits

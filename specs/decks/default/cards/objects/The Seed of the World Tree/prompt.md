@@ -1,0 +1,1 @@
+A glowing green acorn pulsing with light

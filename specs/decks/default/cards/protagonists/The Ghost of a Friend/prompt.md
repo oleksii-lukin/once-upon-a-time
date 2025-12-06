@@ -1,0 +1,1 @@
+A translucent friendly spirit waving from a mist, blue spectral glow

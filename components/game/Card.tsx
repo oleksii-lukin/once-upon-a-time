@@ -2,6 +2,24 @@
 
 import { Database } from '@/supabase/types';
 
+function normalizeTypeKey(raw?: string) {
+  const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const map: Record<string, string> = {
+    endings: 'ending',
+    ending: 'ending',
+    catalysts: 'catalyst',
+    catalyst: 'catalyst',
+    characters: 'character',
+    character: 'character',
+    settings: 'setting',
+    setting: 'setting',
+    aspects: 'aspect',
+    aspect: 'aspect',
+    card: 'card',
+  };
+  return map[s] || 'card';
+}
+
 type CardData = Database['public']['Tables']['cards']['Row'];
 
 interface CardProps {
@@ -18,9 +36,9 @@ export default function Card({ card, isHoverable = false, onClick, className = '
     const { t, i18n } = useTranslation();
     const localizedContent = getLocalizedCardContent(card as any, i18n.language);
 
-    // key might be 'ending', 'catalyst' etc.
-    const typeKey = localizedContent.type.toLowerCase();
-    const localizedType = t(`card_types.${typeKey}`, { defaultValue: localizedContent.type });
+    const typeKey = normalizeTypeKey(localizedContent.type);
+    // prefer translated generic fallback instead of raw value
+    const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') });
 
     return (
         <div

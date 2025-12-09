@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Database } from '@/supabase/types';
 import { createClient } from '@/utils/supabase/client';
 import PlayerHand from './PlayerHand';
 import TableArea from './TableArea';
 import GameSidebar from './GameSidebar';
+import TurnControls from './TurnControls';
+import { useGameEngine } from './useGameEngine';
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -27,10 +29,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
     // Determine current player ID (user or guest)
     const currentPlayerId = currentUserId || currentGuestId || null;
-    const currentPlayer = players.find(p =>
+    const currentPlayer = useMemo(() => players.find(p =>
         (currentUserId && p.user_id === currentUserId) ||
         (currentGuestId && p.guest_id === currentGuestId)
-    );
+    ), [players, currentUserId, currentGuestId]);
 
     const fetchGameState = useCallback(async () => {
         // Get game session for this lobby
@@ -56,7 +58,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             if (playedData) {
                 const playedCardsWithType = playedData.map((item: any) => ({
                     ...item.cards,
-                    type: item.cards.category || 'Card',
+                    // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
+                    type: item.cards.category || item.cards.type || 'Card',
                     played_by: item.player_id
                 }));
                 setPlayedCards(playedCardsWithType);
@@ -77,13 +80,22 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
                 if (handData) {
                     const cardsWithType = handData.map((item: any) => ({
                         ...item.cards,
-                        type: item.cards.category || 'Card'
+                        // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
+                        type: item.cards.category || item.cards.type || 'Card'
                     }));
                     setHand(cardsWithType);
                 }
             }
         }
     }, [supabase, lobby.id, currentPlayer]);
+
+    // Initialize Game Engine Hook
+    const { playCard, passTurn, interrupt, winGame, isDrawing } = useGameEngine(
+        gameSession,
+        currentPlayer,
+        players,
+        fetchGameState
+    );
 
     // Initial fetch and subscriptions
     useEffect(() => {
@@ -119,79 +131,49 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         };
     }, [supabase, lobby.id, fetchGameState]);
 
-    const handlePlayCard = async (card: CardData) => {
-        if (!gameSession || !currentPlayer) return;
-
-        // Optimistic update
-        setHand(prev => prev.filter(c => c.id !== card.id));
-        setPlayedCards(prev => [...prev, { ...card, played_by: currentPlayer.id }]);
-
-        // 1. Remove from hand
-        const { error: removeError } = await supabase
-            .from('player_hands')
-            .delete()
-            .eq('game_session_id', gameSession.id)
-            .eq('player_id', currentPlayer.id)
-            .eq('card_id', card.id);
-
-        if (removeError) {
-            console.error('Error removing card from hand:', removeError);
-            fetchGameState();
-            return;
-        }
-
-        // 2. Add to played cards
-        const { error: playError } = await supabase
-            .from('played_cards')
-            .insert({
-                game_session_id: gameSession.id,
-                player_id: currentPlayer.id,
-                card_id: card.id,
-                position: playedCards.length
-            });
-
-        if (playError) {
-            console.error('Error playing card:', playError);
-            fetchGameState();
-        }
-    };
-
-    const handlePassTurn = async () => {
-        if (!gameSession || !currentPlayer) return;
-
-        // Sort players to ensure consistent order
-        const sortedPlayers = [...players].sort((a, b) => {
-            if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-                return a.turn_order - b.turn_order;
-            }
-            return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
-        });
-        const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id);
-
-        if (currentIndex === -1) return;
-
-        const nextIndex = (currentIndex + 1) % sortedPlayers.length;
-        const nextPlayer = sortedPlayers[nextIndex];
-
-        // Update game session
-        const { error } = await supabase
-            .from('game_sessions')
-            .update({
-                current_turn_player_id: nextPlayer.id,
-                storyteller_id: nextPlayer.id // Passing turn passes storyteller role
-            })
-            .eq('id', gameSession.id);
-
-        if (error) {
-            console.error('Error passing turn:', error);
-        }
-    };
-
-    // Derive storyteller info
+    // Derived State
+    const currentTurnPlayerId = gameSession?.current_turn_player_id;
+    const isMyTurn = currentTurnPlayerId === currentPlayer?.id;
     const storytellerPlayer = players.find(p => p.id === gameSession?.storyteller_id);
-    const storyteller = {
-        name: storytellerPlayer?.user_id || 'Unknown',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2kM4V9bGS-2Dg2TcCrOb1xrXHTpki0HFxceUe9rRUH_KaPjQoQN0jbVpQBa2TqwdSV6mLT7goB_ZbKcYdE6HhVLSZsN0vUX6TpnJB76NgakSFqG5GPRpJfTZutG1R4MZFq1tS4aLI30MXOnXwRNwfKPVi63SRkGypJCterAJp-9W9tUENfo_WoQl8qqxnbhBBCjNdZ8_aH3QWvhQpEDB30HdC0nTZ1-goYnn0fnbZNvY8TMelwbPtjboFMgS-PPv_iCKzUJkMDPQ'
+    const isStoryteller = storytellerPlayer?.id === currentPlayer?.id;
+
+    // Separate Ending Card from Hand for Logic (assuming Ending cards have type 'ending')
+    // For now, treat all as playable via Play Card, but Win button logic is specific.
+    const storyCards = hand.filter(c => c.type !== 'ending');
+    const endingCard = hand.find(c => c.type === 'ending');
+    const handSize = storyCards.length; // Only story cards count for "Empty Hand" logic usually
+
+    const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+
+    const onSelectCard = (card: CardData) => {
+        setSelectedCardId(prev => prev === card.id ? null : card.id);
+    };
+
+    const handlePlaySelected = async () => {
+        if (!selectedCardId) return;
+        const card = hand.find(c => c.id === selectedCardId);
+        if (card) {
+            await onPlayCard(card);
+            setSelectedCardId(null);
+        }
+    };
+
+    const onPlayCard = async (card: CardData) => {
+        // Optimistic Update
+        setHand(prev => prev.filter(c => c.id !== card.id));
+        setPlayedCards(prev => [...prev, { ...card, played_by: currentPlayer?.id }]);
+
+        await playCard(card, hand, playedCards.length);
+    };
+
+    const onWin = async () => {
+        // Find ending card via type='ending' (which we fixed in fetching)
+        const currentEndingCard = endingCard || hand.find(c => c.type === 'ending');
+        if (currentEndingCard) {
+            await winGame(currentEndingCard.id);
+        } else {
+            console.error("No ending card found in hand!");
+        }
     };
 
     return (
@@ -204,15 +186,32 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
             <main className="flex-1 flex flex-col justify-between overflow-hidden relative z-10">
                 <TableArea playedCards={playedCards} storytellerPlayer={storytellerPlayer} players={players} />
-                <PlayerHand cards={hand} onPlayCard={handlePlayCard} onPassTurn={handlePassTurn} isMyTurn={gameSession?.current_turn_player_id === currentPlayer?.id} />
+                <PlayerHand
+                    cards={hand}
+                    onSelectCard={onSelectCard}
+                    selectedCardId={selectedCardId}
+                    isMyTurn={isMyTurn}
+                />
             </main>
 
             <GameSidebar
                 players={players}
                 currentPlayerId={currentPlayerId}
-                currentTurnPlayerId={gameSession?.current_turn_player_id || ''}
+                currentTurnPlayerId={currentTurnPlayerId || ''}
                 lobbyId={lobby.id}
                 enableVideoChat={(lobby.settings as any)?.enableVideoChat !== false}
+            />
+
+            <TurnControls
+                isMyTurn={!!isMyTurn}
+                isStoryteller={!!isStoryteller}
+                canInterrupt={!isMyTurn && !!currentPlayer} // Can interrupt if logged in and not my turn
+                handSize={handSize}
+                selectedCardId={selectedCardId}
+                onPlaySelected={handlePlaySelected}
+                onPass={passTurn}
+                onInterrupt={interrupt}
+                onWin={onWin}
             />
         </div>
     );

@@ -88,39 +88,59 @@ export async function initializeGame(lobbyId: string) {
         return { error: 'Failed to create game session' };
     }
 
-    // Shuffle cards
-    const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+    // Separate cards into Endings and Story Cards
+    // Seed data uses type='ending' and category=NULL for ending cards
+    const endingCards = cards.filter(c => c.type === 'ending');
+    const storyCards = cards.filter(c => c.type !== 'ending');
 
-    // Deal cards to players (e.g., 5 cards each)
-    const cardsPerPlayer = 5;
+    if (endingCards.length < players.length) {
+        console.error('Not enough ending cards for players');
+        return { error: 'Not enough ending cards' };
+    }
+
+    // Shuffle both piles
+    const shuffledEndings = [...endingCards].sort(() => Math.random() - 0.5);
+    const shuffledStory = [...storyCards].sort(() => Math.random() - 0.5);
+
+    // Deal cards to players
+    const storyCardsPerPlayer = 5;
     const playerHands: any[] = [];
     const drawPile: any[] = [];
 
-    let cardIndex = 0;
+    let storyIndex = 0;
 
     // Deal cards to each player
     for (let i = 0; i < players.length; i++) {
-        for (let j = 0; j < cardsPerPlayer; j++) {
-            if (cardIndex < shuffledCards.length) {
+        // 1. Deal 1 Ending Card
+        playerHands.push({
+            game_session_id: gameSession.id,
+            player_id: players[i].id,
+            card_id: shuffledEndings[i].id,
+            position: 999, // Special position or high number to sort last? Or we handle sorting in UI.
+        });
+
+        // 2. Deal Story Cards
+        for (let j = 0; j < storyCardsPerPlayer; j++) {
+            if (storyIndex < shuffledStory.length) {
                 playerHands.push({
                     game_session_id: gameSession.id,
                     player_id: players[i].id,
-                    card_id: shuffledCards[cardIndex].id,
+                    card_id: shuffledStory[storyIndex].id,
                     position: j,
                 });
-                cardIndex++;
+                storyIndex++;
             }
         }
     }
 
-    // Remaining cards go to draw pile
-    while (cardIndex < shuffledCards.length) {
+    // Remaining Story Cards go to draw pile
+    while (storyIndex < shuffledStory.length) {
         drawPile.push({
             game_session_id: gameSession.id,
-            card_id: shuffledCards[cardIndex].id,
-            position: cardIndex - (players.length * cardsPerPlayer),
+            card_id: shuffledStory[storyIndex].id,
+            position: storyIndex - (players.length * storyCardsPerPlayer),
         });
-        cardIndex++;
+        storyIndex++;
     }
 
     // Insert player hands

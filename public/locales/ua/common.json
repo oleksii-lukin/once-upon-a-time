@@ -131,5 +131,33 @@
     "spectators": "Спостерігачі",
     "no_players_yet": "Гравців поки немає.",
     "no_spectators": "Спостерігачів немає.",
-    "selected_decks": "Обрані колоди"
+    "selected_decks": "Вибрані колоди",
+    "game": {
+        "ending_card_label": "Кінцівка",
+        "unknown_player": "Невідомий",
+        "storyteller_label": "Оповідач",
+        "played_by": "Зіграно {{name}}",
+        "no_cards_played": "Карти ще не зіграні...",
+        "play_card_btn": "Зіграти карту",
+        "pass_turn_btn": "Передати хід",
+        "play_ending_win_btn": "Зіграти кінцівку і виграти!",
+        "interrupt_btn": "Перервати!",
+        "mute_audio": "Вимкнути мікрофон",
+        "unmute_audio": "Увімкнути мікрофон",
+        "turn_off_video": "Вимкнути камеру",
+        "turn_on_video": "Увімкнути камеру",
+        "device_settings": "Налаштування пристроїв",
+        "microphone_label": "Мікрофон",
+        "camera_label": "Камера",
+        "waiting_players": "Очікування інших гравців...",
+        "current_storyteller": "Поточний оповідач"
+    },
+    "card_types": {
+        "ending": "Кінцівка",
+        "card": "Карта",
+        "catalyst": "Каталізатор",
+        "character": "Персонаж",
+        "setting": "Місце",
+        "aspect": "Аспект"
+    }
 }

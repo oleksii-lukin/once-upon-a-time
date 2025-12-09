@@ -131,5 +131,33 @@
     "spectators": "Наблюдатели",
     "no_players_yet": "Игроков пока нет.",
     "no_spectators": "Наблюдателей нет.",
-    "selected_decks": "Выбранные колоды"
+    "selected_decks": "Выбранные колоды",
+    "game": {
+        "ending_card_label": "Концовка",
+        "unknown_player": "Неизвестный",
+        "storyteller_label": "Рассказчик",
+        "played_by": "Сыграно {{name}}",
+        "no_cards_played": "Карты еще не сыграны...",
+        "play_card_btn": "Сыграть карту",
+        "pass_turn_btn": "Передать ход",
+        "play_ending_win_btn": "Сыграть концовку и выиграть!",
+        "interrupt_btn": "Прервать!",
+        "mute_audio": "Выключить микрофон",
+        "unmute_audio": "Включить микрофон",
+        "turn_off_video": "Выключить камеру",
+        "turn_on_video": "Включить камеру",
+        "device_settings": "Настройки устройств",
+        "microphone_label": "Микрофон",
+        "camera_label": "Камера",
+        "waiting_players": "Ожидание других игроков...",
+        "current_storyteller": "Текущий рассказчик"
+    },
+    "card_types": {
+        "ending": "Концовка",
+        "card": "Карта",
+        "catalyst": "Катализатор",
+        "character": "Персонаж",
+        "setting": "Место",
+        "aspect": "Аспект"
+    }
 }

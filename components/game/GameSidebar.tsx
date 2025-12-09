@@ -5,6 +5,7 @@ import { Database } from '@/supabase/types';
 import { getPlayerDisplayName } from '../lobby/PlayerDisplay';
 import useWebRTC from './useWebRTC';
 import VideoPlayer from './VideoPlayer';
+import { useTranslation } from 'react-i18next';
 
 type Player = Database['public']['Tables']['players']['Row'];
 
@@ -17,6 +18,7 @@ interface GameSidebarProps {
 }
 
 export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true }: GameSidebarProps) {
+    const { t } = useTranslation();
     const {
         localStream,
         remoteStreams,
@@ -62,21 +64,21 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                 <button
                     onClick={handleToggleAudio}
                     className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-                    title={audioEnabled ? "Mute Microphone" : "Unmute Microphone"}
+                    title={audioEnabled ? t('game.mute_audio') : t('game.unmute_audio')}
                 >
                     <span className="material-symbols-outlined text-lg">{audioEnabled ? 'mic' : 'mic_off'}</span>
                 </button>
                 <button
                     onClick={handleToggleVideo}
                     className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-                    title={videoEnabled ? "Turn Off Camera" : "Turn On Camera"}
+                    title={videoEnabled ? t('game.turn_off_video') : t('game.turn_on_video')}
                 >
                     <span className="material-symbols-outlined text-lg">{videoEnabled ? 'videocam' : 'videocam_off'}</span>
                 </button>
                 <button
                     onClick={() => setShowSettings(!showSettings)}
                     className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
-                    title="Device Settings"
+                    title={t('game.device_settings')}
                 >
                     <span className="material-symbols-outlined text-lg">settings</span>
                 </button>
@@ -85,7 +87,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                 {showSettings && (
                     <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl z-50 flex flex-col gap-3">
                         <div>
-                            <label className="text-xs text-white/50 mb-1 block">Microphone</label>
+                            <label className="text-xs text-white/50 mb-1 block">{t('game.microphone_label')}</label>
                             <select
                                 className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
                                 value={selectedAudioDeviceId}
@@ -93,13 +95,13 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                             >
                                 {devices.filter(d => d.kind === 'audioinput').map(device => (
                                     <option key={device.deviceId} value={device.deviceId}>
-                                        {device.label || `Microphone ${device.deviceId.slice(0, 5)}...`}
+                                        {device.label || `${t('game.microphone_label')} ${device.deviceId.slice(0, 5)}...`}
                                     </option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs text-white/50 mb-1 block">Camera</label>
+                            <label className="text-xs text-white/50 mb-1 block">{t('game.camera_label')}</label>
                             <select
                                 className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
                                 value={selectedVideoDeviceId}
@@ -107,7 +109,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                             >
                                 {devices.filter(d => d.kind === 'videoinput').map(device => (
                                     <option key={device.deviceId} value={device.deviceId}>
-                                        {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
+                                        {device.label || `${t('game.camera_label')} ${device.deviceId.slice(0, 5)}...`}
                                     </option>
                                 ))}
                             </select>
@@ -163,14 +165,14 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                 </div>
                 {gridPlayers.length === 0 && (
                     <div className="text-center p-8 border-2 border-dashed border-white/10 rounded-xl">
-                        <p className="text-white/40 text-sm italic">Waiting for other players...</p>
+                        <p className="text-white/40 text-sm italic">{t('game.waiting_players')}</p>
                     </div>
                 )}
             </div>
 
             {/* Current Turn Indicator */}
             <div className="mt-auto text-center p-4 bg-white/5 rounded-lg flex-shrink-0">
-                <p className="text-sm text-white/70">Current Storyteller</p>
+                <p className="text-sm text-white/70">{t('game.current_storyteller')}</p>
                 <p className="text-lg font-bold text-white">
                     {getPlayerDisplayName(players.find(p => p.id === currentTurnPlayerId) || players[0])}
                 </p>

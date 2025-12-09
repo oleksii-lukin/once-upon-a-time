@@ -3,6 +3,7 @@
 import Card from './Card';
 import { Database } from '@/supabase/types';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Mock card type for now until we have the full schema
 type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string; position?: number };
@@ -15,6 +16,7 @@ interface PlayerHandProps {
 }
 
 export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn }: PlayerHandProps) {
+    const { t } = useTranslation();
     // Sort cards: Story cards first, Ending cards last
     // We use useMemo to prevent re-sorting on every render if cards dependencies don't change
     const sortedCards = React.useMemo(() => {
@@ -57,7 +59,7 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                                 />
                                 {isEnding && (
                                     <div className="text-center text-xs text-yellow-400 mt-3 font-bold tracking-[0.2em] uppercase drop-shadow-md">
-                                        Ending
+                                        {t('game.ending_card_label')}
                                     </div>
                                 )}
                             </div>

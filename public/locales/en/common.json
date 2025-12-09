@@ -131,5 +131,33 @@
     "spectators": "Spectators",
     "no_players_yet": "No players yet.",
     "no_spectators": "No spectators.",
-    "selected_decks": "Selected Decks"
+    "selected_decks": "Selected Decks",
+    "game": {
+        "ending_card_label": "Ending",
+        "unknown_player": "Unknown",
+        "storyteller_label": "Storyteller",
+        "played_by": "Played by {{name}}",
+        "no_cards_played": "No cards played yet...",
+        "play_card_btn": "Play Card",
+        "pass_turn_btn": "Pass Turn",
+        "play_ending_win_btn": "Play Ending & Win!",
+        "interrupt_btn": "Interrupt!",
+        "mute_audio": "Mute Microphone",
+        "unmute_audio": "Unmute Microphone",
+        "turn_off_video": "Turn Off Camera",
+        "turn_on_video": "Turn On Camera",
+        "device_settings": "Device Settings",
+        "microphone_label": "Microphone",
+        "camera_label": "Camera",
+        "waiting_players": "Waiting for other players...",
+        "current_storyteller": "Current Storyteller"
+    },
+    "card_types": {
+        "ending": "Ending",
+        "card": "Card",
+        "catalyst": "Catalyst",
+        "character": "Character",
+        "setting": "Setting",
+        "aspect": "Aspect"
+    }
 }

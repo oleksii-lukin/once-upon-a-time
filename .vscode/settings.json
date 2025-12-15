@@ -1,4 +1,6 @@
 {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
     "i18n-ally.localesPaths": [
         "app/i18n",
         "public/locales"

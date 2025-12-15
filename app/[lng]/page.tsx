@@ -15,7 +15,7 @@ export default async function Home({ params }: { params: Promise<{ lng: string }
           <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
           <div className="flex items-center gap-4">
             <div className="flex gap-2">
-              {languages.filter((l) => l !== lng).map((l) => (
+              {languages.filter(l => l !== lng).map(l => (
                 <span key={l}>
                   <Link href={`/${l}`} className="text-white/70 hover:text-white uppercase text-sm font-semibold">
                     {l}

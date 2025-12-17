@@ -3,6 +3,7 @@ import DeckEditor from '@/components/admin/DeckEditor'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { useTranslation } from '@/app/i18n/server'
+import { ArrowLeft as ArrowLeftIcon } from 'lucide-react'
 
 export default async function DeckDetailsPage({
   params,
@@ -28,7 +29,7 @@ export default async function DeckDetailsPage({
       <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
         <div className="flex items-center gap-4">
           <Link href={`/${lng}/admin/decks`} className="text-white/60 hover:text-white">
-            <span className="material-symbols-outlined">arrow_back</span>
+            <ArrowLeftIcon className="w-5 h-5" />
           </Link>
           <h1 className="text-white text-2xl font-bold">{deck.name}</h1>
         </div>

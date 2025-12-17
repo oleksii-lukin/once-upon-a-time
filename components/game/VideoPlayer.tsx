@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Palette as PaletteIcon } from 'lucide-react'
 import { Database } from '@/supabase/types'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 
@@ -52,7 +53,7 @@ export default function VideoPlayer({ stream, player, isLocal = false, styleCoun
           </div>
           {styleCount !== undefined && (
             <div className="flex items-center gap-1 bg-black/50 text-white px-2 py-0.5 rounded-full text-xs">
-              <span className="material-symbols-outlined text-xs">style</span>
+              <PaletteIcon className="w-3.5 h-3.5" />
               <span>{styleCount}</span>
             </div>
           )}

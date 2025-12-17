@@ -1,6 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import {
+  Mic as MicOnIcon,
+  MicOff as MicOffIcon,
+  Video as VideoOnIcon,
+  VideoOff as VideoOffIcon,
+  Settings as SettingsIcon,
+} from 'lucide-react'
 import { Database } from '@/supabase/types'
 import { getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import useWebRTC from './useWebRTC'
@@ -66,21 +73,21 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
           className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
           title={audioEnabled ? t('game.mute_audio') : t('game.unmute_audio')}
         >
-          <span className="material-symbols-outlined text-lg">{audioEnabled ? 'mic' : 'mic_off'}</span>
+          {audioEnabled ? <MicOnIcon className="w-5 h-5" /> : <MicOffIcon className="w-5 h-5" />}
         </button>
         <button
           onClick={handleToggleVideo}
           className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
           title={videoEnabled ? t('game.turn_off_video') : t('game.turn_on_video')}
         >
-          <span className="material-symbols-outlined text-lg">{videoEnabled ? 'videocam' : 'videocam_off'}</span>
+          {videoEnabled ? <VideoOnIcon className="w-5 h-5" /> : <VideoOffIcon className="w-5 h-5" />}
         </button>
         <button
           onClick={() => setShowSettings(!showSettings)}
           className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
           title={t('game.device_settings')}
         >
-          <span className="material-symbols-outlined text-lg">settings</span>
+          <SettingsIcon className="w-5 h-5" />
         </button>
 
         {/* Device Settings Popover */}

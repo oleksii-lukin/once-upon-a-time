@@ -16,3 +16,7 @@
 - The application connects to the remote Supabase instance
 - Connection details are in `.env.local` (gitignored)
 - Use Supabase client libraries for all database operations
+
+## Icons
+- Use lucide-react icons
+- Add suffix for any icon in use, like UserIcon instead of just User

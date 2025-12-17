@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { User as UserIcon, Edit as EditIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
@@ -63,7 +64,7 @@ export default function UserProfileCard({ compact = false }: UserProfileCardProp
     return (
       <div className="bg-gray-50 dark:bg-white/5 border border-gray-200/20 dark:border-white/20 rounded-xl p-6 flex flex-col items-center text-center">
         <div className="bg-gray-200 dark:bg-white/20 rounded-full size-24 mb-4 flex items-center justify-center">
-          <span className="material-symbols-outlined text-4xl text-gray-400 dark:text-white/40">person</span>
+          <UserIcon className="w-10 h-10 text-gray-400 dark:text-white/40" />
         </div>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('guest_user')}</h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">{t('sign_in_to_track')}</p>
@@ -113,7 +114,7 @@ export default function UserProfileCard({ compact = false }: UserProfileCardProp
           href={`/${lng}/profile`}
           className="mt-4 w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-white/10 hover:bg-white/20 text-gray-700 dark:text-white text-sm font-medium transition-colors"
         >
-          <span className="material-symbols-outlined text-base">edit</span>
+          <EditIcon className="w-4 h-4" />
           {t('edit_profile')}
         </Link>
       )}

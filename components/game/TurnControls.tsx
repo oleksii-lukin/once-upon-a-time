@@ -1,5 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { Play as PlayIcon } from 'lucide-react'
 
 interface TurnControlsProps {
   isMyTurn: boolean
@@ -35,7 +36,7 @@ export default function TurnControls({
             disabled={!selectedCardId}
             className="bg-primary hover:bg-primary/80 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined">play_arrow</span>
+            <PlayIcon className="w-5 h-5" />
             {' '}
             {t('game.play_card_btn')}
           </button>

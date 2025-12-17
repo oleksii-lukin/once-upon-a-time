@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { X as CrossIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useRouter } from 'next/navigation'
@@ -261,7 +262,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
               onClick={() => setSelectedLobby(null)}
               className="text-white/50 hover:text-white"
             >
-              <span className="material-symbols-outlined">close</span>
+              <CrossIcon className="w-5 h-5" />
             </button>
           </div>
 

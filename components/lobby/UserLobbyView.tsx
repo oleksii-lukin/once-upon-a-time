@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Copy as CopyIcon, Info as InfoIcon, Check as CheckIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useUser, UserButton } from '@clerk/nextjs'
@@ -215,7 +216,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                   </span>
                   <span className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</span>
                   <button className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                    <span className="material-symbols-outlined text-xl">content_copy</span>
+                    <CopyIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -264,7 +265,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
                           <label className="text-white text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</label>
-                          <button className="text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-base">info</span></button>
+                          <button className="text-white/50 hover:text-white transition-colors"><InfoIcon className="w-4 h-4" /></button>
                         </div>
                         <label className="relative inline-flex items-center opacity-50 pointer-events-none">
                           <input className="peer sr-only" disabled id="allow-interrupts" type="checkbox" checked={settings.allowInterrupts} />
@@ -378,7 +379,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       </div>
                       <div className="flex gap-3">
                         <button className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors gap-2">
-                          <span className="material-symbols-outlined">check</span>
+                          <CheckIcon className="w-5 h-5" />
                           <span className="truncate">{t('ready')}</span>
                         </button>
                         <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-white/10 text-white/80 text-base font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Check as CheckIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
@@ -162,7 +163,7 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
               : saved
                 ? (
                     <>
-                      <span className="material-symbols-outlined text-lg">check</span>
+                      <CheckIcon className="w-4 h-4" />
                       <span>{t('saved')}</span>
                     </>
                   )

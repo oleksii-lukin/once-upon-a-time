@@ -1,6 +1,13 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
 import { useTranslation } from '@/app/i18n/server'
+import {
+  LayoutDashboard as LayoutDashboardIcon,
+  Palette as PaletteIcon,
+  Users as UsersIcon,
+  DoorOpen as DoorOpenIcon,
+  Settings as SettingsIcon,
+} from 'lucide-react'
 
 export default async function AdminLayout({ children, params }: { children: ReactNode, params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -14,23 +21,23 @@ export default async function AdminLayout({ children, params }: { children: Reac
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           <Link href={`/${lng}/admin`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">dashboard</span>
+            <LayoutDashboardIcon className="w-5 h-5" />
             <span className="text-sm font-medium">{t('dashboard')}</span>
           </Link>
           <Link href={`/${lng}/admin/decks`} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#302839] text-white">
-            <span className="material-symbols-outlined">style</span>
+            <PaletteIcon className="w-5 h-5" />
             <span className="text-sm font-medium">{t('decks')}</span>
           </Link>
           <Link href={`/${lng}/admin/players`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">group</span>
+            <UsersIcon className="w-5 h-5" />
             <span className="text-sm font-medium">{t('players')}</span>
           </Link>
           <Link href={`/${lng}/admin/lobbies`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">meeting_room</span>
+            <DoorOpenIcon className="w-5 h-5" />
             <span className="text-sm font-medium">{t('lobbies')}</span>
           </Link>
           <Link href={`/${lng}/admin/settings`} className="flex items-center gap-3 px-3 py-2 rounded-lg text-white/70 hover:bg-white/5 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">settings</span>
+            <SettingsIcon className="w-5 h-5" />
             <span className="text-sm font-medium">{t('settings')}</span>
           </Link>
         </nav>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Sword as SwordIcon, Hourglass as HourglassIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useRouter, useParams } from 'next/navigation'
@@ -127,9 +128,11 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
               </td>
               <td className="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
                 <div className={`flex items-center gap-2 ${lobby.status === 'playing' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  <span className="material-symbols-outlined text-base">
-                    {lobby.status === 'playing' ? 'swords' : 'hourglass_top'}
-                  </span>
+                  {lobby.status === 'playing' ? (
+                    <SwordIcon className="w-4 h-4" />
+                  ) : (
+                    <HourglassIcon className="w-4 h-4" />
+                  )}
                   <span className="capitalize">{t(lobby.status as 'waiting' | 'playing' | 'finished')}</span>
                 </div>
               </td>

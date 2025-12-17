@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { AlertCircle as AlertCircleIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
@@ -124,7 +125,7 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#141118] text-white p-4">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 max-w-md w-full text-center">
-          <span className="material-symbols-outlined text-4xl text-red-500 mb-4">error</span>
+          <AlertCircleIcon className="w-10 h-10 text-red-500 mb-4 inline-block" />
           <h1 className="text-xl font-bold mb-2">{t('error', 'Error')}</h1>
           <p className="text-white/70 mb-6">{errorMessage}</p>
           <button

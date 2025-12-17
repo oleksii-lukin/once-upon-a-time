@@ -4,6 +4,7 @@ import LobbyList from '@/components/lobby/LobbyList'
 import CreateLobbyButton from '@/components/lobby/CreateLobbyButton'
 import UserProfileCard from '@/components/profile/UserProfileCard'
 import { useTranslation } from '@/app/i18n/server'
+import { Search as SearchIcon, UserPlus as UserPlusIcon } from 'lucide-react'
 
 export default async function LobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -50,7 +51,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                 <label className="flex flex-col min-w-40 h-12 w-full flex-1">
                   <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
                     <div className="text-gray-400 flex border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 items-center justify-center pl-4 rounded-l-lg border-r-0">
-                      <span className="material-symbols-outlined text-gray-500 dark:text-gray-400">search</span>
+                      <SearchIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </div>
                     <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder={t('search_placeholder')} />
                   </div>
@@ -83,7 +84,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                       </div>
                     </div>
                     <button className="text-primary hover:text-primary/80 transition-colors">
-                      <span className="material-symbols-outlined">person_add</span>
+                      <UserPlusIcon className="w-5 h-5" />
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
@@ -98,7 +99,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                       </div>
                     </div>
                     <button className="text-primary hover:text-primary/80 transition-colors">
-                      <span className="material-symbols-outlined">person_add</span>
+                      <UserPlusIcon className="w-5 h-5" />
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
@@ -113,7 +114,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                       </div>
                     </div>
                     <button className="text-primary hover:text-primary/80 transition-colors">
-                      <span className="material-symbols-outlined">person_add</span>
+                      <UserPlusIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </div>

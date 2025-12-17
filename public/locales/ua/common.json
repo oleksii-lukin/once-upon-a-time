@@ -74,6 +74,7 @@
     "finished": "Завершено",
     "lobby_not_found": "Лобі не знайдено",
     "failed_to_join": "Не вдалося приєднатися до лобі",
+    "failed_to_start_game": "Не вдалося почати гру: {{error}}",
     "unexpected_error": "Сталася неочікувана помилка",
     "error": "Помилка",
     "back_to_home": "Повернутися на головну",

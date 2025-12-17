@@ -74,6 +74,7 @@
     "finished": "Завершено",
     "lobby_not_found": "Лобби не найдено",
     "failed_to_join": "Не удалось присоединиться к лобби",
+    "failed_to_start_game": "Не удалось начать игру: {{error}}",
     "unexpected_error": "Произошла непредвиденная ошибка",
     "error": "Ошибка",
     "back_to_home": "Вернуться на главную",

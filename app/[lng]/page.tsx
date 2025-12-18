@@ -1,7 +1,5 @@
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import { useTranslation } from '../i18n/server'
-import Link from 'next/link'
-import { languages } from '../i18n/settings'
 
 export default async function Home({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -9,34 +7,6 @@ export default async function Home({ params }: { params: Promise<{ lng: string }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-      {/* Header */}
-      <header className="fixed top-0 w-full bg-black/20 backdrop-blur-sm border-b border-white/10 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              {languages.filter(l => l !== lng).map(l => (
-                <span key={l}>
-                  <Link href={`/${l}`} className="text-white/70 hover:text-white uppercase text-sm font-semibold">
-                    {l}
-                  </Link>
-                </span>
-              ))}
-            </div>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20 transition-all">
-                  {t('sign_in')}
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <main className="container mx-auto px-4 pt-32 pb-16">
         <div className="max-w-4xl mx-auto text-center">

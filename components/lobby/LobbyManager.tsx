@@ -79,6 +79,23 @@ export default function LobbyManager({
     }
   }, [lobby.id, supabase])
 
+  // Hide the global header during active gameplay and restore otherwise
+  useEffect(() => {
+    const header = typeof document !== 'undefined' ? document.getElementById('site-header') : null
+    if (!header) return
+    if (lobby.status === 'playing') {
+      header.style.display = 'none'
+    }
+    else {
+      header.style.display = ''
+    }
+    return () => {
+      if (header) {
+        header.style.display = ''
+      }
+    }
+  }, [lobby.status])
+
   if (lobby.status === 'playing') {
     return <GameView lobby={lobby} players={players} currentUserId={userId} currentGuestId={guestId} />
   }

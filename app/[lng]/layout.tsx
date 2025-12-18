@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
+import SiteHeader from '@/components/layout/SiteHeader'
 import '../globals.css'
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
         >
+          <SiteHeader />
           {children}
         </body>
       </html>

@@ -1,22 +1,29 @@
 # Project Rules for Once Upon a Time
 
-## Database Configuration
+## Database
+
+### Database Configuration
 - **CRITICAL**: This project uses a **REMOTE Supabase database**, NOT a local one
 - The database is connected via `supabase connect`
 - **NEVER** run `npx supabase db reset` or any local database commands
 - **NEVER** attempt to apply migrations locally
 - All database changes must be applied to the remote database
 
-## How to Apply Migrations
+### How to Apply Migrations
 1. Use Supabase Dashboard SQL Editor, OR
 2. Use `npx supabase db push` to push migrations to remote, OR
 3. Manually run SQL in the remote database
 
-## Database Access
+### Database Access
 - The application connects to the remote Supabase instance
 - Connection details are in `.env.local` (gitignored)
 - Use Supabase client libraries for all database operations
 
-## Icons
+## UI
+
+### Components
+- Project uses tailwind and shadcn components when possible
+
+### Icons
 - Use lucide-react icons
 - Add suffix for any icon in use, like UserIcon instead of just User

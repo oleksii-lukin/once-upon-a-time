@@ -128,11 +128,13 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
               </td>
               <td className="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
                 <div className={`flex items-center gap-2 ${lobby.status === 'playing' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {lobby.status === 'playing' ? (
-                    <SwordIcon className="w-4 h-4" />
-                  ) : (
-                    <HourglassIcon className="w-4 h-4" />
-                  )}
+                  {lobby.status === 'playing'
+                    ? (
+                        <SwordIcon className="w-4 h-4" />
+                      )
+                    : (
+                        <HourglassIcon className="w-4 h-4" />
+                      )}
                   <span className="capitalize">{t(lobby.status as 'waiting' | 'playing' | 'finished')}</span>
                 </div>
               </td>

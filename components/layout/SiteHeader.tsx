@@ -1,14 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { useTranslation } from '@/app/i18n/client'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
-export default function SiteHeader() {
-  const params = useParams()
-  const lng = (params?.lng as string) || 'en'
+export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = useTranslation(lng, 'common')
 
   return (
@@ -49,6 +47,7 @@ export default function SiteHeader() {
               </span>
             ))}
           </div>
+          <ThemeToggle />
           <ClerkLoading>
             <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
           </ClerkLoading>

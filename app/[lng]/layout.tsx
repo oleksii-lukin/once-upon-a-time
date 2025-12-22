@@ -1,18 +1,10 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import SiteHeader from '@/components/layout/SiteHeader'
 import '../globals.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' })
 
 import { dir } from 'i18next'
 import { languages } from '../i18n/settings'
@@ -32,16 +24,34 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang={lng} dir={dir(lng)}>
+      <html lang={lng} dir={dir(lng)} suppressHydrationWarning>
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+          {/* Inline script to set initial theme before paint to avoid flash */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+(() => {
+  try {
+    const storageKey = 'theme';
+    const stored = localStorage.getItem(storageKey);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldDark = stored ? stored === 'dark' : prefersDark;
+    const root = document.documentElement;
+    if (shouldDark) root.classList.add('dark'); else root.classList.remove('dark');
+  } catch {}
+})();
+              `,
+            }}
+          />
         </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
+          suppressHydrationWarning
+          className={`${jetbrainsMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
         >
-          <SiteHeader />
+          <SiteHeader lng={lng} />
           {children}
         </body>
       </html>

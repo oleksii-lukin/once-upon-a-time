@@ -65,6 +65,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import { PlusIcon, BluetoothIcon, MoreVerticalIcon, FileIcon, FolderIcon, FolderOpenIcon, FileCodeIcon, MoreHorizontalIcon, FolderSearchIcon, SaveIcon, DownloadIcon, EyeIcon, LayoutIcon, PaletteIcon, SunIcon, MoonIcon, MonitorIcon, UserIcon, CreditCardIcon, SettingsIcon, KeyboardIcon, LanguagesIcon, BellIcon, MailIcon, ShieldIcon, HelpCircleIcon, FileTextIcon, LogOutIcon } from 'lucide-react'
 
 export function ComponentExample() {
@@ -97,9 +98,11 @@ function CardExample() {
         </CardHeader>
         <CardFooter>
           <AlertDialog>
-            <AlertDialogTrigger render={<Button />}>
-              <PlusIcon data-icon="inline-start" />
-              Show Dialog
+            <AlertDialogTrigger asChild>
+              <Button>
+                <PlusIcon data-icon="inline-start" />
+                Show Dialog
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent size="sm">
               <AlertDialogHeader>
@@ -135,13 +138,6 @@ const frameworks = [
   'Astro',
 ] as const
 
-const roleItems = [
-  { label: 'Developer', value: 'developer' },
-  { label: 'Designer', value: 'designer' },
-  { label: 'Manager', value: 'manager' },
-  { label: 'Other', value: 'other' },
-]
-
 function FormExample() {
   const [notifications, setNotifications] = React.useState({
     email: true,
@@ -158,11 +154,11 @@ function FormExample() {
           <CardDescription>Please fill in your details below</CardDescription>
           <CardAction>
             <DropdownMenu>
-              <DropdownMenuTrigger
-                render={<Button variant="ghost" size="icon" />}
-              >
-                <MoreVerticalIcon />
-                <span className="sr-only">More options</span>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVerticalIcon />
+                  <span className="sr-only">More options</span>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuGroup>
@@ -396,6 +392,18 @@ function FormExample() {
           <form>
             <FieldGroup>
               <div className="grid grid-cols-2 gap-4">
+                <Field orientation="horizontal">
+                  <FieldLabel htmlFor="form-email-notifs">Email notifications</FieldLabel>
+                  <Switch
+                    id="form-email-notifs"
+                    checked={notifications.email}
+                    onCheckedChange={() =>
+                      setNotifications({
+                        ...notifications,
+                        email: !notifications.email,
+                      })}
+                  />
+                </Field>
                 <Field>
                   <FieldLabel htmlFor="small-form-name">Name</FieldLabel>
                   <Input
@@ -406,17 +414,16 @@ function FormExample() {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="small-form-role">Role</FieldLabel>
-                  <Select items={roleItems} defaultValue={null}>
+                  <Select defaultValue="">
                     <SelectTrigger id="small-form-role">
-                      <SelectValue />
+                      <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {roleItems.map(item => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="developer">Developer</SelectItem>
+                        <SelectItem value="designer">Designer</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>

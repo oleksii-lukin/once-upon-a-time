@@ -28,3 +28,12 @@
 ### Icons
 - Use lucide-react icons
 - Add suffix for any icon in use, like UserIcon instead of just User
+
+## Framework
+- Project is built on Next.js and uses App Router
+- Project uses React Compiler, so avoid unnecessary optimizations like useMemo and useCallback, allow React Compiler to do it's job
+
+## Authentication
+- Use Clerk for authentication
+- Use Clerk's built-in hooks for authentication
+- Use Clerk's built-in components for authentication

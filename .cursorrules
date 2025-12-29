@@ -23,6 +23,7 @@
 
 ### Components
 - Project uses tailwind and shadcn components when possible
+- For toasts we use Sonner according to shadcn recommedations
 
 ### Icons
 - Use lucide-react icons

@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
+import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { useTranslation } from '@/app/i18n/client'
 import ThemeToggle from '@/components/theme/ThemeToggle'
+import CustomUserButton from '@/components/clerk/CustomUserButton'
 
 export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = useTranslation(lng, 'common')
@@ -49,20 +50,20 @@ export default function SiteHeader({ lng }: { lng: string }) {
           </div>
           <ThemeToggle />
           <ClerkLoading>
-            <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
+            <div className="w-8 h-8 bg-white/10 animate-pulse" />
           </ClerkLoading>
           <ClerkLoaded>
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-gray-900 dark:text-white rounded-md border border-black/10 dark:border-white/10 transition-all text-sm">
+                <button className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-black/10 dark:border-white/10 transition-all text-sm">
                   {t('sign_in')}
                 </button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <div className="relative w-8 h-8">
-                <div className="relative w-8 h-8 overflow-hidden rounded-full">
-                  <UserButton appearance={{ elements: { userButtonBox: 'w-8 h-8' } }} />
+                <div className="relative w-8 h-8 overflow-hidden">
+                  <CustomUserButton />
                 </div>
               </div>
             </SignedIn>

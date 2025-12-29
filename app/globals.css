@@ -80,6 +80,28 @@
   --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
   --sidebar-border: oklch(0.928 0.006 264.531);
   --sidebar-ring: oklch(0.707 0.022 261.325);
+  /* clerk component theming - shadcn style */
+  --clerk-color-primary: #171717;
+  --clerk-color-primary-foreground: #fafafa;
+  --clerk-color-danger: #e7000b;
+  --clerk-color-success: #22c543;
+  --clerk-color-warning: #f36b16;
+  --clerk-color-neutral: #0a0a0a;
+  --clerk-color-foreground: #0a0a0a;
+  --clerk-color-muted-foreground: #737373;
+  --clerk-color-background: #ffffff;
+  --clerk-color-input: #e5e5e5;
+  --clerk-color-input-foreground: #0a0a0a;
+  --clerk-color-ring: #a1a1a1;
+  --clerk-color-shimmer: #ffffff;
+  --clerk-color-modal-backdrop: #000000;
+  --clerk-border-radius: 0;
+  --clerk-spacing: 1rem;
+  --clerk-color-muted: #f5f5f5;
+}
+
+.cl-userButtonAvatarBox {
+  border-radius: 0 !important;
 }
 
 .dark {

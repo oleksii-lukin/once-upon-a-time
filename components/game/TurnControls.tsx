@@ -1,5 +1,5 @@
 import React from 'react'
-import { getTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { Play as PlayIcon } from 'lucide-react'
 
 interface TurnControlsProps {
@@ -25,7 +25,7 @@ export default function TurnControls({
   onInterrupt,
   onWin,
 }: TurnControlsProps) {
-  const { t } = getTranslation()
+  const { t } = useTranslation()
   return (
     <div className="fixed bottom-32 right-8 flex flex-col gap-4 z-50">
       {/* Storyteller Controls */}

@@ -1,7 +1,7 @@
 'use client'
 
 import i18next from 'i18next'
-import { initReactI18next, getTranslation as getTranslationOrg } from 'react-i18next'
+import { initReactI18next, useTranslation as getTranslationOrg } from 'react-i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { getOptions, languages, cookieName } from './settings'

@@ -12,7 +12,7 @@ import { Database } from '@/supabase/types'
 import { getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import useWebRTC from './useWebRTC'
 import VideoPlayer from './VideoPlayer'
-import { getTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 
 type Player = Database['public']['Tables']['players']['Row']
 
@@ -25,7 +25,7 @@ interface GameSidebarProps {
 }
 
 export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true }: GameSidebarProps) {
-  const { t } = getTranslation()
+  const { t } = useTranslation()
   const {
     localStream,
     remoteStreams,

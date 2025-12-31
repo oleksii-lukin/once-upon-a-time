@@ -123,7 +123,7 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
 
   if (status === 'error') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#141118] text-white p-4">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background text-white p-4">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-8 max-w-md w-full text-center">
           <AlertCircleIcon className="w-10 h-10 text-red-500 mb-4 inline-block" />
           <h1 className="text-xl font-bold mb-2">{t('error', 'Error')}</h1>
@@ -140,7 +140,7 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#141118] text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-white">
       <div className="flex flex-col items-center gap-4">
         <div className="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="text-lg font-medium animate-pulse">

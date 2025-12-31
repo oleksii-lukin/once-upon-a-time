@@ -14,38 +14,38 @@ export default async function DecksPage({ params }: { params: Promise<{ lng: str
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
-        <h1 className="text-white text-2xl font-bold">{t('decks')}</h1>
+      <div className="flex items-center justify-between px-8 py-6 border-b border-border">
+        <h1 className="text-foreground text-2xl font-bold">{t('decks')}</h1>
         <NewDeckButton />
       </div>
 
       <div className="p-8">
-        <div className="overflow-hidden rounded-lg border border-white/10 bg-[#141118]">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#211c27] text-left">
-                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('deck_name')}</th>
-                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('cards')}</th>
-                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('status')}</th>
-                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('last_updated')}</th>
-                <th className="px-6 py-3 text-sm font-medium text-white/70">{t('actions')}</th>
+              <tr className="bg-muted/40 text-left">
+                <th className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('deck_name')}</th>
+                <th className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('cards')}</th>
+                <th className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('status')}</th>
+                <th className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('last_updated')}</th>
+                <th className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('actions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-border">
               {decks?.map(deck => (
-                <tr key={deck.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 text-sm text-white font-medium">{deck.name}</td>
-                  <td className="px-6 py-4 text-sm text-white/60">{deck.cards?.[0]?.count || 0}</td>
+                <tr key={deck.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="px-6 py-4 text-sm text-foreground font-medium">{deck.name}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{deck.cards?.[0]?.count || 0}</td>
                   <td className="px-6 py-4">
                     <button className={`px-3 py-1 rounded-full text-xs font-medium ${deck.is_active
                       ? 'bg-green-500/20 text-green-400'
-                      : 'bg-white/10 text-white/50'
+                      : 'bg-muted text-muted-foreground'
                     }`}
                     >
                       {deck.is_active ? t('active') : t('inactive')}
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-sm text-white/60">
+                  <td className="px-6 py-4 text-sm text-muted-foreground">
                     {new Date(deck.updated_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
@@ -60,7 +60,7 @@ export default async function DecksPage({ params }: { params: Promise<{ lng: str
               ))}
               {(!decks || decks.length === 0) && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-white/40">
+                  <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                     {t('no_decks_found')}
                   </td>
                 </tr>

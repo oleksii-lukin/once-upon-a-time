@@ -46,7 +46,7 @@ export default async function LobbyDetailsPage({
   ) || false
 
   return (
-    <div className="min-h-screen bg-[#141118]">
+    <div className="min-h-screen bg-background">
       <LobbyManager
         initialLobby={lobby}
         initialPlayers={players || []}

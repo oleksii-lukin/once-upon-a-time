@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Copy as CopyIcon, Info as InfoIcon, Check as CheckIcon } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Info as InfoIcon, Check as CheckIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useUser } from '@clerk/nextjs'
@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
+import CopyButton from '@/components/common/CopyButton'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -72,6 +73,16 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     fetchDecks()
   }, [supabase, currentLobby.settings])
 
+  // Fetch players (hoisted to avoid use-before-declare) and memoized for deps
+  const fetchPlayers = useCallback(async () => {
+    const { data } = await supabase
+      .from('players')
+      .select('*')
+      .eq('lobby_id', lobby.id)
+      .order('joined_at', { ascending: true })
+    if (data) setPlayers(data)
+  }, [supabase, lobby.id])
+
   useEffect(() => {
     // Subscribe to player changes
     const playersChannel = supabase
@@ -111,16 +122,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
       supabase.removeChannel(playersChannel)
       supabase.removeChannel(lobbyChannel)
     }
-  }, [lobby.id, supabase])
-
-  const fetchPlayers = async () => {
-    const { data } = await supabase
-      .from('players')
-      .select('*')
-      .eq('lobby_id', lobby.id)
-      .order('joined_at', { ascending: true })
-    if (data) setPlayers(data)
-  }
+  }, [lobby.id, supabase, fetchPlayers])
 
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
   const [channel, setChannel] = useState<ReturnType<typeof supabase.channel> | null>(null)
@@ -197,41 +199,46 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
           <div className="layout-content-container flex flex-col w-full max-w-7xl flex-1">
             <main className="flex-1">
               <div className="flex flex-wrap justify-between items-center gap-3 p-4">
-                <p className="text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">{t('game_lobby')}</p>
+                <p className="text-foreground text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">{t('game_lobby')}</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-white/70">
+                  <span className="text-muted-foreground">
                     {t('room_code')}
                     :
                   </span>
-                  <span className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</span>
-                  <Button size="icon" variant="ghost" className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                    <CopyIcon className="w-5 h-5" />
-                  </Button>
+                  <span className="text-foreground font-bold text-lg tracking-widest">{currentLobby.code}</span>
+                  <CopyButton
+                    value={currentLobby.code || ''}
+                    label={t('copied')}
+                    className="size-9 shrink-0 rounded-lg text-foreground bg-muted/50 hover:bg-muted/70 transition-colors"
+                    variant="ghost"
+                    size="icon"
+                    side="top"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white/5 p-6 rounded-xl opacity-70">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('game_settings')}</h2>
+                  <div className="bg-card p-6 rounded-xl opacity-70">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('game_settings')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-6">
                         <div className="flex flex-col">
                           <Label className="flex flex-col min-w-40 flex-1">
-                            <p className="text-white text-base font-medium leading-normal pb-2">{t('room_name')}</p>
-                            <Input className="flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal disabled:opacity-50" disabled readOnly value={currentLobby.name} />
+                            <p className="text-foreground text-base font-medium leading-normal pb-2">{t('room_name')}</p>
+                            <Input className="flex w-full min-w-0 flex-1 rounded-lg text-foreground focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border bg-background h-11 placeholder:text-muted-foreground p-[15px] text-base font-normal leading-normal disabled:opacity-50" disabled readOnly value={currentLobby.name} />
                           </Label>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
+                        <div className="flex flex-col gap-2 p-4 border border-border rounded-lg">
                           <div className="flex items-center justify-between py-2">
-                            <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-hot-join">{t('allow_hot_join')}</Label>
+                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-hot-join">{t('allow_hot_join')}</Label>
                             <Switch checked={settings.allowHotJoin} disabled id="allow-hot-join" />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <Label className="text-white text-base font-medium leading-normal" htmlFor="game-visibility">{t('public_game')}</Label>
+                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="game-visibility">{t('public_game')}</Label>
                             <Switch checked={settings.publicGame} disabled id="game-visibility" />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-spectators">{t('allow_spectators')}</Label>
+                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-spectators">{t('allow_spectators')}</Label>
                             <Switch checked={settings.allowSpectators} disabled id="allow-spectators" />
                           </div>
                         </div>
@@ -239,34 +246,34 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       <div className="flex-1"></div>
                     </div>
                   </div>
-                  <div className="bg-white/5 p-6 rounded-xl opacity-70">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
+                  <div className="bg-card p-6 rounded-xl opacity-70">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
-                          <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</Label>
-                          <Button variant="ghost" size="icon" className="text-white/50 hover:text-white transition-colors"><InfoIcon className="w-4 h-4" /></Button>
+                          <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</Label>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground transition-colors"><InfoIcon className="w-4 h-4" /></Button>
                         </div>
                         <Switch checked={settings.allowInterrupts} disabled id="allow-interrupts" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <Label className="text-white text-base font-medium leading-normal" htmlFor="timer-per-turn">{t('timer_per_turn')}</Label>
+                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="timer-per-turn">{t('timer_per_turn')}</Label>
                         <Switch checked={settings.timerPerTurn} disabled id="timer-per-turn" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <Label className="text-white text-base font-medium leading-normal" htmlFor="happy-ending">{t('happy_ending_variant')}</Label>
+                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="happy-ending">{t('happy_ending_variant')}</Label>
                         <Switch checked={settings.happyEnding} disabled id="happy-ending" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <Label className="text-white text-base font-medium leading-normal" htmlFor="enable-video-chat">{t('enable_video_chat')}</Label>
+                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="enable-video-chat">{t('enable_video_chat')}</Label>
                         <Switch checked={settings.enableVideoChat} disabled id="enable-video-chat" />
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white/5 p-6 rounded-xl opacity-70">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('decks')}</h2>
+                  <div className="bg-card p-6 rounded-xl opacity-70">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('decks')}</h2>
                     <div className="flex flex-col">
-                      <p className="text-white text-base font-medium leading-normal pb-2">{t('selected_decks')}</p>
+                      <p className="text-foreground text-base font-medium leading-normal pb-2">{t('selected_decks')}</p>
                       <div className="space-y-2">
                         {decks.map(deck => (
                           <label
@@ -277,19 +284,19 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                             }`}
                           >
                             <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
-                            <span className="text-white font-medium">{deck.name}</span>
+                            <span className="text-foreground font-medium">{deck.name}</span>
                           </label>
                         ))}
                         {decks.length === 0 && (
-                          <p className="text-white/40 text-sm italic">{t('no_decks_selected')}</p>
+                          <p className="text-muted-foreground text-sm italic">{t('no_decks_selected')}</p>
                         )}
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="lg:col-span-1 flex flex-col gap-6">
-                  <div className="bg-white/5 p-6 rounded-xl flex-1 flex flex-col">
-                    <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">
+                  <div className="bg-card p-6 rounded-xl flex-1 flex flex-col">
+                    <h2 className="text-foreground text-lg font-bold leading-tight tracking-[-0.015em] pb-4">
                       {t('players')}
                       {' '}
                       (
@@ -298,22 +305,22 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                     </h2>
                     <div className="flex-1 space-y-3 overflow-y-auto">
                       {displayedPlayers.filter(p => p.role !== 'spectator').map(player => (
-                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-white/10'}`}>
+                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-muted/50'}`}>
                           <PlayerAvatar player={player} />
                           <div className="flex flex-col">
-                            <p className="text-white font-bold truncate">{getPlayerDisplayName(player)}</p>
-                            <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-green-400' : 'text-white/50'}`}>
+                            <p className="text-foreground font-bold truncate">{getPlayerDisplayName(player)}</p>
+                            <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
                               {player.role === 'host' ? t('host') : player.status === 'ready' ? t('ready') : t('not_ready')}
                             </p>
                           </div>
                         </div>
                       ))}
                       {displayedPlayers.filter(p => p.role !== 'spectator').length === 0 && (
-                        <p className="text-white/40 text-sm">{t('no_players_yet')}</p>
+                        <p className="text-muted-foreground text-sm">{t('no_players_yet')}</p>
                       )}
                     </div>
                     <div className="mt-4">
-                      <h3 className="text-white/70 text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-white/10">
+                      <h3 className="text-muted-foreground text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-border">
                         {t('spectators')}
                         {' '}
                         (
@@ -322,30 +329,30 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       </h3>
                       <div className="space-y-3">
                         {displayedPlayers.filter(p => p.role === 'spectator').map(player => (
-                          <div key={player.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                          <div key={player.id} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg">
                             <PlayerAvatar player={player} />
-                            <p className="text-white/80 font-medium truncate">{getPlayerDisplayName(player)}</p>
+                            <p className="text-muted-foreground font-medium truncate">{getPlayerDisplayName(player)}</p>
                           </div>
                         ))}
                         {displayedPlayers.filter(p => p.role === 'spectator').length === 0 && (
-                          <p className="text-white/40 text-sm">{t('no_spectators')}</p>
+                          <p className="text-muted-foreground text-sm">{t('no_spectators')}</p>
                         )}
                       </div>
                     </div>
                     <div className="mt-auto pt-6 space-y-4">
                       <div>
-                        <p className="text-white/80 text-sm font-medium leading-normal pb-2 text-center">{t('choose_your_role')}</p>
-                        <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-black/20">
-                          <Button className="px-4 py-2 text-sm font-bold rounded-md">{t('player')}</Button>
-                          <Button variant="ghost" className="px-4 py-2 text-sm font-bold rounded-md text-white/70 hover:bg-white/10">{t('spectator')}</Button>
+                        <p className="text-muted-foreground text-sm font-medium leading-normal pb-2 text-center">{t('choose_your_role')}</p>
+                        <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-muted">
+                          <Button className="px-4 py-2 text-sm font-bold">{t('player')}</Button>
+                          <Button variant="ghost" className="px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted/70">{t('spectator')}</Button>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <Button className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors gap-2">
+                        <Button className="min-w-[84px] w-full h-14 px-4 text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 gap-2">
                           <CheckIcon className="w-5 h-5" />
                           <span className="truncate">{t('ready')}</span>
                         </Button>
-                        <Button variant="ghost" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-white/10 text-white/80 text-base font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
+                        <Button variant="ghost" className="min-w-[84px] h-14 px-4 bg-muted/50 text-muted-foreground text-base font-bold leading-normal tracking-[0.015em] hover:bg-muted/70">
                           <span className="truncate">{t('leave')}</span>
                         </Button>
                       </div>

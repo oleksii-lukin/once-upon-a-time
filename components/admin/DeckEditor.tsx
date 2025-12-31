@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@clerk/nextjs'
 import { Database } from '@/supabase/types'
 import ImageUpload from './ImageUpload'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Deck = Database['public']['Tables']['decks']['Row']
 type Card = Database['public']['Tables']['cards']['Row'] & {
@@ -218,80 +219,80 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
   return (
     <div className="h-full grid grid-rows-2 gap-8">
       <div className="flex flex-col gap-4 min-h-0">
-        <h2 className="text-white text-xl font-bold">
+        <h2 className="text-foreground text-xl font-bold">
           Cards (
           {cards.length}
           )
         </h2>
-        <div className="flex-1 overflow-auto rounded-lg border border-white/10 bg-[#141118]">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[#211c27] text-left">
-                <th className="px-4 py-3 text-sm font-medium text-white/70">Type</th>
-                <th className="px-4 py-3 text-sm font-medium text-white/70">Name</th>
-                <th className="px-4 py-3 text-sm font-medium text-white/70">Description</th>
-                <th className="px-4 py-3 text-sm font-medium text-white/70">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
+        <div className="flex-1 overflow-auto rounded-lg border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 text-left">
+                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">Type</TableHead>
+                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">Name</TableHead>
+                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">Description</TableHead>
+                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border">
               {cards.map(card => (
-                <tr
+                <TableRow
                   key={card.id}
-                  className={`hover:bg-white/5 transition-colors cursor-pointer ${selectedCard?.id === card.id ? 'bg-white/10' : ''}`}
+                  className={`transition-colors cursor-pointer ${selectedCard?.id === card.id ? 'bg-muted/50' : ''}`}
                   onClick={() => handleCardSelect(card)}
                 >
-                  <td className="px-4 py-3 text-sm text-white/60">
+                  <TableCell className="px-4 py-3 text-sm text-muted-foreground">
                     {card.type === 'ending'
                       ? 'Ending'
                       : (card.category ? card.category.charAt(0).toUpperCase() + card.category.slice(1) : 'Story')}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-white font-medium">{card.name}</td>
-                  <td className="px-4 py-3 text-sm text-white/60 truncate max-w-xs">{card.description}</td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm text-foreground font-medium">{card.name}</TableCell>
+                  <TableCell className="px-4 py-3 text-sm text-muted-foreground truncate max-w-xs">{card.description}</TableCell>
+                  <TableCell className="px-4 py-3">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(card.id) }}
                       className="text-red-400 hover:text-red-300 text-xs font-medium"
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {cards.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="px-4 py-6 text-center text-white/40">
+                <TableRow>
+                  <TableCell colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
                     No cards yet. Add one below.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
-      <div className="bg-[#211c27] p-6 rounded-xl border border-white/10 overflow-auto">
+      <div className="bg-card p-6 rounded-xl border border-border overflow-auto">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-white text-lg font-bold">
+          <h3 className="text-foreground text-lg font-bold">
             {selectedCard ? 'Edit Card' : 'Add New Card'}
           </h3>
           {selectedCard && (
             <button
               onClick={() => handleCardSelect(null)}
-              className="text-white/60 hover:text-white text-sm"
+              className="text-muted-foreground hover:text-foreground text-sm"
             >
               Cancel Edit
             </button>
           )}
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-white/10 pb-2">
+        <div className="flex gap-2 mb-6 border-b border-border pb-2">
           {['en', 'ru', 'ua'].map(lang => (
             <button
               key={lang}
               onClick={() => setActiveLang(lang)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
                 ? 'bg-primary text-white'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
               }`}
             >
               {lang.toUpperCase()}
@@ -302,7 +303,7 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <label className="block">
-              <span className="text-white/70 text-sm font-medium">
+              <span className="text-muted-foreground text-sm font-medium">
                 Card Name (
                 {activeLang.toUpperCase()}
                 )
@@ -311,17 +312,17 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
                 type="text"
                 value={getValue('name')}
                 onChange={e => updateField('name', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
+                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
                 placeholder="e.g. The Magic Sword"
               />
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-white/70 text-sm font-medium">Type</span>
+                <span className="text-muted-foreground text-sm font-medium">Type</span>
                 <select
                   value={formData.type}
                   onChange={e => setFormData({ ...formData, type: e.target.value as any })}
-                  className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
+                  className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
                 >
                   <option value="story">Story</option>
                   <option value="ending">Ending</option>
@@ -329,11 +330,11 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
               </label>
               {formData.type === 'story' && (
                 <label className="block">
-                  <span className="text-white/70 text-sm font-medium">Category</span>
+                  <span className="text-muted-foreground text-sm font-medium">Category</span>
                   <select
                     value={formData.category || 'protagonist'}
                     onChange={e => setFormData({ ...formData, category: e.target.value as any })}
-                    className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary"
+                    className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
                   >
                     <option value="protagonist">Protagonist</option>
                     <option value="antagonist">Antagonist</option>
@@ -346,18 +347,18 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
               )}
             </div>
             <div className="space-y-2">
-              <span className="text-white/70 text-sm font-medium">Card Image</span>
+              <span className="text-muted-foreground text-sm font-medium">Card Image</span>
               <ImageUpload
                 value={formData.image_url}
                 onChange={url => setFormData({ ...formData, image_url: url })}
               />
               <label className="block">
-                <span className="text-white/60 text-xs">Or paste URL directly:</span>
+                <span className="text-muted-foreground text-xs">Or paste URL directly:</span>
                 <input
                   type="text"
                   value={formData.image_url}
                   onChange={e => setFormData({ ...formData, image_url: e.target.value })}
-                  className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white text-sm focus:ring-primary focus:border-primary"
+                  className="mt-1 block w-full rounded-lg bg-background border-border text-foreground text-sm focus:ring-primary focus:border-primary"
                   placeholder="https://..."
                 />
               </label>
@@ -365,7 +366,7 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
           </div>
           <div className="space-y-4">
             <label className="block">
-              <span className="text-white/70 text-sm font-medium">
+              <span className="text-muted-foreground text-sm font-medium">
                 Description (
                 {activeLang.toUpperCase()}
                 )
@@ -373,12 +374,12 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
               <textarea
                 value={getValue('description')}
                 onChange={e => updateField('description', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary h-24"
+                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary h-24"
                 placeholder="Card description..."
               />
             </label>
             <label className="block">
-              <span className="text-white/70 text-sm font-medium">
+              <span className="text-muted-foreground text-sm font-medium">
                 Usage Examples (
                 {activeLang.toUpperCase()}
                 )
@@ -386,7 +387,7 @@ export default function DeckEditor({ deck }: { deck: Deck }) {
               <textarea
                 value={getValue('usage_examples')}
                 onChange={e => updateField('usage_examples', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-[#141118] border-white/10 text-white focus:ring-primary focus:border-primary h-24"
+                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary h-24"
                 placeholder="Examples of how to use this card..."
               />
             </label>

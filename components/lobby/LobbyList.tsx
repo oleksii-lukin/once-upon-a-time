@@ -7,6 +7,7 @@ import { Database } from '@/supabase/types'
 import { useRouter, useParams } from 'next/navigation'
 import { getGuestId } from '@/lib/auth/guest'
 import { useTranslation } from '@/app/i18n/client'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
   players: { count: number }[]
@@ -108,26 +109,26 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
   }
 
   return (
-    <div className="flex overflow-hidden rounded-xl border border-gray-200/20 dark:border-white/20 bg-gray-50/50 dark:bg-white/5">
-      <table className="flex-1">
-        <thead>
-          <tr className="bg-gray-100/50 dark:bg-white/10">
-            <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[40%] text-sm font-medium leading-normal">{t('room_name')}</th>
-            <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">{t('players')}</th>
-            <th className="px-4 py-3 text-left text-gray-700 dark:text-white w-[20%] text-sm font-medium leading-normal">{t('status')}</th>
-            <th className="px-4 py-3 text-left text-gray-500 dark:text-gray-400 w-[20%] text-sm font-medium leading-normal">{t('action')}</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="flex overflow-hidden rounded-xl border border-border bg-card">
+      <Table className="flex-1">
+        <TableHeader>
+          <TableRow className="bg-muted/40">
+            <TableHead className="px-4 py-3 w-[40%] text-sm font-medium leading-normal text-muted-foreground">{t('room_name')}</TableHead>
+            <TableHead className="px-4 py-3 w-[20%] text-sm font-medium leading-normal text-muted-foreground">{t('players')}</TableHead>
+            <TableHead className="px-4 py-3 w-[20%] text-sm font-medium leading-normal text-muted-foreground">{t('status')}</TableHead>
+            <TableHead className="px-4 py-3 w-[20%] text-sm font-medium leading-normal text-muted-foreground">{t('action')}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {lobbies.map(lobby => (
-            <tr key={lobby.id} className="border-t border-t-gray-200/20 dark:border-t-white/20 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
-              <td className="h-[72px] px-4 py-2 text-gray-800 dark:text-white text-sm font-normal leading-normal">{lobby.name}</td>
-              <td className="h-[72px] px-4 py-2 text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
+            <TableRow key={lobby.id} className="transition-colors">
+              <TableCell className="h-[72px] px-4 py-2 text-sm font-normal leading-normal text-foreground">{lobby.name}</TableCell>
+              <TableCell className="h-[72px] px-4 py-2 text-sm font-normal leading-normal text-muted-foreground">
                 {lobby.players?.[0]?.count || 0}
                 {' '}
                 {t('players')}
-              </td>
-              <td className="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+              </TableCell>
+              <TableCell className="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
                 <div className={`flex items-center gap-2 ${lobby.status === 'playing' ? 'text-green-500' : 'text-yellow-500'}`}>
                   {lobby.status === 'playing'
                     ? (
@@ -138,8 +139,8 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                       )}
                   <span className="capitalize">{t(lobby.status as 'waiting' | 'playing' | 'finished')}</span>
                 </div>
-              </td>
-              <td className="h-[72px] px-4 py-2">
+              </TableCell>
+              <TableCell className="h-[72px] px-4 py-2">
                 <Button
                   onClick={() => handleJoin(lobby.id)}
                   className="w-full min-w-[84px] max-w-[480px] h-9 px-4 text-primary text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/30 transition-colors"
@@ -147,18 +148,18 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                 >
                   {lobby.status === 'playing' ? t('spectate') : t('join')}
                 </Button>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
           {lobbies.length === 0 && (
-            <tr>
-              <td colSpan={4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+            <TableRow>
+              <TableCell colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                 {t('no_active_lobbies')}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   )
 }

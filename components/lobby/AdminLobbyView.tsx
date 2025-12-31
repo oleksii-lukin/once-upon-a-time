@@ -3,13 +3,16 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { Copy as CopyIcon, Check as CheckIcon, Info as InfoIcon } from 'lucide-react'
+import { Info as InfoIcon } from 'lucide-react'
 
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { initializeGame } from '@/app/actions/game'
 import { useTranslation } from '@/app/i18n/client'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import CopyButton from '@/components/common/CopyButton'
 
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 
@@ -60,30 +63,12 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
     return defaultSettings
   })
 
-  const [copiedLink, setCopiedLink] = useState(false)
-  const [copiedCode, setCopiedCode] = useState(false)
-
   // Generate invite link based on current URL
   const inviteLink = typeof window !== 'undefined'
     ? `${window.location.origin}/${lng}/invite/${currentLobby.code}`
     : ''
 
-  const copyToClipboard = async (text: string, type: 'link' | 'code') => {
-    try {
-      await navigator.clipboard.writeText(text)
-      if (type === 'link') {
-        setCopiedLink(true)
-        setTimeout(() => setCopiedLink(false), 2000)
-      }
-      else {
-        setCopiedCode(true)
-        setTimeout(() => setCopiedCode(false), 2000)
-      }
-    }
-    catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
+  // Copy handled by CopyButton
 
   // Update lobby name in database
   const updateLobbyName = async (newName: string) => {
@@ -293,42 +278,42 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
           <div className="layout-content-container flex flex-col w-full max-w-7xl flex-1">
             <main className="flex-1">
               <div className="flex flex-wrap justify-between gap-3 p-4">
-                <p className="text-white text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">{t('game_lobby')}</p>
+                <p className="text-foreground text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">{t('game_lobby')}</p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white/5 p-6 rounded-xl">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('game_settings')}</h2>
+                  <div className="bg-card p-6 rounded-xl">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('game_settings')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-6">
                         <div className="flex flex-col">
                           <label className="flex flex-col min-w-40 flex-1">
-                            <p className="text-white text-base font-medium leading-normal pb-2">{t('room_name')}</p>
+                            <p className="text-foreground text-base font-medium leading-normal pb-2">{t('room_name')}</p>
                             <input
-                              className="form-input flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal"
+                              className="form-input flex w-full min-w-0 flex-1 rounded-lg text-foreground focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-border bg-background h-11 placeholder:text-muted-foreground p-[15px] text-base font-normal leading-normal"
                               value={roomName}
                               onChange={e => setRoomName(e.target.value)}
                               onBlur={() => updateLobbyName(roomName)}
                             />
                           </label>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
+                        <div className="flex flex-col gap-2 p-4 border border-border rounded-lg">
                           <div className="flex items-center justify-between py-2">
-                            <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">{t('allow_hot_join')}</label>
+                            <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="allow-hot-join">{t('allow_hot_join')}</label>
                             <Switch
                               checked={settings.allowHotJoin}
                               onCheckedChange={() => updateSettings({ allowHotJoin: !settings.allowHotJoin })}
                             />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">{t('public_game')}</label>
+                            <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="game-visibility">{t('public_game')}</label>
                             <Switch
                               checked={settings.publicGame}
                               onCheckedChange={() => updateSettings({ publicGame: !settings.publicGame })}
                             />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">{t('allow_spectators')}</label>
+                            <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="allow-spectators">{t('allow_spectators')}</label>
                             <Switch
                               checked={settings.allowSpectators}
                               onCheckedChange={() => updateSettings({ allowSpectators: !settings.allowSpectators })}
@@ -336,67 +321,57 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white/5 p-6 rounded-xl">
-                        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">{t('invite_friends')}</h2>
+                      <div className="bg-card p-6 rounded-xl">
+                        <h2 className="text-foreground text-lg font-bold leading-tight tracking-[-0.015em] pb-4">{t('invite_friends')}</h2>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-white/70 text-sm font-medium leading-normal pb-2">{t('share_invite_link')}</p>
+                            <p className="text-muted-foreground text-sm font-medium leading-normal pb-2">{t('share_invite_link')}</p>
                             <div className="flex items-center gap-2">
-                              <input
-                                className="form-input text-sm w-full rounded-lg text-white/90 border border-white/10 bg-[#211c27] h-11 px-3"
+                              <Input
+                                className="text-sm w-full rounded-lg text-foreground border border-border bg-background h-11 px-3 placeholder:text-muted-foreground"
                                 readOnly
                                 type="text"
                                 value={inviteLink}
                               />
-                              <button
-                                onClick={() => copyToClipboard(inviteLink, 'link')}
-                                className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors relative"
-                                title="Copy invite link"
-                              >
-                                {copiedLink
-                                  ? (
-                                      <CheckIcon className="size-6 text-green-400" />
-                                    )
-                                  : (
-                                      <CopyIcon className="size-6" />
-                                    )}
-                              </button>
+                              <CopyButton
+                                value={inviteLink}
+                                label={t('copied')}
+                                className="size-11 shrink-0 rounded-lg bg-muted/50 hover:bg-muted/70 text-foreground transition-colors"
+                                variant="ghost"
+                                size="icon"
+                                side="top"
+                              />
                             </div>
                           </div>
                           <div>
-                            <p className="text-white/70 text-sm font-medium leading-normal pb-2">{t('or_use_room_code')}</p>
+                            <p className="text-muted-foreground text-sm font-medium leading-normal pb-2">{t('or_use_room_code')}</p>
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center justify-center w-full rounded-lg border-2 border-dashed border-white/20 h-11">
-                                <p className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</p>
+                              <div className="flex items-center justify-center w-full rounded-lg border-2 border-dashed border-border h-11">
+                                <p className="text-foreground font-bold text-lg tracking-widest">{currentLobby.code}</p>
                               </div>
-                              <button
-                                onClick={() => copyToClipboard(currentLobby.code || '', 'code')}
-                                className="flex items-center justify-center size-11 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                                title="Copy room code"
-                              >
-                                {copiedCode
-                                  ? (
-                                      <CheckIcon className="size-6 text-green-400" />
-                                    )
-                                  : (
-                                      <CopyIcon className="size-6" />
-                                    )}
-                              </button>
+                              <CopyButton
+                                value={currentLobby.code || ''}
+                                label={t('copied')}
+                                className="size-11 shrink-0 rounded-lg bg-muted/50 hover:bg-muted/70 text-foreground transition-colors"
+                                variant="ghost"
+                                size="icon"
+                                side="top"
+                              />
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white/5 p-6 rounded-xl">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
+                  <div className="bg-card p-6 rounded-xl">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
-                          <label className={`text-base font-medium leading-normal transition-colors ${settings.allowInterrupts ? 'text-white' : 'text-white/40'}`} htmlFor="allow-interrupts">{t('allow_interrupts')}</label>
-                          <button className="text-white/50 hover:text-white transition-colors">
+                          <label className={`text-base font-medium leading-normal transition-colors ${settings.allowInterrupts ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="allow_interrupts">{t('allow_interrupts')}</label>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                             <InfoIcon className="size-5" />
-                          </button>
+                          </Button>
                         </div>
                         <Switch
                           checked={settings.allowInterrupts}
@@ -404,21 +379,21 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">{t('timer_per_turn')}</label>
+                        <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="timer-per-turn">{t('timer_per_turn')}</label>
                         <Switch
                           checked={settings.timerPerTurn}
                           onCheckedChange={() => updateSettings({ timerPerTurn: !settings.timerPerTurn })}
                         />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">{t('happy_ending_variant')}</label>
+                        <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="happy-ending">{t('happy_ending_variant')}</label>
                         <Switch
                           checked={settings.happyEnding}
                           onCheckedChange={() => updateSettings({ happyEnding: !settings.happyEnding })}
                         />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-white' : 'text-white/40'}`} htmlFor="enable-video-chat">{t('enable_video_chat')}</label>
+                        <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-foreground' : 'text-muted-foreground'}`} htmlFor="enable-video-chat">{t('enable_video_chat')}</label>
                         <Switch
                           checked={settings.enableVideoChat}
                           onCheckedChange={() => updateSettings({ enableVideoChat: !settings.enableVideoChat })}
@@ -426,15 +401,15 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white/5 p-6 rounded-xl">
-                    <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('decks')}</h2>
+                  <div className="bg-card p-6 rounded-xl">
+                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">{t('decks')}</h2>
                     <div className="flex flex-col">
-                      <p className="text-white text-base font-medium leading-normal pb-2">{t('select_decks_to_include')}</p>
+                      <p className="text-foreground text-base font-medium leading-normal pb-2">{t('select_decks_to_include')}</p>
                       <div className="space-y-2">
                         {decks.map(deck => (
                           <label
                             key={deck.id}
-                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedDecks.includes(deck.id) ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedDecks.includes(deck.id) ? 'bg-primary/20 border-primary' : 'hover:bg-muted/50 border-transparent'}`}
                           >
                             <Switch
                               checked={selectedDecks.includes(deck.id)}
@@ -447,21 +422,21 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                                 }
                               }}
                             />
-                            <span className={`font-medium transition-colors ${selectedDecks.includes(deck.id) ? 'text-white' : 'text-white/60'}`}>
+                            <span className={`font-medium transition-colors ${selectedDecks.includes(deck.id) ? 'text-foreground' : 'text-muted-foreground'}`}>
                               {deck.name}
                             </span>
                           </label>
                         ))}
                         {decks.length === 0 && (
-                          <p className="text-white/40 text-sm italic">{t('no_decks_available')}</p>
+                          <p className="text-muted-foreground text-sm italic">{t('no_decks_available')}</p>
                         )}
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="lg:col-span-1 flex flex-col gap-6">
-                  <div className="bg-white/5 p-6 rounded-xl flex-1 flex flex-col">
-                    <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-4">
+                  <div className="bg-card p-6 rounded-xl flex-1 flex flex-col">
+                    <h2 className="text-foreground text-lg font-bold leading-tight tracking-[-0.015em] pb-4">
                       {t('players')}
                       {' '}
                       (
@@ -470,22 +445,22 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                     </h2>
                     <div className="flex-1 space-y-3 overflow-y-auto">
                       {displayedPlayers.filter(p => p.role !== 'spectator').map(player => (
-                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-white/10'}`}>
+                        <div key={player.id} className={`flex items-center gap-3 p-3 rounded-lg ${player.role === 'host' ? 'bg-primary/20 border border-primary' : 'bg-muted/50'}`}>
                           <PlayerAvatar player={player} />
                           <div className="flex flex-col">
-                            <p className="text-white font-bold truncate">{getPlayerDisplayName(player)}</p>
-                            <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-green-400' : 'text-white/50'}`}>
+                            <p className="text-foreground font-bold truncate">{getPlayerDisplayName(player)}</p>
+                            <p className={`text-xs font-semibold ${player.role === 'host' ? 'text-primary' : player.status === 'ready' ? 'text-emerald-500' : 'text-muted-foreground'}`}>
                               {player.role === 'host' ? t('host') : player.status === 'ready' ? t('ready') : t('not_ready')}
                             </p>
                           </div>
                         </div>
                       ))}
                       {displayedPlayers.filter(p => p.role !== 'spectator').length === 0 && (
-                        <p className="text-white/40 text-sm">{t('no_players_yet')}</p>
+                        <p className="text-muted-foreground text-sm">{t('no_players_yet')}</p>
                       )}
                     </div>
                     <div className="mt-4">
-                      <h3 className="text-white/70 text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-white/10">
+                      <h3 className="text-muted-foreground text-sm font-bold leading-tight tracking-[-0.015em] pb-2 pt-4 border-t border-border">
                         {t('spectators')}
                         {' '}
                         (
@@ -494,13 +469,13 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                       </h3>
                       <div className="space-y-3">
                         {displayedPlayers.filter(p => p.role === 'spectator').map(player => (
-                          <div key={player.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                          <div key={player.id} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg">
                             <PlayerAvatar player={player} />
-                            <p className="text-white/80 font-medium truncate">{getPlayerDisplayName(player)}</p>
+                            <p className="text-muted-foreground font-medium truncate">{getPlayerDisplayName(player)}</p>
                           </div>
                         ))}
                         {displayedPlayers.filter(p => p.role === 'spectator').length === 0 && (
-                          <p className="text-white/40 text-sm">{t('no_spectators')}</p>
+                          <p className="text-muted-foreground text-sm">{t('no_spectators')}</p>
                         )}
                       </div>
                     </div>
@@ -508,7 +483,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                       <button
                         onClick={startGame}
                         disabled={isStarting}
-                        className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span className="truncate">{isStarting ? t('starting') : t('start_game')}</span>
                       </button>

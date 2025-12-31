@@ -11,7 +11,7 @@ export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = useTranslation(lng, 'common')
 
   return (
-    <header id="site-header" className="w-full border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-[#141118]/80 backdrop-blur supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-[#141118]/70">
+    <header id="site-header" className="w-full border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-background/80 backdrop-blur supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-background/70">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link href={`/${lng}`} className="flex items-center gap-3">

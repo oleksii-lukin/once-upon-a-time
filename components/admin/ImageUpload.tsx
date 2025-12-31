@@ -19,7 +19,7 @@ export default function ImageUpload({ value, onChange, onRemove }: ImageUploadPr
       {value
         ? (
             <div className="relative group">
-              <div className="relative rounded-lg overflow-hidden border-2 border-white/10 bg-[#141118] aspect-[3/4] max-w-[200px]">
+              <div className="relative rounded-lg overflow-hidden border-2 border-white/10 bg-background aspect-[3/4] max-w-[200px]">
                 <img
                   src={value}
                   alt="Uploaded image"
@@ -44,7 +44,7 @@ export default function ImageUpload({ value, onChange, onRemove }: ImageUploadPr
         : (
             <div className="space-y-2">
               <div className="relative">
-                <div className="border-2 border-dashed border-white/20 rounded-lg p-8 bg-[#141118] hover:bg-[#1a1620] transition-colors">
+                <div className="border-2 border-dashed border-white/20 rounded-lg p-8 bg-background hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <div className="p-4 rounded-full bg-primary/10">
                       <ImageIcon className="w-8 h-8 text-primary" />

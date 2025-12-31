@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/app/i18n/client'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
   players: { count: number }[]
@@ -189,45 +190,44 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
         {/* Table */}
         <div className="flex-1 overflow-auto p-8">
-          <div className="overflow-hidden rounded-lg border border-white/10 bg-[#141118]">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-[#211c27] text-left">
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Name</th>
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Code</th>
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Players</th>
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Status</th>
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Created</th>
-                  <th className="px-6 py-3 text-sm font-medium text-white/70">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 text-left">
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Name</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Code</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Players</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Status</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Created</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {filteredLobbies.map(lobby => (
-                  <tr
+                  <TableRow
                     key={lobby.id}
-                    className={`hover:bg-white/5 transition-colors cursor-pointer ${selectedLobby?.id === lobby.id ? 'bg-white/10' : ''
-                    }`}
+                    className={`transition-colors cursor-pointer ${selectedLobby?.id === lobby.id ? 'bg-muted/50' : ''}`}
                     onClick={() => setSelectedLobby(lobby)}
                   >
-                    <td className="px-6 py-4 text-sm text-white font-medium">
+                    <TableCell className="px-6 py-4 text-sm text-foreground font-medium">
                       {lobby.name}
                       {lobby.deleted_at && (
-                        <span className="ml-2 text-white/30">(archived)</span>
+                        <span className="ml-2 text-muted-foreground">(archived)</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/60 font-mono">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground font-mono">
                       {lobby.code}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/60">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                       {lobby.players?.[0]?.count || 0}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       {getStatusBadge(lobby)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/60">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-muted-foreground">
                       {formatDate(lobby.created_at)}
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -237,30 +237,30 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
                       >
                         View
                       </button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {filteredLobbies.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-white/40">
+                  <TableRow>
+                    <TableCell colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                       No lobbies found
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>
 
       {/* Detail Panel */}
       {selectedLobby && (
-        <div className="w-96 border-l border-white/10 bg-[#1a1520] flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-            <h2 className="text-white font-bold">Lobby Details</h2>
+        <div className="w-96 border-l border-border bg-card flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 className="text-foreground font-bold">Lobby Details</h2>
             <button
               onClick={() => setSelectedLobby(null)}
-              className="text-white/50 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               <CrossIcon className="w-5 h-5" />
             </button>
@@ -270,43 +270,43 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
             <div className="space-y-6">
               {/* Basic Info */}
               <div>
-                <h3 className="text-white/50 text-xs font-medium uppercase mb-2">Info</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">Info</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-white/50 text-xs">Name</label>
-                    <p className="text-white font-medium">{selectedLobby.name}</p>
+                    <label className="text-muted-foreground text-xs">Name</label>
+                    <p className="text-foreground font-medium">{selectedLobby.name}</p>
                   </div>
                   <div>
-                    <label className="text-white/50 text-xs">Code</label>
-                    <p className="text-white font-mono">{selectedLobby.code}</p>
+                    <label className="text-muted-foreground text-xs">Code</label>
+                    <p className="text-foreground font-mono">{selectedLobby.code}</p>
                   </div>
                   <div>
-                    <label className="text-white/50 text-xs">Status</label>
+                    <label className="text-muted-foreground text-xs">Status</label>
                     <div className="mt-1">{getStatusBadge(selectedLobby)}</div>
                   </div>
                   <div>
-                    <label className="text-white/50 text-xs">Language</label>
-                    <p className="text-white">{selectedLobby.language.toUpperCase()}</p>
+                    <label className="text-muted-foreground text-xs">Language</label>
+                    <p className="text-foreground">{selectedLobby.language.toUpperCase()}</p>
                   </div>
                   <div>
-                    <label className="text-white/50 text-xs">Players</label>
-                    <p className="text-white">{selectedLobby.players?.[0]?.count || 0}</p>
+                    <label className="text-muted-foreground text-xs">Players</label>
+                    <p className="text-foreground">{selectedLobby.players?.[0]?.count || 0}</p>
                   </div>
                 </div>
               </div>
 
               {/* Timestamps */}
               <div>
-                <h3 className="text-white/50 text-xs font-medium uppercase mb-2">Timestamps</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">Timestamps</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-white/50 text-xs">Created</label>
-                    <p className="text-white text-sm">{formatDate(selectedLobby.created_at)}</p>
+                    <label className="text-muted-foreground text-xs">Created</label>
+                    <p className="text-foreground text-sm">{formatDate(selectedLobby.created_at)}</p>
                   </div>
                   {selectedLobby.deleted_at && (
                     <div>
-                      <label className="text-white/50 text-xs">Archived</label>
-                      <p className="text-white text-sm">{formatDate(selectedLobby.deleted_at)}</p>
+                      <label className="text-muted-foreground text-xs">Archived</label>
+                      <p className="text-foreground text-sm">{formatDate(selectedLobby.deleted_at)}</p>
                     </div>
                   )}
                 </div>
@@ -314,28 +314,28 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
               {/* Settings */}
               <div>
-                <h3 className="text-white/50 text-xs font-medium uppercase mb-2">Settings</h3>
-                <pre className="text-xs text-white/70 bg-white/5 p-3 rounded-lg overflow-auto max-h-40">
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">Settings</h3>
+                <pre className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg overflow-auto max-h-40">
                   {JSON.stringify(selectedLobby.settings, null, 2)}
                 </pre>
               </div>
 
               {/* IDs */}
               <div>
-                <h3 className="text-white/50 text-xs font-medium uppercase mb-2">IDs</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">IDs</h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="text-white/50 text-xs">Lobby ID</label>
-                    <p className="text-white/60 text-xs font-mono break-all">{selectedLobby.id}</p>
+                    <label className="text-muted-foreground text-xs">Lobby ID</label>
+                    <p className="text-muted-foreground text-xs font-mono break-all">{selectedLobby.id}</p>
                   </div>
                   <div>
-                    <label className="text-white/50 text-xs">Created By</label>
-                    <p className="text-white/60 text-xs font-mono break-all">{selectedLobby.created_by}</p>
+                    <label className="text-muted-foreground text-xs">Created By</label>
+                    <p className="text-muted-foreground text-xs font-mono break-all">{selectedLobby.created_by}</p>
                   </div>
                   {selectedLobby.deck_id && (
                     <div>
-                      <label className="text-white/50 text-xs">Deck ID</label>
-                      <p className="text-white/60 text-xs font-mono break-all">{selectedLobby.deck_id}</p>
+                      <label className="text-muted-foreground text-xs">Deck ID</label>
+                      <p className="text-muted-foreground text-xs font-mono break-all">{selectedLobby.deck_id}</p>
                     </div>
                   )}
                 </div>
@@ -344,7 +344,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
           </div>
 
           {/* Actions */}
-          <div className="p-6 border-t border-white/10 space-y-3">
+          <div className="p-6 border-t border-border space-y-3">
             {selectedLobby.deleted_at
               ? (
                   <>

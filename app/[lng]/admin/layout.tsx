@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import {
   LayoutDashboard as LayoutDashboardIcon,
   Palette as PaletteIcon,
@@ -11,7 +11,7 @@ import {
 
 export default async function AdminLayout({ children, params }: { children: ReactNode, params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
 
   return (
     <div className="relative flex h-screen w-full bg-background overflow-hidden">

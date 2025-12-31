@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { getGuestId } from '@/lib/auth/guest'
 import { getGuestIdentity } from '@/lib/auth/guestIdentity'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { languages } from '@/app/i18n/settings'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -16,7 +16,7 @@ export default function CreateLobbyButton() {
   const router = useRouter()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
   const { getToken, userId } = useAuth()
   const { user } = useUser()
   const [selectedLanguage, setSelectedLanguage] = useState(lng)

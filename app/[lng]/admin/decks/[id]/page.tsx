@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import DeckEditor from '@/components/admin/DeckEditor'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import { ArrowLeft as ArrowLeftIcon } from 'lucide-react'
 
 export default async function DeckDetailsPage({
@@ -11,7 +11,7 @@ export default async function DeckDetailsPage({
   params: Promise<{ id: string, lng: string }>
 }) {
   const { id, lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
 
   const { data: deck } = await supabase

@@ -8,7 +8,7 @@ import { useUser } from '@clerk/nextjs'
 import { getGuestId } from '@/lib/auth/guest'
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import { useParams } from 'next/navigation'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   const supabase = createClient()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   // Default settings
   const defaultSettings = {

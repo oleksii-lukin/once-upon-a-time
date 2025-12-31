@@ -1,11 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import AdminLobbiesClient from '@/components/admin/AdminLobbiesClient'
 
 export default async function AdminLobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
 
   // Fetch ALL lobbies including soft-deleted ones

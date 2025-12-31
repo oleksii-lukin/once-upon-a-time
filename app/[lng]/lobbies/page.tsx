@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import LobbyList from '@/components/lobby/LobbyList'
 import CreateLobbyButton from '@/components/lobby/CreateLobbyButton'
 import UserProfileCard from '@/components/profile/UserProfileCard'
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import { Search as SearchIcon, UserPlus as UserPlusIcon } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 
 export default async function LobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
   const { data: lobbies } = await supabase
     .from('lobbies')

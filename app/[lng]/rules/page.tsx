@@ -1,4 +1,4 @@
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import path from 'path'
 import { promises as fs } from 'fs'
 
@@ -59,7 +59,7 @@ function mdToHtml(md: string): string {
 
 export default async function RulesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  await useTranslation(lng, 'common')
+  await getTranslation(lng, 'common')
   const mdPath = path.join(process.cwd(), 'specs', 'game-rules.md')
   let content = ''
   try {

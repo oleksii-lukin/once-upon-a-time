@@ -4,13 +4,13 @@ import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter, useParams } from 'next/navigation'
 import { useState } from 'react'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 
 export default function NewDeckButton() {
   const router = useRouter()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
   const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
 

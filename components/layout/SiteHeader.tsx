@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 import CustomUserButton from '@/components/clerk/CustomUserButton'
 
 export default function SiteHeader({ lng }: { lng: string }) {
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   return (
     <header id="site-header" className="w-full border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-background/80 backdrop-blur supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-background/70">

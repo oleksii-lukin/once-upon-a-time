@@ -8,7 +8,7 @@ import { Info as InfoIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { initializeGame } from '@/app/actions/game'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,7 +50,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
   const supabase = useMemo(() => createClient(), [])
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   const [roomName, setRoomName] = useState(lobby.name)
   const [decks, setDecks] = useState<Deck[]>([])

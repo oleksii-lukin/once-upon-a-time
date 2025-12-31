@@ -5,7 +5,7 @@ import { User as UserIcon, Edit as EditIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -22,7 +22,7 @@ export default function UserProfileCard({ compact = false }: UserProfileCardProp
   const supabase = createClient()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   useEffect(() => {
     async function fetchProfile() {

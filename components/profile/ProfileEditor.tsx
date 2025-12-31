@@ -5,7 +5,7 @@ import { Check as CheckIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
 import AvatarUpload from './AvatarUpload'
 import { Label } from '@/components/ui/label'
@@ -28,7 +28,7 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
   const supabase = createClient()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   // Form fields
   const [displayName, setDisplayName] = useState('')

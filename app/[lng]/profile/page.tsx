@@ -1,10 +1,10 @@
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 import ProfileEditor from '@/components/profile/ProfileEditor'
 import UserProfileCard from '@/components/profile/UserProfileCard'
 
 export default async function ProfilePage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">

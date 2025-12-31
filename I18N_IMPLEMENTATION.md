@@ -92,13 +92,13 @@ Translation keys include:
 
 **Server Components:**
 ```typescript
-const { t } = await useTranslation(lng, 'common')
+const { t } = await getTranslation(lng, 'common')
 <h1>{t('title')}</h1>
 ```
 
 **Client Components:**
 ```typescript
-const { t } = useTranslation(lng, 'common')
+const { t } = getTranslation(lng, 'common')
 <button>{t('create_new_story')}</button>
 ```
 

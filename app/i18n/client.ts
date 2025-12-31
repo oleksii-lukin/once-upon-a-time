@@ -1,7 +1,7 @@
 'use client'
 
 import i18next from 'i18next'
-import { initReactI18next, useTranslation as useTranslationOrg } from 'react-i18next'
+import { initReactI18next, getTranslation as getTranslationOrg } from 'react-i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { getOptions, languages, cookieName } from './settings'
@@ -22,8 +22,8 @@ i18next
     preload: runsOnServerSide ? languages : [],
   })
 
-export function useTranslation(lng: string, ns: string, options?: any) {
-  const ret = useTranslationOrg(ns, options)
+export function getTranslation(lng: string, ns: string, options?: any) {
+  const ret = getTranslationOrg(ns, options)
   const { i18n } = ret
   if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {
     i18n.changeLanguage(lng)

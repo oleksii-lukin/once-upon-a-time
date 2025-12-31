@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useRouter, useParams } from 'next/navigation'
 import { getGuestId } from '@/lib/auth/guest'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
@@ -23,7 +23,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
   const router = useRouter()
   const params = useParams()
   const lng = params.lng as string
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
   const { user } = useUser()
 
   const fetchLobbies = async () => {

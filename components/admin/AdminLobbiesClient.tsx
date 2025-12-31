@@ -5,7 +5,7 @@ import { X as CrossIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useRouter } from 'next/navigation'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
@@ -27,7 +27,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
   const [isRestoring, setIsRestoring] = useState(false)
   const supabase = createClient()
   const router = useRouter()
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
 
   const filteredLobbies = lobbies.filter((lobby) => {
     if (filter === 'active') return !lobby.deleted_at

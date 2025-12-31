@@ -1,7 +1,7 @@
 import Card from './Card'
 import { Database } from '@/supabase/types'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
-import { useTranslation } from 'react-i18next'
+import { getTranslation } from 'react-i18next'
 
 type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, played_by?: string }
 type Player = Database['public']['Tables']['players']['Row']
@@ -13,7 +13,7 @@ interface TableAreaProps {
 }
 
 export default function TableArea({ playedCards, storytellerPlayer, players }: TableAreaProps) {
-  const { t } = useTranslation()
+  const { t } = getTranslation()
   return (
     <div className="flex-grow flex items-start justify-center p-6 overflow-auto">
       <div className="flex flex-col gap-6 w-full max-w-7xl">

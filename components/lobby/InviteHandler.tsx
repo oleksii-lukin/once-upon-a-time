@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { getGuestId } from '@/lib/auth/guest'
 import { getGuestIdentity } from '@/lib/auth/guestIdentity'
-import { useTranslation } from '@/app/i18n/client'
+import { getTranslation } from '@/app/i18n/client'
 
 interface InviteHandlerProps {
   code: string
@@ -20,7 +20,7 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
   const router = useRouter()
   const { getToken, userId, isLoaded: isAuthLoaded } = useAuth()
   const { user, isLoaded: isUserLoaded } = useUser()
-  const { t } = useTranslation(lng, 'common')
+  const { t } = getTranslation(lng, 'common')
   const joiningRef = useRef(false)
 
   useEffect(() => {

@@ -1,11 +1,11 @@
 import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
-import { useTranslation } from '../i18n/server'
+import { getTranslation } from '../i18n/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export default async function Home({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
 
   return (
     <div className="min-h-screen bg-linear-to-br from-primary via-secondary to-accent">

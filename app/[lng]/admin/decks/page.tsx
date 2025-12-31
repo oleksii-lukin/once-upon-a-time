@@ -1,11 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import NewDeckButton from '@/components/admin/NewDeckButton'
-import { useTranslation } from '@/app/i18n/server'
+import { getTranslation } from '@/app/i18n/server'
 
 export default async function DecksPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
-  const { t } = await useTranslation(lng, 'common')
+  const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
   const { data: decks } = await supabase
     .from('decks')

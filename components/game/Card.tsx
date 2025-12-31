@@ -29,11 +29,11 @@ interface CardProps {
   className?: string
 }
 
-import { useTranslation } from 'react-i18next'
+import { getTranslation } from 'react-i18next'
 import { getLocalizedCardContent } from '@/utils/gameUtils'
 
 export default function Card({ card, isHoverable = false, onClick, className = '' }: CardProps) {
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = getTranslation()
   const localizedContent = getLocalizedCardContent(card as any, i18n.language)
 
   const typeKey = normalizeTypeKey(localizedContent.type)

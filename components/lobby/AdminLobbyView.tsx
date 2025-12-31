@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import { useParams } from 'next/navigation'
-import { initializeGame } from '@/app/actions/game'
 import { useUser } from '@clerk/nextjs'
 import { Copy as CopyIcon, Check as CheckIcon, Info as InfoIcon } from 'lucide-react'
-import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
+
+import { createClient } from '@/utils/supabase/client'
+import { Database } from '@/supabase/types'
+import { initializeGame } from '@/app/actions/game'
 import { useTranslation } from '@/app/i18n/client'
+import { Switch } from '@/components/ui/switch'
+
+import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -312,42 +315,24 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
                           <div className="flex items-center justify-between py-2">
                             <label className={`text-base font-medium leading-normal transition-colors ${settings.allowHotJoin ? 'text-white' : 'text-white/40'}`} htmlFor="allow-hot-join">{t('allow_hot_join')}</label>
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input
-                                className="peer sr-only"
-                                id="allow-hot-join"
-                                type="checkbox"
-                                checked={settings.allowHotJoin}
-                                onChange={e => updateSettings({ allowHotJoin: e.target.checked })}
-                              />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Switch
+                              checked={settings.allowHotJoin}
+                              onCheckedChange={() => updateSettings({ allowHotJoin: !settings.allowHotJoin })}
+                            />
                           </div>
                           <div className="flex items-center justify-between py-2">
                             <label className={`text-base font-medium leading-normal transition-colors ${settings.publicGame ? 'text-white' : 'text-white/40'}`} htmlFor="game-visibility">{t('public_game')}</label>
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input
-                                className="peer sr-only"
-                                id="game-visibility"
-                                type="checkbox"
-                                checked={settings.publicGame}
-                                onChange={e => updateSettings({ publicGame: e.target.checked })}
-                              />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Switch
+                              checked={settings.publicGame}
+                              onCheckedChange={() => updateSettings({ publicGame: !settings.publicGame })}
+                            />
                           </div>
                           <div className="flex items-center justify-between py-2">
                             <label className={`text-base font-medium leading-normal transition-colors ${settings.allowSpectators ? 'text-white' : 'text-white/40'}`} htmlFor="allow-spectators">{t('allow_spectators')}</label>
-                            <label className="relative inline-flex cursor-pointer items-center">
-                              <input
-                                className="peer sr-only"
-                                id="allow-spectators"
-                                type="checkbox"
-                                checked={settings.allowSpectators}
-                                onChange={e => updateSettings({ allowSpectators: e.target.checked })}
-                              />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Switch
+                              checked={settings.allowSpectators}
+                              onCheckedChange={() => updateSettings({ allowSpectators: !settings.allowSpectators })}
+                            />
                           </div>
                         </div>
                       </div>
@@ -413,55 +398,31 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                             <InfoIcon className="size-5" />
                           </button>
                         </div>
-                        <label className="relative inline-flex cursor-pointer items-center">
-                          <input
-                            className="peer sr-only"
-                            id="allow-interrupts"
-                            type="checkbox"
-                            checked={settings.allowInterrupts}
-                            onChange={e => updateSettings({ allowInterrupts: e.target.checked })}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Switch
+                          checked={settings.allowInterrupts}
+                          onCheckedChange={() => updateSettings({ allowInterrupts: !settings.allowInterrupts })}
+                        />
                       </div>
                       <div className="flex items-center justify-between py-2">
                         <label className={`text-base font-medium leading-normal transition-colors ${settings.timerPerTurn ? 'text-white' : 'text-white/40'}`} htmlFor="timer-per-turn">{t('timer_per_turn')}</label>
-                        <label className="relative inline-flex cursor-pointer items-center">
-                          <input
-                            className="peer sr-only"
-                            id="timer-per-turn"
-                            type="checkbox"
-                            checked={settings.timerPerTurn}
-                            onChange={e => updateSettings({ timerPerTurn: e.target.checked })}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Switch
+                          checked={settings.timerPerTurn}
+                          onCheckedChange={() => updateSettings({ timerPerTurn: !settings.timerPerTurn })}
+                        />
                       </div>
                       <div className="flex items-center justify-between py-2">
                         <label className={`text-base font-medium leading-normal transition-colors ${settings.happyEnding ? 'text-white' : 'text-white/40'}`} htmlFor="happy-ending">{t('happy_ending_variant')}</label>
-                        <label className="relative inline-flex cursor-pointer items-center">
-                          <input
-                            className="peer sr-only"
-                            id="happy-ending"
-                            type="checkbox"
-                            checked={settings.happyEnding}
-                            onChange={e => updateSettings({ happyEnding: e.target.checked })}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Switch
+                          checked={settings.happyEnding}
+                          onCheckedChange={() => updateSettings({ happyEnding: !settings.happyEnding })}
+                        />
                       </div>
                       <div className="flex items-center justify-between py-2">
                         <label className={`text-base font-medium leading-normal transition-colors ${settings.enableVideoChat ? 'text-white' : 'text-white/40'}`} htmlFor="enable-video-chat">{t('enable_video_chat')}</label>
-                        <label className="relative inline-flex cursor-pointer items-center">
-                          <input
-                            className="peer sr-only"
-                            id="enable-video-chat"
-                            type="checkbox"
-                            checked={settings.enableVideoChat}
-                            onChange={e => updateSettings({ enableVideoChat: e.target.checked })}
-                          />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Switch
+                          checked={settings.enableVideoChat}
+                          onCheckedChange={() => updateSettings({ enableVideoChat: !settings.enableVideoChat })}
+                        />
                       </div>
                     </div>
                   </div>
@@ -475,12 +436,10 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                             key={deck.id}
                             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedDecks.includes(deck.id) ? 'bg-primary/20 border-primary' : 'hover:bg-white/10 border-transparent'}`}
                           >
-                            <input
-                              className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark"
-                              type="checkbox"
+                            <Switch
                               checked={selectedDecks.includes(deck.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
+                              onCheckedChange={() => {
+                                if (!selectedDecks.includes(deck.id)) {
                                   updateSelectedDecks([...selectedDecks, deck.id])
                                 }
                                 else {

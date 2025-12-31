@@ -8,6 +8,8 @@ import { getGuestId } from '@/lib/auth/guest'
 import { getGuestIdentity } from '@/lib/auth/guestIdentity'
 import { useTranslation } from '@/app/i18n/client'
 import { languages } from '@/app/i18n/settings'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function CreateLobbyButton() {
   const [loading, setLoading] = useState(false)
@@ -88,24 +90,25 @@ export default function CreateLobbyButton() {
 
   return (
     <div className="flex gap-2">
-      <select
-        value={selectedLanguage}
-        onChange={e => setSelectedLanguage(e.target.value)}
-        className="rounded-lg border border-gray-200/20 bg-gray-100 dark:bg-white/10 px-3 py-2 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-      >
-        {languages.map(l => (
-          <option key={l} value={l}>
-            {l.toUpperCase()}
-          </option>
-        ))}
-      </select>
-      <button
+      <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+        <SelectTrigger>
+          <SelectValue placeholder={lng.toUpperCase()} />
+        </SelectTrigger>
+        <SelectContent>
+          {languages.map(l => (
+            <SelectItem key={l} value={l}>
+              {l.toUpperCase()}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
         onClick={handleCreate}
         disabled={loading}
-        className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors disabled:opacity-70"
+        className="flex min-w-[84px] max-w-[480px] cursor-pointer px-4 text-white"
       >
         <span className="truncate">{loading ? t('creating') : t('create_new_story')}</span>
-      </button>
+      </Button>
     </div>
   )
 }

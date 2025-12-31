@@ -4,6 +4,9 @@ import CreateLobbyButton from '@/components/lobby/CreateLobbyButton'
 import UserProfileCard from '@/components/profile/UserProfileCard'
 import { useTranslation } from '@/app/i18n/server'
 import { Search as SearchIcon, UserPlus as UserPlusIcon } from 'lucide-react'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default async function LobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -30,19 +33,19 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                 <CreateLobbyButton />
               </div>
               <div className="flex flex-col md:flex-row gap-4">
-                <label className="flex flex-col min-w-40 h-12 w-full flex-1">
+                <Label className="flex flex-col min-w-40 h-12 w-full flex-1">
                   <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
                     <div className="text-gray-400 flex border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 items-center justify-center pl-4 rounded-l-lg border-r-0">
                       <SearchIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </div>
-                    <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder={t('search_placeholder')} />
+                    <Input className="flex w-full min-w-0 flex-1 rounded-l-none border-l-0 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 pl-2 text-base" placeholder={t('search_placeholder')} />
                   </div>
-                </label>
+                </Label>
                 <div className="flex items-center gap-2">
-                  <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-800 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-gray-200/20 dark:border-white/20 bg-gray-100 dark:bg-white/10 h-12 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-base font-normal leading-normal" placeholder={t('enter_join_code')} />
-                  <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-gray-200 dark:bg-white/20 text-gray-800 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-300 dark:hover:bg-white/30 transition-colors">
+                  <Input className="h-12" placeholder={t('enter_join_code')} />
+                  <Button className="min-w-[84px] h-12 px-4 text-sm font-bold leading-normal tracking-[0.015em]">
                     <span className="truncate">{t('join')}</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -65,9 +68,9 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                         <p className="text-xs text-gray-500 dark:text-gray-400">{t('in_lobby')}</p>
                       </div>
                     </div>
-                    <button className="text-primary hover:text-primary/80 transition-colors">
+                    <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80">
                       <UserPlusIcon className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -80,9 +83,9 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                         <p className="text-xs text-gray-500 dark:text-gray-400">{t('in_game')}</p>
                       </div>
                     </div>
-                    <button className="text-primary hover:text-primary/80 transition-colors">
+                    <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80">
                       <UserPlusIcon className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -95,9 +98,9 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                         <p className="text-xs text-gray-500 dark:text-gray-400">{t('offline')}</p>
                       </div>
                     </div>
-                    <button className="text-primary hover:text-primary/80 transition-colors">
+                    <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80">
                       <UserPlusIcon className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

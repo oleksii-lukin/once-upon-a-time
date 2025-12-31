@@ -8,6 +8,10 @@ import { Database } from '@/supabase/types'
 import { useTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
 import AvatarUpload from './AvatarUpload'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 
@@ -117,7 +121,7 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
   }
 
   return (
-    <div className="bg-white/5 rounded-xl p-8">
+    <div className="bg-white/5 p-8">
       <div className="flex flex-col items-center gap-8">
         <AvatarUpload
           value={avatarUrl}
@@ -126,35 +130,35 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
 
         <div className="w-full max-w-md space-y-6">
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <Label className="block text-white text-sm font-medium mb-2">
               {t('display_name')}
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
               placeholder={user.fullName || user.username || t('enter_name')}
-              className="w-full h-12 px-4 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="h-12 bg-white/10"
             />
           </div>
 
           <div>
-            <label className="block text-white text-sm font-medium mb-2">
+            <Label className="block text-white text-sm font-medium mb-2">
               {t('bio')}
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               value={bio}
               onChange={e => setBio(e.target.value)}
               placeholder={t('bio_placeholder')}
               rows={3}
-              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              className="bg-white/10"
             />
           </div>
 
-          <button
+          <Button
             onClick={handleSave}
             disabled={saving}
-            className="w-full h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full h-12 text-white font-bold"
           >
             {saving
               ? (
@@ -170,7 +174,7 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
                 : (
                     <span>{t('save_profile')}</span>
                   )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,66 +1,69 @@
 import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import { useTranslation } from '../i18n/server'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default async function Home({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
   const { t } = await useTranslation(lng, 'common')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
+    <div className="min-h-screen bg-linear-to-br from-primary via-secondary to-accent">
       {/* Hero Section */}
       <main className="container mx-auto px-4 pt-32 pb-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-6xl font-bold text-white mb-6 leading-tight">
+          <h2 className="text-6xl font-bold text-primary-background mb-6 leading-tight">
             {t('welcome')}
           </h2>
-          <p className="text-xl text-purple-200 mb-12 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-background mb-12 max-w-2xl mx-auto">
             {t('tagline')}
           </p>
 
           <div className="flex gap-4 justify-center">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="px-8 py-4 bg-white text-purple-900 rounded-full font-semibold text-lg hover:bg-purple-50 transition-all shadow-lg">
+                <Button className="px-16 py-8 text-2xl font-semibold shadow-lg">
                   {t('get_started')}
-                </button>
+                </Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
-              <a
-                href={`/${lng}/lobbies`}
-                className="px-8 py-4 bg-white text-purple-900 rounded-full font-semibold text-lg hover:bg-purple-50 transition-all shadow-lg"
-              >
-                {t('join_lobby')}
-              </a>
+              <Button asChild className="px-16 py-8 text-2xl font-semibold shadow-lg">
+                <Link href={`/${lng}/lobbies`}>
+                  {t('join_lobby')}
+                </Link>
+              </Button>
             </SignedIn>
-            <button className="px-8 py-4 bg-white/10 text-white rounded-full font-semibold text-lg hover:bg-white/20 transition-all border border-white/20">
-              {t('learn_more')}
-            </button>
+            <Button asChild className="px-16 py-8 text-2xl font-semibold shadow-lg bg-info text-info-foreground hover:bg-info/80">
+              <Link href={`/${lng}/rules`}>
+                {t('learn_more')}
+              </Link>
+            </Button>
           </div>
         </div>
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mt-24 max-w-5xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+          <div className="bg-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-border/20">
             <div className="text-4xl mb-4">🎭</div>
-            <h3 className="text-xl font-semibold text-white mb-3">{t('realtime_gameplay')}</h3>
-            <p className="text-purple-200">
+            <h3 className="text-xl font-semibold text-secondary-foreground mb-3">{t('realtime_gameplay')}</h3>
+            <p className="text-secondary-foreground">
               {t('realtime_desc')}
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+          <div className="bg-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-border/20">
             <div className="text-4xl mb-4">📖</div>
-            <h3 className="text-xl font-semibold text-white mb-3">{t('classic_storytelling')}</h3>
-            <p className="text-purple-200">
+            <h3 className="text-xl font-semibold text-secondary-foreground mb-3">{t('classic_storytelling')}</h3>
+            <p className="text-secondary-foreground">
               {t('classic_desc')}
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+          <div className="bg-foreground/10 backdrop-blur-sm rounded-2xl p-8 border border-border/20">
             <div className="text-4xl mb-4">🎮</div>
-            <h3 className="text-xl font-semibold text-white mb-3">{t('easy_to_learn')}</h3>
-            <p className="text-purple-200">
+            <h3 className="text-xl font-semibold text-secondary-foreground mb-3">{t('easy_to_learn')}</h3>
+            <p className="text-secondary-foreground">
               {t('easy_desc')}
             </p>
           </div>

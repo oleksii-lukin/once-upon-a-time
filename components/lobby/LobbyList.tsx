@@ -14,6 +14,7 @@ type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
 
 import { useUser } from '@clerk/nextjs'
 import { getGuestIdentity } from '@/lib/auth/guestIdentity'
+import { Button } from '@/components/ui/button'
 
 export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] }) {
   const [lobbies, setLobbies] = useState<Lobby[]>(initialLobbies)
@@ -139,12 +140,13 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                 </div>
               </td>
               <td className="h-[72px] px-4 py-2">
-                <button
+                <Button
                   onClick={() => handleJoin(lobby.id)}
-                  className="flex w-full min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-4 bg-primary/20 text-primary text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/30 transition-colors"
+                  className="w-full min-w-[84px] max-w-[480px] h-9 px-4 text-primary text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/30 transition-colors"
+                  variant="outline"
                 >
                   {lobby.status === 'playing' ? t('spectate') : t('join')}
-                </button>
+                </Button>
               </td>
             </tr>
           ))}

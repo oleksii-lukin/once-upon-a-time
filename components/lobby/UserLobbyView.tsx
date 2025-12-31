@@ -9,6 +9,11 @@ import { getGuestId } from '@/lib/auth/guest'
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import { useParams } from 'next/navigation'
 import { useTranslation } from '@/app/i18n/client'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -199,9 +204,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                     :
                   </span>
                   <span className="text-white font-bold text-lg tracking-widest">{currentLobby.code}</span>
-                  <button className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <Button size="icon" variant="ghost" className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
                     <CopyIcon className="w-5 h-5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-4">
@@ -211,32 +216,23 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-6">
                         <div className="flex flex-col">
-                          <label className="flex flex-col min-w-40 flex-1">
+                          <Label className="flex flex-col min-w-40 flex-1">
                             <p className="text-white text-base font-medium leading-normal pb-2">{t('room_name')}</p>
-                            <input className="form-input flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal disabled:opacity-50" disabled readOnly value={currentLobby.name} />
-                          </label>
+                            <Input className="flex w-full min-w-0 flex-1 rounded-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-[#211c27] h-11 placeholder:text-white/40 p-[15px] text-base font-normal leading-normal disabled:opacity-50" disabled readOnly value={currentLobby.name} />
+                          </Label>
                         </div>
                         <div className="flex flex-col gap-2 p-4 border border-white/10 rounded-lg">
                           <div className="flex items-center justify-between py-2">
-                            <label className="text-white text-base font-medium leading-normal" htmlFor="allow-hot-join">{t('allow_hot_join')}</label>
-                            <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                              <input className="peer sr-only" disabled id="allow-hot-join" type="checkbox" checked={settings.allowHotJoin} />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-hot-join">{t('allow_hot_join')}</Label>
+                            <Switch checked={settings.allowHotJoin} disabled id="allow-hot-join" />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <label className="text-white text-base font-medium leading-normal" htmlFor="game-visibility">{t('public_game')}</label>
-                            <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                              <input className="peer sr-only" disabled id="game-visibility" type="checkbox" checked={settings.publicGame} />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Label className="text-white text-base font-medium leading-normal" htmlFor="game-visibility">{t('public_game')}</Label>
+                            <Switch checked={settings.publicGame} disabled id="game-visibility" />
                           </div>
                           <div className="flex items-center justify-between py-2">
-                            <label className="text-white text-base font-medium leading-normal" htmlFor="allow-spectators">{t('allow_spectators')}</label>
-                            <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                              <input className="peer sr-only" disabled id="allow-spectators" type="checkbox" checked={settings.allowSpectators} />
-                              <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                            </label>
+                            <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-spectators">{t('allow_spectators')}</Label>
+                            <Switch checked={settings.allowSpectators} disabled id="allow-spectators" />
                           </div>
                         </div>
                       </div>
@@ -248,34 +244,22 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
-                          <label className="text-white text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</label>
-                          <button className="text-white/50 hover:text-white transition-colors"><InfoIcon className="w-4 h-4" /></button>
+                          <Label className="text-white text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</Label>
+                          <Button variant="ghost" size="icon" className="text-white/50 hover:text-white transition-colors"><InfoIcon className="w-4 h-4" /></Button>
                         </div>
-                        <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                          <input className="peer sr-only" disabled id="allow-interrupts" type="checkbox" checked={settings.allowInterrupts} />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Switch checked={settings.allowInterrupts} disabled id="allow-interrupts" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className="text-white text-base font-medium leading-normal" htmlFor="timer-per-turn">{t('timer_per_turn')}</label>
-                        <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                          <input className="peer sr-only" disabled id="timer-per-turn" type="checkbox" checked={settings.timerPerTurn} />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Label className="text-white text-base font-medium leading-normal" htmlFor="timer-per-turn">{t('timer_per_turn')}</Label>
+                        <Switch checked={settings.timerPerTurn} disabled id="timer-per-turn" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className="text-white text-base font-medium leading-normal" htmlFor="happy-ending">{t('happy_ending_variant')}</label>
-                        <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                          <input className="peer sr-only" disabled id="happy-ending" type="checkbox" checked={settings.happyEnding} />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Label className="text-white text-base font-medium leading-normal" htmlFor="happy-ending">{t('happy_ending_variant')}</Label>
+                        <Switch checked={settings.happyEnding} disabled id="happy-ending" />
                       </div>
                       <div className="flex items-center justify-between py-2">
-                        <label className="text-white text-base font-medium leading-normal" htmlFor="enable-video-chat">{t('enable_video_chat')}</label>
-                        <label className="relative inline-flex items-center opacity-50 pointer-events-none">
-                          <input className="peer sr-only" disabled id="enable-video-chat" type="checkbox" checked={settings.enableVideoChat} />
-                          <div className="peer h-6 w-11 rounded-full bg-white/20 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50"></div>
-                        </label>
+                        <Label className="text-white text-base font-medium leading-normal" htmlFor="enable-video-chat">{t('enable_video_chat')}</Label>
+                        <Switch checked={settings.enableVideoChat} disabled id="enable-video-chat" />
                       </div>
                     </div>
                   </div>
@@ -292,12 +276,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                               : 'border-transparent'
                             }`}
                           >
-                            <input
-                              className="form-checkbox rounded text-primary bg-transparent border-white/30 focus:ring-primary/50 focus:ring-offset-background-dark disabled:opacity-50"
-                              disabled
-                              type="checkbox"
-                              checked={selectedDeckIds.includes(deck.id)}
-                            />
+                            <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
                             <span className="text-white font-medium">{deck.name}</span>
                           </label>
                         ))}
@@ -357,18 +336,18 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       <div>
                         <p className="text-white/80 text-sm font-medium leading-normal pb-2 text-center">{t('choose_your_role')}</p>
                         <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-black/20">
-                          <button className="px-4 py-2 text-sm font-bold rounded-md bg-primary text-white">{t('player')}</button>
-                          <button className="px-4 py-2 text-sm font-bold rounded-md text-white/70 hover:bg-white/10">{t('spectator')}</button>
+                          <Button className="px-4 py-2 text-sm font-bold rounded-md">{t('player')}</Button>
+                          <Button variant="ghost" className="px-4 py-2 text-sm font-bold rounded-md text-white/70 hover:bg-white/10">{t('spectator')}</Button>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <button className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-primary text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors gap-2">
+                        <Button className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 text-white text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors gap-2">
                           <CheckIcon className="w-5 h-5" />
                           <span className="truncate">{t('ready')}</span>
-                        </button>
-                        <button className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-white/10 text-white/80 text-base font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
+                        </Button>
+                        <Button variant="ghost" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-white/10 text-white/80 text-base font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
                           <span className="truncate">{t('leave')}</span>
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>

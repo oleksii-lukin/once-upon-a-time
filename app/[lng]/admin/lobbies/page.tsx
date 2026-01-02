@@ -1,5 +1,4 @@
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
 import { getTranslation } from '@/app/i18n/server'
 import AdminLobbiesClient from '@/components/admin/AdminLobbiesClient'
 

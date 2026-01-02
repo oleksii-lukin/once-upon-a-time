@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Info as InfoIcon, Check as CheckIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
@@ -15,10 +15,17 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import CopyButton from '@/components/common/CopyButton'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
 type Deck = Database['public']['Tables']['decks']['Row']
+
+type LobbyPresence = {
+  player_id?: string
+  user_id?: string
+  guest_id?: string
+}
 
 interface UserLobbyViewProps {
   lobby: Lobby
@@ -29,7 +36,6 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   const { user } = useUser()
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby)
-  const [selectedRole, setSelectedRole] = useState('Storyteller')
   const [decks, setDecks] = useState<Deck[]>([])
   const [selectedDeckIds, setSelectedDeckIds] = useState<string[]>([])
   const supabase = createClient()
@@ -37,20 +43,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   const lng = params.lng as string
   const { t } = getTranslation(lng, 'common')
 
-  // Default settings
-  const defaultSettings = {
-    allowHotJoin: true,
-    publicGame: true,
-    allowSpectators: true,
-    allowInterrupts: true,
-    timerPerTurn: false,
-    happyEnding: false,
-    enableVideoChat: true,
-  }
-
-  const settings = currentLobby.settings && typeof currentLobby.settings === 'object'
-    ? { ...defaultSettings, ...(currentLobby.settings as any) }
-    : defaultSettings
+  const settings = (currentLobby.settings && typeof currentLobby.settings === 'object')
+    ? (LobbySettingsSchema.safeParse(currentLobby.settings).success ? LobbySettingsSchema.parse(currentLobby.settings) : defaultLobbySettings)
+    : defaultLobbySettings
 
   // Fetch decks on mount
   useEffect(() => {
@@ -63,9 +58,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
         setDecks(data)
         // Get selected decks from lobby settings
         if (currentLobby.settings && typeof currentLobby.settings === 'object') {
-          const lobbySelectedDecks = (currentLobby.settings as any).selectedDecks
-          if (lobbySelectedDecks && Array.isArray(lobbySelectedDecks)) {
-            setSelectedDeckIds(lobbySelectedDecks)
+          const parsed = LobbySettingsSchema.safeParse(currentLobby.settings)
+          if (parsed.success) {
+            setSelectedDeckIds(parsed.data.selectedDecks)
           }
         }
       }
@@ -90,7 +85,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'players', filter: `lobby_id=eq.${lobby.id}` },
-        (payload) => {
+        () => {
           fetchPlayers()
         },
       )
@@ -108,9 +103,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
             setCurrentLobby(updatedLobby)
             // Update selected decks when host changes them
             if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
-              const lobbySelectedDecks = (updatedLobby.settings as any).selectedDecks
-              if (lobbySelectedDecks && Array.isArray(lobbySelectedDecks)) {
-                setSelectedDeckIds(lobbySelectedDecks)
+              const parsed = LobbySettingsSchema.safeParse(updatedLobby.settings)
+              if (parsed.success) {
+                setSelectedDeckIds(parsed.data.selectedDecks)
               }
             }
           }
@@ -125,34 +120,34 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   }, [lobby.id, supabase, fetchPlayers])
 
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
-  const [channel, setChannel] = useState<ReturnType<typeof supabase.channel> | null>(null)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   // 1. Setup channel (run once)
   useEffect(() => {
     const newChannel = supabase.channel(`lobby:${lobby.id}`)
       .on('presence', { event: 'sync' }, () => {
-        const newState = newChannel.presenceState()
+        const newState = newChannel.presenceState<LobbyPresence>()
         const onlineIds = new Set<string>()
         for (const key in newState) {
-          newState[key].forEach((presence: any) => {
+          newState[key].forEach((presence) => {
             if (presence.player_id) onlineIds.add(presence.player_id)
           })
         }
         setOnlineUsers(onlineIds)
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ newPresences }: { newPresences: LobbyPresence[] }) => {
         setOnlineUsers((prev) => {
           const next = new Set(prev)
-          newPresences.forEach((p: any) => {
+          newPresences.forEach((p) => {
             if (p.player_id) next.add(p.player_id)
           })
           return next
         })
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, ({ leftPresences }: { leftPresences: LobbyPresence[] }) => {
         setOnlineUsers((prev) => {
           const next = new Set(prev)
-          leftPresences.forEach((p: any) => {
+          leftPresences.forEach((p) => {
             if (p.player_id) next.delete(p.player_id)
           })
           return next
@@ -160,7 +155,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
       })
       .subscribe()
 
-    setChannel(newChannel)
+    channelRef.current = newChannel
 
     return () => {
       supabase.removeChannel(newChannel)
@@ -169,7 +164,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
 
   // 2. Track presence when player ID is available
   useEffect(() => {
-    if (!channel) return
+    if (!channelRef.current) return
 
     const guestId = !user ? getGuestId() : undefined
     const currentPlayer = players.find(p =>
@@ -179,13 +174,13 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     const playerId = currentPlayer?.id
 
     if (playerId) {
-      channel.track({
+      channelRef.current.track({
         player_id: playerId,
         user_id: user?.id,
         guest_id: guestId,
       })
     }
-  }, [channel, user, players])
+  }, [user, players])
 
   // Filter players to only show online ones (plus self)
   const displayedPlayers = players.filter((p) => {

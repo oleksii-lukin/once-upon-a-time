@@ -13,25 +13,14 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CopyButton from '@/components/common/CopyButton'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import type { LobbySettings } from '@/types/lobby'
 
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
 type Deck = Database['public']['Tables']['decks']['Row']
-
-// Default settings
-const defaultSettings = {
-  allowHotJoin: true,
-  publicGame: true,
-  allowSpectators: true,
-  allowInterrupts: true,
-  timerPerTurn: false,
-  happyEnding: false,
-  enableVideoChat: true,
-  selectedDecks: [] as string[],
-}
-type LobbySettings = typeof defaultSettings
 
 type LobbyPresence = {
   player_id?: string
@@ -56,11 +45,12 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
   const [decks, setDecks] = useState<Deck[]>([])
 
   // Initialize settings from lobby data or defaults
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState<LobbySettings>(() => {
     if (lobby.settings && typeof lobby.settings === 'object') {
-      return { ...defaultSettings, ...(lobby.settings as Partial<LobbySettings>) }
+      const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+      return parsed.success ? parsed.data : defaultLobbySettings
     }
-    return defaultSettings
+    return defaultLobbySettings
   })
 
   // Generate invite link based on current URL
@@ -98,9 +88,13 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
   }
 
   const [isStarting, setIsStarting] = useState(false)
-  const [selectedDecks, setSelectedDecks] = useState<string[]>(
-    (lobby.settings && typeof lobby.settings === 'object' && (lobby.settings as LobbySettings).selectedDecks) || [],
-  )
+  const [selectedDecks, setSelectedDecks] = useState<string[]>(() => {
+    if (lobby.settings && typeof lobby.settings === 'object') {
+      const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+      return parsed.success ? parsed.data.selectedDecks : []
+    }
+    return []
+  })
 
   // Update selected decks in settings
   const updateSelectedDecks = async (newSelectedDecks: string[]) => {
@@ -194,11 +188,10 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
             setCurrentLobby(updatedLobby)
             setRoomName(updatedLobby.name)
             if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
-              const newSettings = { ...defaultSettings, ...updatedLobby.settings }
-              setSettings(newSettings)
-              // Sync selected decks
-              if ((updatedLobby.settings as LobbySettings).selectedDecks) {
-                setSelectedDecks((updatedLobby.settings as LobbySettings).selectedDecks)
+              const parsed = LobbySettingsSchema.safeParse(updatedLobby.settings)
+              if (parsed.success) {
+                setSettings(parsed.data)
+                setSelectedDecks(parsed.data.selectedDecks)
               }
             }
           }

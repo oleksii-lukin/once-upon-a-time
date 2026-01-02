@@ -1,6 +1,4 @@
 import { createClient } from '@/utils/supabase/server'
-import AdminLobbyView from '@/components/lobby/AdminLobbyView'
-import UserLobbyView from '@/components/lobby/UserLobbyView'
 import LobbyManager from '@/components/lobby/LobbyManager'
 import { notFound } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'

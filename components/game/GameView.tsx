@@ -8,6 +8,8 @@ import TableArea from './TableArea'
 import GameSidebar from './GameSidebar'
 import TurnControls from './TurnControls'
 import { useGameEngine } from './useGameEngine'
+import type { Tables } from '@/supabase/types'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -56,7 +58,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         .order('played_at')
 
       if (playedData) {
-        const playedCardsWithType = playedData.map((item: any) => ({
+        type PlayedRow = Tables<'played_cards'> & { cards: Tables<'cards'> }
+        const playedCardsWithType = (playedData as PlayedRow[]).map((item) => ({
           ...item.cards,
           // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
           type: item.cards.category || item.cards.type || 'Card',
@@ -78,7 +81,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           .order('position')
 
         if (handData) {
-          const cardsWithType = handData.map((item: any) => ({
+          type HandRow = Tables<'player_hands'> & { cards: Tables<'cards'> }
+          const cardsWithType = (handData as HandRow[]).map((item) => ({
             ...item.cards,
             // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
             type: item.cards.category || item.cards.type || 'Card',
@@ -201,7 +205,13 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         currentPlayerId={currentPlayerId}
         currentTurnPlayerId={currentTurnPlayerId || ''}
         lobbyId={lobby.id}
-        enableVideoChat={(lobby.settings as any)?.enableVideoChat !== false}
+        enableVideoChat={(() => {
+          if (lobby.settings && typeof lobby.settings === 'object') {
+            const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+            return parsed.success ? parsed.data.enableVideoChat : defaultLobbySettings.enableVideoChat
+          }
+          return defaultLobbySettings.enableVideoChat
+        })()}
       />
 
       <TurnControls

@@ -18,6 +18,18 @@
 - The application connects to the remote Supabase instance
 - Connection details are in `.env.local` (gitignored)
 - Use Supabase client libraries for all database operations
+- After applying migrations, re-generate types from database and update all type instances used in the code for types that cannot be generated like JSONB fields
+
+### Typing and Validation
+- Use Supabase-generated types from `@/supabase/types` for all DB interactions
+  - Use `Tables<'table'>` for read results
+  - Use `TablesInsert<'table'>` for inserts
+  - Avoid `any` for DB rows and payloads
+- For JSONB columns (e.g., `lobbies.settings`), define and use a Zod schema
+  - Schema: `LobbySettingsSchema` in `@/types/lobby`
+  - Defaults: `defaultLobbySettings`
+  - Always parse with `safeParse` and fall back to defaults on failure
+- For joined selects, type the composite, e.g. `Tables<'player_hands'> & { cards: Tables<'cards'> }`
 
 ## UI
 

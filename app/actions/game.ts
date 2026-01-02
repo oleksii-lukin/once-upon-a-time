@@ -1,6 +1,9 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import type { TablesInsert } from '@/supabase/types'
+import type { Tables } from '@/supabase/types'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 
 export async function initializeGame(lobbyId: string) {
   const supabase = await createClient()
@@ -19,8 +22,9 @@ export async function initializeGame(lobbyId: string) {
 
   // Determine which decks to use
   let deckIds: string[] = []
-  if (lobby.settings && typeof lobby.settings === 'object' && (lobby.settings as any).selectedDecks) {
-    deckIds = (lobby.settings as any).selectedDecks
+  if (lobby.settings && typeof lobby.settings === 'object') {
+    const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+    deckIds = parsed.success ? (parsed.data.selectedDecks ?? []) : defaultLobbySettings.selectedDecks
   }
 
   // Fallback to lobby.deck_id if no settings or empty selectedDecks
@@ -45,7 +49,7 @@ export async function initializeGame(lobbyId: string) {
   }
 
   // Shuffle players for random turn order
-  const players = [...playersData].sort(() => Math.random() - 0.5)
+  const players = [...(playersData as Tables<'players'>[])].sort(() => Math.random() - 0.5)
 
   // Assign turn order to players
   for (let i = 0; i < players.length; i++) {
@@ -88,10 +92,35 @@ export async function initializeGame(lobbyId: string) {
     return { error: 'Failed to create game session' }
   }
 
+  // Helpers to build typed insert rows
+  const pushPlayerHand = (
+    arr: TablesInsert<'player_hands'>[],
+    params: { game_session_id: string, player_id: string, card_id: string, position?: number },
+  ) => {
+    arr.push({
+      game_session_id: params.game_session_id,
+      player_id: params.player_id,
+      card_id: params.card_id,
+      position: params.position,
+    })
+  }
+
+  const pushDrawPile = (
+    arr: TablesInsert<'draw_pile'>[],
+    params: { game_session_id: string, card_id: string, position?: number },
+  ) => {
+    arr.push({
+      game_session_id: params.game_session_id,
+      card_id: params.card_id,
+      position: params.position,
+    })
+  }
+
   // Separate cards into Endings and Story Cards
   // Seed data uses type='ending' and category=NULL for ending cards
-  const endingCards = cards.filter(c => c.type === 'ending')
-  const storyCards = cards.filter(c => c.type !== 'ending')
+  const typedCards = cards as Tables<'cards'>[]
+  const endingCards = typedCards.filter(c => c.type === 'ending')
+  const storyCards = typedCards.filter(c => c.type !== 'ending')
 
   if (endingCards.length < players.length) {
     console.error('Not enough ending cards for players')
@@ -104,15 +133,15 @@ export async function initializeGame(lobbyId: string) {
 
   // Deal cards to players
   const storyCardsPerPlayer = 5
-  const playerHands: any[] = []
-  const drawPile: any[] = []
+  const playerHands: TablesInsert<'player_hands'>[] = []
+  const drawPile: TablesInsert<'draw_pile'>[] = []
 
   let storyIndex = 0
 
   // Deal cards to each player
   for (let i = 0; i < players.length; i++) {
     // 1. Deal 1 Ending Card
-    playerHands.push({
+    pushPlayerHand(playerHands, {
       game_session_id: gameSession.id,
       player_id: players[i].id,
       card_id: shuffledEndings[i].id,
@@ -122,7 +151,7 @@ export async function initializeGame(lobbyId: string) {
     // 2. Deal Story Cards
     for (let j = 0; j < storyCardsPerPlayer; j++) {
       if (storyIndex < shuffledStory.length) {
-        playerHands.push({
+        pushPlayerHand(playerHands, {
           game_session_id: gameSession.id,
           player_id: players[i].id,
           card_id: shuffledStory[storyIndex].id,
@@ -135,7 +164,7 @@ export async function initializeGame(lobbyId: string) {
 
   // Remaining Story Cards go to draw pile
   while (storyIndex < shuffledStory.length) {
-    drawPile.push({
+    pushDrawPile(drawPile, {
       game_session_id: gameSession.id,
       card_id: shuffledStory[storyIndex].id,
       position: storyIndex - (players.length * storyCardsPerPlayer),

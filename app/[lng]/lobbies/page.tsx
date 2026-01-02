@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import LobbyList from '@/components/lobby/LobbyList'
+import LobbyList, { type Lobby } from '@/components/lobby/LobbyList'
 import CreateLobbyButton from '@/components/lobby/CreateLobbyButton'
 import UserProfileCard from '@/components/profile/UserProfileCard'
 import { getTranslation } from '@/app/i18n/server'
@@ -49,7 +49,7 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
                 </div>
               </div>
 
-              <LobbyList initialLobbies={lobbies as any} />
+              <LobbyList initialLobbies={lobbies as Lobby[]} />
 
             </div>
             <div className="flex flex-col gap-8">

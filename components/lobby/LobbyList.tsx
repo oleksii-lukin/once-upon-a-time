@@ -9,7 +9,7 @@ import { getGuestId } from '@/lib/auth/guest'
 import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
-type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
+export type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
   players: { count: number }[]
 }
 
@@ -39,8 +39,6 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
   }
 
   useEffect(() => {
-    fetchLobbies()
-
     const channel = supabase
       .channel('public:lobbies')
       .on(

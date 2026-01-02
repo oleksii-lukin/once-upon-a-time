@@ -47,10 +47,10 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
             <React.Fragment key={card.id}>
               {isFirstEnding && index > 0 && (
                 <div className="flex flex-col items-center justify-center h-48 mx-6 animate-fade-in">
-                  <div className="h-full w-0.5 bg-gradient-to-b from-transparent via-yellow-500/50 to-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
+                  <div className="h-full w-0.5 bg-linear-to-b from-transparent via-yellow-500/50 to-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
                 </div>
               )}
-              <div className={`w-48 flex-shrink-0 transition-all duration-300 ${isEnding ? 'transform hover:-translate-y-4' : ''} ${isSelected ? 'transform -translate-y-6 z-10' : ''}`}>
+              <div className={`w-48 shrink-0 transition-all duration-300 ${isEnding ? 'transform hover:-translate-y-4' : ''} ${isSelected ? 'transform -translate-y-6 z-10' : ''}`}>
                 <Card
                   card={card}
                   isHoverable={isMyTurn}

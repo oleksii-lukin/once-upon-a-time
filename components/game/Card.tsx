@@ -34,7 +34,7 @@ import { getLocalizedCardContent } from '@/utils/gameUtils'
 
 export default function Card({ card, isHoverable = false, onClick, className = '' }: CardProps) {
   const { t, i18n } = useTranslation()
-  const localizedContent = getLocalizedCardContent(card as any, i18n.language)
+  const localizedContent = getLocalizedCardContent(card, i18n.language)
 
   const typeKey = normalizeTypeKey(localizedContent.type)
   // prefer translated generic fallback instead of raw value
@@ -44,7 +44,7 @@ export default function Card({ card, isHoverable = false, onClick, className = '
     <div
       onClick={onClick}
       className={`
-                bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-[3/4] shadow-lg border border-white/10 
+                bg-cover bg-center flex flex-col justify-end p-4 rounded-xl aspect-3/4 shadow-lg border border-white/10 
                 ${isHoverable ? 'cursor-pointer transition-transform duration-200 ease-out hover:-translate-y-8 hover:scale-105 hover:z-10' : ''}
                 ${className}
             `}

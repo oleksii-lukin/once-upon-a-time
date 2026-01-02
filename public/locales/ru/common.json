@@ -176,6 +176,17 @@
             }
         },
         "deckEditor": {
+            "imageUpload": {
+                "hoverToRemove": "Наведите, чтобы удалить",
+                "uploadCardImage": "Загрузить изображение карты",
+                "fileSizeLimit": "PNG, JPG до 4МБ",
+                "orPasteImageUrl": "Или вставьте URL изображения в поле ниже",
+                "uploading": "Загрузка...",
+                "chooseImage": "Выбрать изображение",
+                "gettingReady": "Подготовка...",
+                "uploadFailed": "Ошибка загрузки: {{error}}",
+                "uploadedImageAlt": "Загруженное изображение"
+            },
             "type": {
                 "story": "Сюжетная"
             },

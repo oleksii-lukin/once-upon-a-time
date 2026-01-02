@@ -176,6 +176,17 @@
             }
         },
         "deckEditor": {
+            "imageUpload": {
+                "hoverToRemove": "Hover to remove",
+                "uploadCardImage": "Upload Card Image",
+                "fileSizeLimit": "PNG, JPG up to 4MB",
+                "orPasteImageUrl": "Or paste an image URL in the field below",
+                "uploading": "Uploading...",
+                "chooseImage": "Choose Image",
+                "gettingReady": "Getting ready...",
+                "uploadFailed": "Upload failed: {{error}}",
+                "uploadedImageAlt": "Uploaded image"
+            },
             "type": {
                 "story": "Story"
             },

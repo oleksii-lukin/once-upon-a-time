@@ -10,11 +10,91 @@ import {
 } from 'lucide-react'
 import { Database } from '@/supabase/types'
 import { getPlayerDisplayName } from '../lobby/PlayerDisplay'
-import useWebRTC from './useWebRTC'
+import useWebRTC, { DeviceInfo } from './useWebRTC'
 import VideoPlayer from './VideoPlayer'
 import { useTranslation } from 'react-i18next'
 
 type Player = Database['public']['Tables']['players']['Row']
+
+interface ControlsProps {
+  enableVideoChat: boolean
+  audioEnabled: boolean
+  videoEnabled: boolean
+  showSettings: boolean
+  devices: DeviceInfo[]
+  selectedAudioDeviceId: string
+  selectedVideoDeviceId: string
+  onToggleAudio: () => void
+  onToggleVideo: () => void
+  onToggleSettings: () => void
+  onSwitchDevice: (type: 'audio' | 'video', deviceId: string) => void
+}
+
+function Controls({ enableVideoChat, audioEnabled, videoEnabled, showSettings, devices, selectedAudioDeviceId, selectedVideoDeviceId, onToggleAudio, onToggleVideo, onToggleSettings, onSwitchDevice }: ControlsProps) {
+  const { t } = useTranslation()
+
+  if (!enableVideoChat) return null
+
+  return (
+    <div className="absolute top-2 right-2 flex gap-2">
+      <button
+        onClick={onToggleAudio}
+        className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
+        title={audioEnabled ? t('game.mute_audio') : t('game.unmute_audio')}
+      >
+        {audioEnabled ? <MicOnIcon className="w-5 h-5" /> : <MicOffIcon className="w-5 h-5" />}
+      </button>
+      <button
+        onClick={onToggleVideo}
+        className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
+        title={videoEnabled ? t('game.turn_off_video') : t('game.turn_on_video')}
+      >
+        {videoEnabled ? <VideoOnIcon className="w-5 h-5" /> : <VideoOffIcon className="w-5 h-5" />}
+      </button>
+      <button
+        onClick={onToggleSettings}
+        className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
+        title={t('game.device_settings')}
+      >
+        <SettingsIcon className="w-5 h-5" />
+      </button>
+
+      {/* Device Settings Popover */}
+      {showSettings && (
+        <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl z-50 flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">{t('game.microphone_label')}</label>
+            <select
+              className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
+              value={selectedAudioDeviceId}
+              onChange={e => onSwitchDevice('audio', e.target.value)}
+            >
+              {devices.filter(d => d.kind === 'audioinput').map(device => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `${t('game.microphone_label')} ${device.deviceId.slice(0, 5)}...`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">{t('game.camera_label')}</label>
+            <select
+              className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
+              value={selectedVideoDeviceId}
+              onChange={e => onSwitchDevice('video', e.target.value)}
+            >
+              {devices.filter(d => d.kind === 'videoinput').map(device => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `${t('game.camera_label')} ${device.deviceId.slice(0, 5)}...`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface GameSidebarProps {
   players: Player[]
@@ -62,73 +142,8 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
 
   const [showSettings, setShowSettings] = useState(false)
 
-  // Helper to render controls for me
-  const Controls = () => {
-    if (!enableVideoChat) return null
-
-    return (
-      <div className="absolute top-2 right-2 flex gap-2">
-        <button
-          onClick={handleToggleAudio}
-          className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${audioEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-          title={audioEnabled ? t('game.mute_audio') : t('game.unmute_audio')}
-        >
-          {audioEnabled ? <MicOnIcon className="w-5 h-5" /> : <MicOffIcon className="w-5 h-5" />}
-        </button>
-        <button
-          onClick={handleToggleVideo}
-          className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${videoEnabled ? 'bg-black/50 hover:bg-black/70' : 'bg-red-500 hover:bg-red-600'}`}
-          title={videoEnabled ? t('game.turn_off_video') : t('game.turn_on_video')}
-        >
-          {videoEnabled ? <VideoOnIcon className="w-5 h-5" /> : <VideoOffIcon className="w-5 h-5" />}
-        </button>
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center text-white transition-colors ${showSettings ? 'bg-primary' : 'bg-black/50 hover:bg-black/70'}`}
-          title={t('game.device_settings')}
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
-
-        {/* Device Settings Popover */}
-        {showSettings && (
-          <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-xl z-50 flex flex-col gap-3">
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">{t('game.microphone_label')}</label>
-              <select
-                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
-                value={selectedAudioDeviceId}
-                onChange={e => switchDevice('audio', e.target.value)}
-              >
-                {devices.filter(d => d.kind === 'audioinput').map(device => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `${t('game.microphone_label')} ${device.deviceId.slice(0, 5)}...`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">{t('game.camera_label')}</label>
-              <select
-                className="w-full bg-black/50 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-primary"
-                value={selectedVideoDeviceId}
-                onChange={e => switchDevice('video', e.target.value)}
-              >
-                {devices.filter(d => d.kind === 'videoinput').map(device => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label || `${t('game.camera_label')} ${device.deviceId.slice(0, 5)}...`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  } // End Controls wrapper
-
   return (
-    <aside className="w-96 bg-black/20 dark:bg-black/30 backdrop-blur-md border-l border-white/10 flex flex-col p-6 gap-6 h-full overflow-y-auto flex-shrink-0">
+    <aside className="w-96 bg-black/20 dark:bg-black/30 backdrop-blur-md border-l border-white/10 flex flex-col p-6 gap-6 h-full overflow-y-auto shrink-0">
       {/* Active Player (Storyteller) */}
       {activePlayer && (
         <div className="relative aspect-video w-full rounded-lg overflow-hidden ring-2 shadow-lg ring-primary shadow-primary/20">
@@ -139,7 +154,21 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
             styleCount={5}
             isTurn={true}
           />
-          {activePlayer.id === me?.id && <Controls />}
+          {activePlayer.id === me?.id && (
+            <Controls
+              enableVideoChat={enableVideoChat}
+              audioEnabled={audioEnabled}
+              videoEnabled={videoEnabled}
+              showSettings={showSettings}
+              devices={devices}
+              selectedAudioDeviceId={selectedAudioDeviceId}
+              selectedVideoDeviceId={selectedVideoDeviceId}
+              onToggleAudio={handleToggleAudio}
+              onToggleVideo={handleToggleVideo}
+              onToggleSettings={() => setShowSettings(!showSettings)}
+              onSwitchDevice={switchDevice}
+            />
+          )}
         </div>
       )}
 
@@ -151,7 +180,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
             return (
               <div
                 key={player.id}
-                className={`relative aspect-video w-full rounded-lg ${isActive ? 'outline outline-2 outline-violet-400 shadow-[0_0_15px_rgba(167,139,250,0.6)]' : ''}`}
+                className={`relative aspect-video w-full rounded-lg ${isActive ? 'outline-2 outline-violet-400 shadow-[0_0_15px_rgba(167,139,250,0.6)]' : ''}`}
               >
                 <div className="absolute inset-0 rounded-lg overflow-hidden">
                   <VideoPlayer
@@ -164,7 +193,21 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                   />
                 </div>
                 {/* Show controls if it's me AND I'm not the active player (controls already at top) */}
-                {player.id === me?.id && !isActive && <Controls />}
+                {player.id === me?.id && !isActive && (
+                  <Controls
+                    enableVideoChat={enableVideoChat}
+                    audioEnabled={audioEnabled}
+                    videoEnabled={videoEnabled}
+                    showSettings={showSettings}
+                    devices={devices}
+                    selectedAudioDeviceId={selectedAudioDeviceId}
+                    selectedVideoDeviceId={selectedVideoDeviceId}
+                    onToggleAudio={handleToggleAudio}
+                    onToggleVideo={handleToggleVideo}
+                    onToggleSettings={() => setShowSettings(!showSettings)}
+                    onSwitchDevice={switchDevice}
+                  />
+                )}
               </div>
             )
           })}
@@ -178,7 +221,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
       </div>
 
       {/* Current Turn Indicator */}
-      <div className="mt-auto text-center p-4 bg-white/5 rounded-lg flex-shrink-0">
+      <div className="mt-auto text-center p-4 bg-white/5 rounded-lg shrink-0">
         <p className="text-sm text-white/70">{t('game.current_storyteller')}</p>
         <p className="text-lg font-bold text-white">
           {getPlayerDisplayName(players.find(p => p.id === currentTurnPlayerId) || players[0])}

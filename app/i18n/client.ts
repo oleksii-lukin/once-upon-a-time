@@ -22,7 +22,7 @@ i18next
     preload: runsOnServerSide ? languages : [],
   })
 
-export function getTranslation(lng: string, ns: string, options?: any) {
+export function getTranslation(lng: string, ns: string, options?: Parameters<typeof getTranslationOrg>[1]) {
   const ret = getTranslationOrg(ns, options)
   const { i18n } = ret
   if (runsOnServerSide && lng && i18n.resolvedLanguage !== lng) {
@@ -59,7 +59,7 @@ const cookies = {
     if (parts.length === 2) return parts.pop()?.split(';').shift()
     return ''
   },
-  set: (name: string, value: string, options: any) => {
+  set: (name: string, value: string, options: { path?: string }) => {
     if (typeof document === 'undefined') return
     let cookie = `${name}=${value}`
     if (options.path) cookie += `; path=${options.path}`

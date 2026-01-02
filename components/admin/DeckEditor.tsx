@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@clerk/nextjs'
 import { Database } from '@/supabase/types'
 import ImageUpload from './ImageUpload'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
 
 type Deck = Database['public']['Tables']['decks']['Row']
@@ -21,19 +22,37 @@ type Card = Database['public']['Tables']['cards']['Row'] & {
   }
 }
 
+type LangCode = 'en' | 'ru' | 'ua'
+type TranslationEntry = {
+  name: string
+  description: string
+  usage_examples: string
+}
+type Translations = Record<Exclude<LangCode, 'en'>, TranslationEntry>
+type FormField = 'name' | 'description' | 'usage_examples'
+type FormData = {
+  name: string
+  description: string
+  usage_examples: string
+  image_url: string
+  type: 'story' | 'ending'
+  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null
+  translations: Translations
+}
+
 export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   const { getToken } = useAuth()
   const [cards, setCards] = useState<Card[]>([])
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
-  const [activeLang, setActiveLang] = useState('en')
+  const [activeLang, setActiveLang] = useState<LangCode>('en')
   const { t } = getTranslation(lng, 'common')
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     usage_examples: '',
     image_url: '',
-    type: 'story' as 'story' | 'ending',
-    category: 'protagonist' as 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null,
+    type: 'story',
+    category: 'protagonist',
     translations: {
       ru: { name: '', description: '', usage_examples: '' },
       ua: { name: '', description: '', usage_examples: '' },
@@ -41,7 +60,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   })
   const [loading, setLoading] = useState(true)
 
-  async function fetchCards() {
+  const fetchCards = useCallback(async () => {
     const token = await getToken({ template: 'supabase' })
     if (!token) return
     const supabase = createClient(token)
@@ -54,11 +73,24 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       .order('name', { ascending: true })
     if (data) setCards(data as unknown as Card[])
     setLoading(false)
-  }
+  }, [deck.id, getToken])
 
   useEffect(() => {
-    fetchCards()
-  }, [deck.id])
+    let isCancelled = false
+
+    const fetchData = async () => {
+      await fetchCards()
+      if (!isCancelled) {
+        // State updates are handled inside fetchCards
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [fetchCards])
 
   const handleCardSelect = (card: Card | null) => {
     setSelectedCard(card)
@@ -193,7 +225,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
     }
   }
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: FormField, value: string) => {
     if (activeLang === 'en') {
       setFormData({ ...formData, [field]: value })
     }
@@ -203,7 +235,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         translations: {
           ...formData.translations,
           [activeLang]: {
-            ...(formData.translations as any)[activeLang],
+            ...formData.translations[activeLang as Exclude<LangCode, 'en'>],
             [field]: value,
           },
         },
@@ -211,11 +243,12 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
     }
   }
 
-  const getValue = (field: string) => {
+  const getValue = (field: FormField): string => {
     if (activeLang === 'en') {
-      return (formData as any)[field]
+      return formData[field]
     }
-    return (formData.translations as any)[activeLang]?.[field] || ''
+    const lang = activeLang as Exclude<LangCode, 'en'>
+    return formData.translations[lang]?.[field] || ''
   }
 
   return (
@@ -257,12 +290,16 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                   <TableCell className="px-4 py-3 text-sm text-foreground font-medium">{card.name}</TableCell>
                   <TableCell className="px-4 py-3 text-sm text-muted-foreground truncate max-w-xs">{card.description}</TableCell>
                   <TableCell className="px-4 py-3">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(card.id) }}
-                      className="text-red-400 hover:text-red-300 text-xs font-medium"
+                    <Button
+                      variant="destructive"
+                      size="xs"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(card.id)
+                      }}
                     >
                       {t('delete')}
-                    </button>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -294,7 +331,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         </div>
 
         <div className="flex gap-2 mb-6 border-b border-border pb-2">
-          {['en', 'ru', 'ua'].map(lang => (
+          {(['en', 'ru', 'ua'] as LangCode[]).map(lang => (
             <button
               key={lang}
               onClick={() => setActiveLang(lang)}
@@ -331,7 +368,11 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                 <span className="text-muted-foreground text-sm font-medium">{t('type')}</span>
                 <select
                   value={formData.type}
-                  onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      type: (e.target.value === 'ending' ? 'ending' : 'story'),
+                    })}
                   className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
                 >
                   <option value="story">{t('admin.deckEditor.type.story')}</option>
@@ -343,7 +384,11 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                   <span className="text-muted-foreground text-sm font-medium">{t('category')}</span>
                   <select
                     value={formData.category || 'protagonist'}
-                    onChange={e => setFormData({ ...formData, category: e.target.value as any })}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        category: (e.target.value as FormData['category']),
+                      })}
                     className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
                   >
                     <option value="protagonist">{t('admin.deckEditor.categories.protagonist')}</option>

@@ -59,7 +59,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
       if (playedData) {
         type PlayedRow = Tables<'played_cards'> & { cards: Tables<'cards'> }
-        const playedCardsWithType = (playedData as PlayedRow[]).map((item) => ({
+        const playedCardsWithType = (playedData as PlayedRow[]).map(item => ({
           ...item.cards,
           // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
           type: item.cards.category || item.cards.type || 'Card',
@@ -82,7 +82,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
         if (handData) {
           type HandRow = Tables<'player_hands'> & { cards: Tables<'cards'> }
-          const cardsWithType = (handData as HandRow[]).map((item) => ({
+          const cardsWithType = (handData as HandRow[]).map(item => ({
             ...item.cards,
             // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
             type: item.cards.category || item.cards.type || 'Card',
@@ -103,7 +103,11 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
   // Initial fetch and subscriptions
   useEffect(() => {
-    fetchGameState()
+    // Fetch initial state asynchronously to avoid blocking effect setup
+    const initializeGame = async () => {
+      await fetchGameState()
+    }
+    initializeGame()
 
     const channel = supabase
       .channel(`game:${lobby.id}`)

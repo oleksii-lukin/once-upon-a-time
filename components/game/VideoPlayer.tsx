@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Palette as PaletteIcon } from 'lucide-react'
 import { Database } from '@/supabase/types'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
+import { useTranslation } from 'react-i18next'
 
 type Player = Database['public']['Tables']['players']['Row']
 
@@ -15,6 +16,7 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({ stream, player, isLocal = false, styleCount, isTurn }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -49,7 +51,7 @@ export default function VideoPlayer({ stream, player, isLocal = false, styleCoun
               {' '}
               {isLocal && '(You)'}
             </p>
-            {isTurn && <p className="text-xs text-primary">Storyteller</p>}
+            {isTurn && <p className="text-xs text-primary">{t('game.storyteller_label')}</p>}
           </div>
           {styleCount !== undefined && (
             <div className="flex items-center gap-1 bg-black/50 text-white px-2 py-0.5 rounded-full text-xs">

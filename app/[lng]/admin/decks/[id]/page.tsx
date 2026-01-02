@@ -45,7 +45,7 @@ export default async function DeckDetailsPage({
       </div>
 
       <div className="flex-1 overflow-hidden p-8">
-        <DeckEditor deck={deck} />
+        <DeckEditor deck={deck} lng={lng} />
       </div>
     </div>
   )

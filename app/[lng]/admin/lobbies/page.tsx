@@ -19,7 +19,7 @@ export default async function AdminLobbiesPage({ params }: { params: Promise<{ l
       <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
         <div>
           <h1 className="text-white text-2xl font-bold">{t('lobbies')}</h1>
-          <p className="text-white/50 text-sm mt-1">Manage all lobbies including archived games</p>
+          <p className="text-white/50 text-sm mt-1">{t('admin.lobbies.manageAll')}</p>
         </div>
       </div>
 

@@ -62,6 +62,17 @@
     "storycraft_admin": "StoryCraft Admin",
     "dashboard": "Dashboard",
     "players": "Players",
+    "type": "Type",
+    "category": "Category",
+    "url_placeholder": "https://...",
+    "all": "All",
+    "code": "Code",
+    "created": "Created",
+    "createdBy": "Created By",
+    "info": "Info",
+    "timestamps": "Timestamps",
+    "ids": "IDs",
+    "view": "View",
     "games": "Games",
     "lobbies": "Lobbies",
     "settings": "Settings",
@@ -133,6 +144,56 @@
     "no_players_yet": "No players yet.",
     "no_spectators": "No spectators.",
     "selected_decks": "Selected Decks",
+    "admin": {
+        "lobbies": {
+            "manageAll": "Manage all lobbies including archived games",
+            "status": {
+                "archived": "Archived",
+                "playing": "Playing",
+                "finished": "Finished",
+                "waiting": "Waiting"
+            },
+            "filters": {
+                "active": "Active",
+                "archived": "Archived"
+            },
+            "archivedTag": "(archived)",
+            "empty": "No lobbies found",
+            "details": {
+                "title": "Lobby Details"
+            },
+            "labels": {
+                "lobbyId": "Lobby ID",
+                "deckId": "Deck ID"
+            },
+            "actions": {
+                "restoring": "Restoring...",
+                "restore": "Restore Lobby",
+                "deleting": "Deleting...",
+                "permanentDelete": "Permanently Delete",
+                "archiving": "Archiving...",
+                "archive": "Archive Lobby"
+            }
+        },
+        "deckEditor": {
+            "type": {
+                "story": "Story"
+            },
+            "categories": {
+                "protagonist": "Protagonist",
+                "antagonist": "Antagonist",
+                "setting": "Setting",
+                "object": "Object",
+                "catalyst": "Catalyst",
+                "trait": "Trait"
+            },
+            "placeholders": {
+                "cardNameExample": "e.g. The Magic Sword",
+                "cardDescription": "Card description...",
+                "usageExamples": "Examples of how to use this card..."
+            }
+        }
+    },
     "game": {
         "ending_card_label": "Ending",
         "unknown_player": "Unknown",

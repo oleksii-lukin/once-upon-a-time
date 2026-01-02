@@ -62,6 +62,17 @@
     "storycraft_admin": "Админ StoryCraft",
     "dashboard": "Панель управления",
     "players": "Игроки",
+    "type": "Тип",
+    "category": "Категория",
+    "url_placeholder": "https://...",
+    "all": "Все",
+    "code": "Код",
+    "created": "Создано",
+    "createdBy": "Создано",
+    "info": "Информация",
+    "timestamps": "Временные метки",
+    "ids": "ID",
+    "view": "Просмотр",
     "games": "Игры",
     "lobbies": "Лобби",
     "settings": "Настройки",
@@ -133,6 +144,56 @@
     "no_players_yet": "Игроков пока нет.",
     "no_spectators": "Наблюдателей нет.",
     "selected_decks": "Выбранные колоды",
+    "admin": {
+        "lobbies": {
+            "manageAll": "Управляйте всеми лобби, включая архивные",
+            "status": {
+                "archived": "Архивировано",
+                "playing": "Играет",
+                "finished": "Завершено",
+                "waiting": "Ожидание"
+            },
+            "filters": {
+                "active": "Активные",
+                "archived": "Архивные"
+            },
+            "archivedTag": "(архив)",
+            "empty": "Лобби не найдены",
+            "details": {
+                "title": "Детали лобби"
+            },
+            "labels": {
+                "lobbyId": "ID лобби",
+                "deckId": "ID колоды"
+            },
+            "actions": {
+                "restoring": "Восстановление...",
+                "restore": "Восстановить лобби",
+                "deleting": "Удаление...",
+                "permanentDelete": "Удалить навсегда",
+                "archiving": "Архивирование...",
+                "archive": "Архивировать лобби"
+            }
+        },
+        "deckEditor": {
+            "type": {
+                "story": "Сюжетная"
+            },
+            "categories": {
+                "protagonist": "Протагонист",
+                "antagonist": "Антагонист",
+                "setting": "Место",
+                "object": "Объект",
+                "catalyst": "Катализатор",
+                "trait": "Черта"
+            },
+            "placeholders": {
+                "cardNameExample": "например, Волшебный меч",
+                "cardDescription": "Описание карты...",
+                "usageExamples": "Примеры использования этой карты..."
+            }
+        }
+    },
     "game": {
         "ending_card_label": "Концовка",
         "unknown_player": "Неизвестный",

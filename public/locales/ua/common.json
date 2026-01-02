@@ -62,6 +62,15 @@
     "storycraft_admin": "Адмін StoryCraft",
     "dashboard": "Панель керування",
     "players": "Гравці",
+    "type": "Тип",
+    "all": "Всі",
+    "code": "Код",
+    "created": "Створено",
+    "createdBy": "Створено",
+    "info": "Інформація",
+    "timestamps": "Мітки часу",
+    "ids": "ID",
+    "view": "Переглянути",
     "games": "Ігри",
     "lobbies": "Лобі",
     "settings": "Налаштування",
@@ -133,6 +142,56 @@
     "no_players_yet": "Гравців поки немає.",
     "no_spectators": "Спостерігачів немає.",
     "selected_decks": "Вибрані колоди",
+    "admin": {
+        "lobbies": {
+            "manageAll": "Керуйте всіма лобі, включно з архівними",
+            "status": {
+                "archived": "Архівовано",
+                "playing": "Грає",
+                "finished": "Завершено",
+                "waiting": "Очікування"
+            },
+            "filters": {
+                "active": "Активні",
+                "archived": "Архівні"
+            },
+            "archivedTag": "(архів)",
+            "empty": "Лобі не знайдено",
+            "details": {
+                "title": "Деталі лобі"
+            },
+            "labels": {
+                "lobbyId": "ID лобі",
+                "deckId": "ID колоди"
+            },
+            "actions": {
+                "restoring": "Відновлення...",
+                "restore": "Відновити лобі",
+                "deleting": "Видалення...",
+                "permanentDelete": "Видалити назавжди",
+                "archiving": "Архівування...",
+                "archive": "Архівувати лобі"
+            }
+        },
+        "deckEditor": {
+            "type": {
+                "story": "Сюжетна"
+            },
+            "categories": {
+                "protagonist": "Головний герой",
+                "antagonist": "Антагоніст",
+                "setting": "Місце",
+                "object": "Предмет",
+                "catalyst": "Каталізатор",
+                "trait": "Риса"
+            },
+            "placeholders": {
+                "cardNameExample": "наприклад, Чарівний меч",
+                "cardDescription": "Опис карти...",
+                "usageExamples": "Приклади використання цієї карти..."
+            }
+        }
+    },
     "game": {
         "ending_card_label": "Кінцівка",
         "unknown_player": "Невідомий",

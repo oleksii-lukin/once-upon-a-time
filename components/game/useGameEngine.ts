@@ -70,6 +70,12 @@ export const useGameEngine = (
   const playCard = async (card: CardData, currentHand: CardData[], playedCardsCount: number) => {
     if (!gameSession || !currentPlayer) return
 
+    // Prevent playing ending card as a regular card
+    if (card.type === 'ending') {
+      console.error('Ending card cannot be played as a regular card')
+      return
+    }
+
     // 1. Remove from hand
     const { error: removeError } = await supabase
       .from('player_hands')
@@ -158,14 +164,37 @@ export const useGameEngine = (
     if (error) console.error('Error interrupting:', error)
   }
 
-  const winGame = async (endingCardId: string) => {
+  const winGame = async (endingCardId: string, playedCardsCount: number) => {
     if (!gameSession || !currentPlayer) return
 
-    // Logic to verify empty hand could be checked here or on backend,
-    // but for now we trust the client state check before calling this.
+    // 1. Move ending card to played_cards
+    const { error: removeError } = await supabase
+      .from('player_hands')
+      .delete()
+      .eq('game_session_id', gameSession.id)
+      .eq('player_id', currentPlayer.id)
+      .eq('card_id', endingCardId)
 
-    // Update Game Session with Winner
-    // This triggers the subscription in GameView to show the win screen (if we had one separate, or updates lobby state via trigger)
+    if (removeError) {
+      console.error('Error removing ending card from hand:', removeError)
+      return
+    }
+
+    const { error: playError } = await supabase
+      .from('played_cards')
+      .insert({
+        game_session_id: gameSession.id,
+        player_id: currentPlayer.id,
+        card_id: endingCardId,
+        position: playedCardsCount,
+      })
+
+    if (playError) {
+      console.error('Error playing ending card:', playError)
+      return
+    }
+
+    // 2. Update Game Session with Winner
     const { error } = await supabase
       .from('game_sessions')
       .update({

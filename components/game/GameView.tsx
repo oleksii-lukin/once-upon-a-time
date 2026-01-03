@@ -194,6 +194,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     setSelectedCardId(prev => prev === card.id ? null : card.id)
   }
 
+  const isEndingSelected = useMemo(() => {
+    return hand.find(c => c.id === selectedCardId)?.type === 'ending'
+  }, [hand, selectedCardId])
+
   const handlePlaySelected = async () => {
     if (!selectedCardId) return
     const card = hand.find(c => c.id === selectedCardId)
@@ -204,6 +208,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }
 
   const onPlayCard = async (card: CardData) => {
+    if (card.type === 'ending') return
+
     // Optimistic Update
     setHand(prev => prev.filter(c => c.id !== card.id))
     setPlayedCards(prev => [...prev, { ...card, played_by: currentPlayer?.id }])
@@ -215,7 +221,11 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     // Find ending card via type='ending' (which we fixed in fetching)
     const currentEndingCard = endingCard || hand.find(c => c.type === 'ending')
     if (currentEndingCard) {
-      await winGame(currentEndingCard.id)
+      // Optimistic Update
+      setHand(prev => prev.filter(c => c.id !== currentEndingCard.id))
+      setPlayedCards(prev => [...prev, { ...currentEndingCard, played_by: currentPlayer?.id }])
+
+      await winGame(currentEndingCard.id, playedCards.length)
     }
     else {
       console.error('No ending card found in hand!')
@@ -252,6 +262,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             onPass={passTurn}
             onInterrupt={interrupt}
             onWin={onWin}
+            isEndingSelected={isEndingSelected}
           />
         )}
       </main>

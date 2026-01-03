@@ -79,7 +79,10 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
 
     const { error } = await supabase
       .from('lobbies')
-      .update({ settings: updated })
+      .update({
+        settings: updated,
+        ...(newSettings.gameMode ? { game_mode: newSettings.gameMode } : {})
+      })
       .eq('id', lobby.id)
 
     if (error) {
@@ -357,7 +360,28 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl">
-                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
+                    <div className="flex flex-col gap-4 pb-6 border-b border-border mb-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em]">{t('game_rules')}</h2>
+                        <div className="flex bg-muted p-1 rounded-lg">
+                          <button
+                            onClick={() => updateSettings({ gameMode: 'main' })}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'main' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            {t('main_game_mode')}
+                          </button>
+                          <button
+                            onClick={() => updateSettings({ gameMode: 'fast', allowInterrupts: false })}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'fast' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            {t('fast_game_mode')}
+                          </button>
+                        </div>
+                      </div>
+                      {settings.gameMode === 'fast' && (
+                        <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
@@ -367,6 +391,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                           </Button>
                         </div>
                         <Switch
+                          disabled={settings.gameMode === 'fast'}
                           checked={settings.allowInterrupts}
                           onCheckedChange={() => updateSettings({ allowInterrupts: !settings.allowInterrupts })}
                         />

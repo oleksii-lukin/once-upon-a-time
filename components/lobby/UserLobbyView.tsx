@@ -242,7 +242,26 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl opacity-70">
-                    <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pb-3">{t('game_rules')}</h2>
+                    <div className="flex flex-col gap-4 pb-6 border-b border-border mb-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em]">{t('game_rules')}</h2>
+                        <div className="flex bg-muted p-1 rounded-lg">
+                          <div
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'main' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
+                          >
+                            {t('main_game_mode')}
+                          </div>
+                          <div
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'fast' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
+                          >
+                            {t('fast_game_mode')}
+                          </div>
+                        </div>
+                      </div>
+                      {settings.gameMode === 'fast' && (
+                        <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-2">
@@ -276,7 +295,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                             className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${selectedDeckIds.includes(deck.id)
                               ? 'bg-primary/20 border-primary'
                               : 'border-transparent'
-                            }`}
+                              }`}
                           >
                             <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
                             <span className="text-foreground font-medium">{deck.name}</span>

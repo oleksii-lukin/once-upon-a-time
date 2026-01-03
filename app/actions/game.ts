@@ -83,6 +83,7 @@ export async function initializeGame(lobbyId: string) {
       deck_id: deckIds[0], // Use first selected deck as primary
       current_turn_player_id: players[0].id, // First player in shuffled order starts
       storyteller_id: players[0].id, // First player is storyteller
+      game_mode: lobby.game_mode, // Copy game mode from lobby
     })
     .select()
     .single()

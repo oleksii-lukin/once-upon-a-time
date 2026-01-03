@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ReactNode } from 'react'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/server'
 import {
   LayoutDashboard as LayoutDashboardIcon,
@@ -12,6 +14,14 @@ import {
 export default async function AdminLayout({ children, params }: { children: ReactNode, params: Promise<{ lng: string }> }) {
   const { lng } = await params
   const { t } = await getTranslation(lng, 'common')
+  const { sessionClaims } = await auth()
+
+  // Check if user is admin via Clerk public metadata
+  const isAdmin = (sessionClaims?.publicMetadata as { is_admin?: boolean })?.is_admin === true
+
+  if (!isAdmin) {
+    redirect(`/${lng}/access-denied`)
+  }
 
   return (
     <div className="relative flex h-screen w-full bg-background overflow-hidden">

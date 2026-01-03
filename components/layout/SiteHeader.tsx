@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
+import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { getTranslation } from '@/app/i18n/client'
 import ThemeToggle from '@/components/theme/ThemeToggle'
@@ -9,6 +9,8 @@ import CustomUserButton from '@/components/clerk/CustomUserButton'
 
 export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = getTranslation(lng, 'common')
+  const { user } = useUser()
+  const isAdmin = (user?.publicMetadata as { is_admin?: boolean })?.is_admin === true
 
   return (
     <header id="site-header" className="w-full border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-background/80 backdrop-blur supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-background/70">
@@ -36,6 +38,11 @@ export default function SiteHeader({ lng }: { lng: string }) {
           <Link className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href={`/${lng}/profile`}>
             {t('profile_nav')}
           </Link>
+          {isAdmin && (
+            <Link className="text-primary font-bold hover:opacity-80 text-sm transition-all" href={`/${lng}/admin`}>
+              {t('admin_nav')}
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">

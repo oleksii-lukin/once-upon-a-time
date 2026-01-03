@@ -262,6 +262,24 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
     }
   }, [user, players, lobby.id])
 
+  // Handle role change for host
+  const handleRoleChange = async (newRole: 'host' | 'spectator') => {
+    if (!user) return
+    const currentPlayer = players.find(p => p.user_id === user.id)
+    if (!currentPlayer) return
+
+    const { error } = await supabase
+      .from('players')
+      .update({ role: newRole })
+      .eq('id', currentPlayer.id)
+
+    if (error) {
+      console.error('Error updating host role:', error)
+    }
+  }
+
+  const currentPlayer = players.find(p => p.user_id === user?.id)
+
   // Filter players to only show online ones (plus self if not yet synced)
   const displayedPlayers = players.filter(p =>
     onlineUsers.has(p.id) || p.user_id === user?.id, // Always show self
@@ -506,7 +524,26 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         )}
                       </div>
                     </div>
-                    <div className="mt-6">
+                    <div className="mt-6 space-y-4">
+                      <div>
+                        <p className="text-muted-foreground text-sm font-medium leading-normal pb-2 text-center">{t('choose_your_role')}</p>
+                        <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-muted">
+                          <Button
+                            onClick={() => handleRoleChange('host')}
+                            className={`px-4 py-2 text-sm font-bold ${currentPlayer?.role === 'host' ? '' : 'bg-transparent text-muted-foreground hover:bg-muted/70'}`}
+                            variant={currentPlayer?.role === 'host' ? 'default' : 'ghost'}
+                          >
+                            {t('player')}
+                          </Button>
+                          <Button
+                            onClick={() => handleRoleChange('spectator')}
+                            className={`px-4 py-2 text-sm font-bold ${currentPlayer?.role === 'spectator' ? '' : 'bg-transparent text-muted-foreground hover:bg-muted/70'}`}
+                            variant={currentPlayer?.role === 'spectator' ? 'default' : 'ghost'}
+                          >
+                            {t('spectator')}
+                          </Button>
+                        </div>
+                      </div>
                       <button
                         onClick={startGame}
                         disabled={isStarting}

@@ -23,7 +23,7 @@ interface SignalPayload {
   signal: SignalData
 }
 
-export default function useWebRTC(roomId: string, currentPlayerId: string | null, players: Player[], enabled: boolean = true) {
+export default function useWebRTC(roomId: string, currentPlayerId: string | null, players: Player[], enabled: boolean = true, isSpectator: boolean = false, isAdmin: boolean = false) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({})
   const [devices, setDevices] = useState<DeviceInfo[]>([])
@@ -58,7 +58,8 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
   // Initialize Local Media
   useEffect(() => {
     const initMedia = async () => {
-      if (!enabled) return
+      // Spectators who are not admins don't send media
+      if (!enabled || (isSpectator && !isAdmin)) return
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -93,10 +94,10 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
       }
     }
 
-    if (enabled && !localStream) {
+    if (enabled && !localStream && !(isSpectator && !isAdmin)) {
       initMedia()
     }
-    else if (!enabled && localStream) {
+    else if ((!enabled || (isSpectator && !isAdmin)) && localStream) {
       cleanupLocalStream()
     }
 
@@ -131,7 +132,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
     })
   }, [myPlayerId, roomId, supabase])
 
-  const createPeer = useCallback(async (targetId: string, initiator: boolean, stream: MediaStream) => {
+  const createPeer = useCallback(async (targetId: string, initiator: boolean, stream?: MediaStream) => {
     const SimplePeer = (await import('simple-peer')).default
 
     const peer = new SimplePeer({
@@ -175,7 +176,11 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
 
   // Handle Signaling Channel
   useEffect(() => {
-    if (!enabled || !myPlayerId || !localStream) return
+    if (!enabled || !myPlayerId) return
+
+    // If spectator and not admin, we might still want to establishment peer connections 
+    // to receive streams, but we don't need a local record if we are just receiving?
+    // SimplePeer can work without a stream to send.
 
     const channel = supabase.channel(`game_signaling:${roomId}`)
       .on(
@@ -194,7 +199,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
             // Received signal from someone we don't have a peer for yet.
             // This should mean they are the initiator and we are the receiver.
             // Create non-initiator peer
-            peer = await createPeer(senderId, false, localStream)
+            peer = await createPeer(senderId, false, localStream || undefined)
           }
 
           peer.signal(payload.signal)
@@ -209,7 +214,8 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
 
   // Manage Connections based on Players list
   useEffect(() => {
-    if (!enabled || !myPlayerId || !localStream) return
+    if (!enabled || !myPlayerId) return
+    // Allow connection management even without localStream for receiving-only peers (spectators)
 
     const managePeers = async () => {
       for (const player of players) {
@@ -225,7 +231,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         // Using localized UUID comparison for consistent behavior
         if (myPlayerId < playerId) {
           console.log(`Initiating connection to ${playerId}`)
-          await createPeer(playerId, true, localStream)
+          await createPeer(playerId, true, localStream || undefined)
         }
       }
     }

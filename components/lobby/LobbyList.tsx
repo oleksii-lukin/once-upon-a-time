@@ -34,7 +34,15 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
       .order('created_at', { ascending: false })
 
     if (data) {
-      setLobbies(data as unknown as Lobby[])
+      const filtered = (data as any[]).filter((lobby) => {
+        // If not playing, always show
+        if (lobby.status !== 'playing') return true
+
+        // If playing, check allowSpectators
+        const settings = lobby.settings || {}
+        return settings.allowSpectators !== false
+      })
+      setLobbies(filtered as unknown as Lobby[])
     }
   }
 
@@ -130,11 +138,11 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
                 <div className={`flex items-center gap-2 ${lobby.status === 'playing' ? 'text-green-500' : 'text-yellow-500'}`}>
                   {lobby.status === 'playing'
                     ? (
-                        <SwordIcon className="w-4 h-4" />
-                      )
+                      <SwordIcon className="w-4 h-4" />
+                    )
                     : (
-                        <HourglassIcon className="w-4 h-4" />
-                      )}
+                      <HourglassIcon className="w-4 h-4" />
+                    )}
                   <span className="capitalize">{t(lobby.status as 'waiting' | 'playing' | 'finished')}</span>
                 </div>
               </TableCell>

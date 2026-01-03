@@ -36,6 +36,23 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     || (currentGuestId && p.guest_id === currentGuestId),
   ), [players, currentUserId, currentGuestId])
 
+  const isSpectator = currentPlayer?.role === 'spectator'
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    if (currentUserId) {
+      const fetchAdminStatus = async () => {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('is_admin')
+          .eq('user_id', currentUserId)
+          .single()
+        if (data) setIsAdmin(data.is_admin)
+      }
+      fetchAdminStatus()
+    }
+  }, [currentUserId, supabase])
+
   const fetchGameState = useCallback(async () => {
     // Get game session for this lobby
     const { data: session } = await supabase
@@ -202,6 +219,21 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           selectedCardId={selectedCardId}
           isMyTurn={isMyTurn}
         />
+
+        {/* Turn Controls inside main area to avoid sidebar overlap */}
+        {!isSpectator && (
+          <TurnControls
+            isMyTurn={!!isMyTurn}
+            isStoryteller={!!isStoryteller}
+            canInterrupt={!isMyTurn && !!currentPlayer} // Can interrupt if logged in and not my turn
+            handSize={handSize}
+            selectedCardId={selectedCardId}
+            onPlaySelected={handlePlaySelected}
+            onPass={passTurn}
+            onInterrupt={interrupt}
+            onWin={onWin}
+          />
+        )}
       </main>
 
       <GameSidebar
@@ -216,18 +248,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           }
           return defaultLobbySettings.enableVideoChat
         })()}
-      />
-
-      <TurnControls
-        isMyTurn={!!isMyTurn}
-        isStoryteller={!!isStoryteller}
-        canInterrupt={!isMyTurn && !!currentPlayer} // Can interrupt if logged in and not my turn
-        handSize={handSize}
-        selectedCardId={selectedCardId}
-        onPlaySelected={handlePlaySelected}
-        onPass={passTurn}
-        onInterrupt={interrupt}
-        onWin={onWin}
+        isSpectator={isSpectator}
+        isAdmin={isAdmin}
       />
     </div>
   )

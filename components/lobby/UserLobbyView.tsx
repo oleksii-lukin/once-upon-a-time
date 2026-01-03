@@ -182,6 +182,90 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     }
   }, [user, players])
 
+  // Handle role change
+  const handleRoleChange = async (newRole: 'player' | 'spectator') => {
+    const guestId = !user ? getGuestId() : undefined
+    const currentPlayer = players.find(p =>
+      (user && p.user_id === user.id)
+      || (!user && p.guest_id === guestId),
+    )
+
+    if (!currentPlayer) return
+
+    const { error } = await supabase
+      .from('players')
+      .update({ role: newRole })
+      .eq('id', currentPlayer.id)
+
+    if (error) {
+      console.error('Error updating role:', error)
+    }
+  }
+
+  // Handle ready toggle
+  const handleReadyToggle = async () => {
+    const guestId = !user ? getGuestId() : undefined
+    const currentPlayer = players.find(p =>
+      (user && p.user_id === user.id)
+      || (!user && p.guest_id === guestId),
+    )
+
+    if (!currentPlayer) return
+
+    const newStatus = currentPlayer.status === 'ready' ? 'not_ready' : 'ready'
+    const { error } = await supabase
+      .from('players')
+      .update({ status: newStatus })
+      .eq('id', currentPlayer.id)
+
+    if (error) {
+      console.error('Error updating status:', error)
+    }
+  }
+
+  // Handle leave lobby
+  const handleLeave = async () => {
+    const guestId = !user ? getGuestId() : undefined
+    const currentPlayer = players.find(p =>
+      (user && p.user_id === user.id)
+      || (!user && p.guest_id === guestId),
+    )
+
+    if (!currentPlayer) return
+
+    const { error } = await supabase
+      .from('players')
+      .delete()
+      .eq('id', currentPlayer.id)
+
+    if (error) {
+      console.error('Error leaving lobby:', error)
+      return
+    }
+
+    window.location.href = `/${lng}`
+  }
+
+  // Effect to force player role if allowSpectators is disabled
+  useEffect(() => {
+    if (!settings.allowSpectators) {
+      const guestId = !user ? getGuestId() : undefined
+      const currentPlayer = players.find(p =>
+        (user && p.user_id === user.id)
+        || (!user && p.guest_id === guestId),
+      )
+
+      if (currentPlayer?.role === 'spectator') {
+        handleRoleChange('player')
+      }
+    }
+  }, [settings.allowSpectators]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentPlayer = players.find(p =>
+    (user && p.user_id === user.id)
+    || (!user && p.guest_id === getGuestId()),
+  )
+
   // Filter players to only show online ones (plus self)
   const displayedPlayers = players.filter((p) => {
     const isSelf = (user && p.user_id === user.id) || (!user && p.guest_id === getGuestId())
@@ -365,16 +449,37 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                       <div>
                         <p className="text-muted-foreground text-sm font-medium leading-normal pb-2 text-center">{t('choose_your_role')}</p>
                         <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-muted">
-                          <Button className="px-4 py-2 text-sm font-bold">{t('player')}</Button>
-                          <Button variant="ghost" className="px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted/70">{t('spectator')}</Button>
+                          <Button
+                            onClick={() => handleRoleChange('player')}
+                            className={`px-4 py-2 text-sm font-bold ${currentPlayer?.role !== 'spectator' ? '' : 'bg-transparent text-muted-foreground hover:bg-muted/70'}`}
+                            variant={currentPlayer?.role !== 'spectator' ? 'default' : 'ghost'}
+                          >
+                            {t('player')}
+                          </Button>
+                          <Button
+                            onClick={() => handleRoleChange('spectator')}
+                            disabled={!settings.allowSpectators}
+                            className={`px-4 py-2 text-sm font-bold ${currentPlayer?.role === 'spectator' ? '' : 'bg-transparent text-muted-foreground hover:bg-muted/70'}`}
+                            variant={currentPlayer?.role === 'spectator' ? 'default' : 'ghost'}
+                          >
+                            {t('spectator')}
+                          </Button>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <Button className="min-w-[84px] w-full h-14 px-4 text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 gap-2">
+                        <Button
+                          onClick={handleReadyToggle}
+                          disabled={currentPlayer?.role === 'spectator'}
+                          className={`min-w-[84px] w-full h-14 px-4 text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 gap-2 ${currentPlayer?.status === 'ready' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                        >
                           <CheckIcon className="w-5 h-5" />
-                          <span className="truncate">{t('ready')}</span>
+                          <span className="truncate">{currentPlayer?.status === 'ready' ? t('ready') : t('not_ready')}</span>
                         </Button>
-                        <Button variant="ghost" className="min-w-[84px] h-14 px-4 bg-muted/50 text-muted-foreground text-base font-bold leading-normal tracking-[0.015em] hover:bg-muted/70">
+                        <Button
+                          onClick={handleLeave}
+                          variant="ghost"
+                          className="min-w-[84px] h-14 px-4 bg-muted/50 text-muted-foreground text-base font-bold leading-normal tracking-[0.015em] hover:bg-muted/70"
+                        >
                           <span className="truncate">{t('leave')}</span>
                         </Button>
                       </div>

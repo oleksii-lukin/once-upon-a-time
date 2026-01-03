@@ -27,7 +27,7 @@ export default function TurnControls({
 }: TurnControlsProps) {
   const { t } = useTranslation()
   return (
-    <div className="fixed bottom-32 right-8 flex flex-col gap-4 z-50">
+    <div className="absolute bottom-8 right-8 flex flex-col gap-4 z-50">
       {/* Storyteller Controls */}
       {isMyTurn && (
         <div className="flex flex-col gap-2">

@@ -106,13 +106,15 @@ export const useGameEngine = (
     // 1. Draw a card (Penalty for passing)
     await drawCards(currentPlayer.id, 1)
 
-    // 2. Find next player
-    const sortedPlayers = [...players].sort((a, b) => {
-      if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-        return a.turn_order - b.turn_order
-      }
-      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-    })
+    // 2. Find next player (excluding spectators)
+    const sortedPlayers = players
+      .filter(p => p.role !== 'spectator')
+      .sort((a, b) => {
+        if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
+          return a.turn_order - b.turn_order
+        }
+        return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+      })
     const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id)
     if (currentIndex === -1) return
 

@@ -251,7 +251,9 @@
         "microphone_label": "Мікрофон",
         "camera_label": "Камера",
         "waiting_players": "Очікування інших гравців...",
-        "current_storyteller": "Поточний оповідач"
+        "current_storyteller": "Поточний оповідач",
+        "spectators": "Глядачі",
+        "you": "Ви"
     },
     "card_types": {
         "ending": "Кінцівка",

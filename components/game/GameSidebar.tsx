@@ -9,7 +9,7 @@ import {
   Settings as SettingsIcon,
 } from 'lucide-react'
 import { Database } from '@/supabase/types'
-import { getPlayerDisplayName } from '../lobby/PlayerDisplay'
+import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import useWebRTC, { DeviceInfo } from './useWebRTC'
 import VideoPlayer from './VideoPlayer'
 import { useTranslation } from 'react-i18next'
@@ -102,9 +102,11 @@ interface GameSidebarProps {
   currentTurnPlayerId: string
   lobbyId: string
   enableVideoChat?: boolean
+  isSpectator?: boolean
+  isAdmin?: boolean
 }
 
-export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true }: GameSidebarProps) {
+export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true, isSpectator = false, isAdmin = false }: GameSidebarProps) {
   const { t } = useTranslation()
   const {
     localStream,
@@ -115,7 +117,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
     selectedAudioDeviceId,
     selectedVideoDeviceId,
     switchDevice,
-  } = useWebRTC(lobbyId, currentPlayerId, players, enableVideoChat)
+  } = useWebRTC(lobbyId, currentPlayerId, players, enableVideoChat, isSpectator, isAdmin)
 
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [videoEnabled, setVideoEnabled] = useState(true)
@@ -135,10 +137,11 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
   const me = players.find(p => p.user_id === currentPlayerId || p.guest_id === currentPlayerId)
 
   // Determine the "Active Player" (Storyteller) to show at the top
-  const activePlayer = players.find(p => p.id === currentTurnPlayerId) || players[0]
+  const activePlayer = players.find(p => p.id === currentTurnPlayerId) || players.filter(p => p.role !== 'spectator')[0]
 
-  // Everyone goes in the grid
-  const gridPlayers = players
+  // Only players in the grid
+  const gridPlayers = players.filter(p => p.role !== 'spectator')
+  const spectatorsList = players.filter(p => p.role === 'spectator')
 
   const [showSettings, setShowSettings] = useState(false)
 
@@ -219,6 +222,33 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
           </div>
         )}
       </div>
+
+      {/* Spectators List */}
+      {spectatorsList.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-bold text-white/50 uppercase tracking-wider">{t('game.spectators')}</p>
+          <div className="flex flex-col gap-2">
+            {spectatorsList.map(spectator => (
+              <div
+                key={spectator.id}
+                className="flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors p-2 rounded-lg"
+              >
+                <PlayerAvatar player={spectator} size="sm" />
+                <div className="flex flex-col min-w-0">
+                  <p className="text-sm font-medium text-white truncate">
+                    {getPlayerDisplayName(spectator)}
+                    {spectator.id === me?.id && ` (${t('game.you')})`}
+                  </p>
+                </div>
+                {/* Admin indicator for spectators if relevant */}
+                {(spectator.user_id && players.find(p => p.user_id === spectator.user_id)?.role === 'host') && (
+                  <div className="ml-auto w-2 h-2 rounded-full bg-primary" title="Host" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Current Turn Indicator */}
       <div className="mt-auto text-center p-4 bg-white/5 rounded-lg shrink-0">

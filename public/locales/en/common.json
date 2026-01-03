@@ -253,7 +253,9 @@
         "microphone_label": "Microphone",
         "camera_label": "Camera",
         "waiting_players": "Waiting for other players...",
-        "current_storyteller": "Current Storyteller"
+        "current_storyteller": "Current Storyteller",
+        "spectators": "Spectators",
+        "you": "You"
     },
     "card_types": {
         "ending": "Ending",

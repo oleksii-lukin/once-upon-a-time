@@ -253,7 +253,9 @@
         "microphone_label": "Микрофон",
         "camera_label": "Камера",
         "waiting_players": "Ожидание других игроков...",
-        "current_storyteller": "Текущий рассказчик"
+        "current_storyteller": "Текущий рассказчик",
+        "spectators": "Зрители",
+        "you": "Вы"
     },
     "card_types": {
         "ending": "Концовка",

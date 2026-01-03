@@ -27,6 +27,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const [gameSession, setGameSession] = useState<GameSession | null>(null)
   const [hand, setHand] = useState<CardData[]>([])
   const [playedCards, setPlayedCards] = useState<CardData[]>([])
+  const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
   const supabase = createClient()
 
   // Determine current player ID (user or guest)
@@ -106,6 +107,25 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           }))
           setHand(cardsWithType)
         }
+      }
+
+      // Fetch all hand counts for the sidebar
+      const { data: allHandsData } = await supabase
+        .from('player_hands')
+        .select(`
+          player_id,
+          cards (type)
+        `)
+        .eq('game_session_id', session.id)
+
+      if (allHandsData) {
+        const counts: Record<string, number> = {}
+        allHandsData.forEach((item: any) => {
+          if (item.cards?.type !== 'ending') {
+            counts[item.player_id] = (counts[item.player_id] || 0) + 1
+          }
+        })
+        setPlayerHandCounts(counts)
       }
     }
   }, [supabase, lobby.id, currentPlayer])
@@ -250,6 +270,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         })()}
         isSpectator={isSpectator}
         isAdmin={isAdmin}
+        playerHandCounts={playerHandCounts}
       />
     </div>
   )

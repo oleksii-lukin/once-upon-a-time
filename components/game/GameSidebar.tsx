@@ -104,9 +104,10 @@ interface GameSidebarProps {
   enableVideoChat?: boolean
   isSpectator?: boolean
   isAdmin?: boolean
+  playerHandCounts?: Record<string, number>
 }
 
-export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true, isSpectator = false, isAdmin = false }: GameSidebarProps) {
+export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true, isSpectator = false, isAdmin = false, playerHandCounts = {} }: GameSidebarProps) {
   const { t } = useTranslation()
   const {
     localStream,
@@ -154,7 +155,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
             stream={enableVideoChat ? (activePlayer.id === me?.id ? localStream : (remoteStreams[activePlayer.id] || null)) : null}
             player={activePlayer}
             isLocal={activePlayer.id === me?.id}
-            styleCount={5}
+            cardCount={playerHandCounts[activePlayer.id]}
             isTurn={true}
           />
           {activePlayer.id === me?.id && (
@@ -191,7 +192,7 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
                     stream={enableVideoChat && !isActive ? (player.id === me?.id ? localStream : (remoteStreams[player.id] || null)) : null}
                     player={player}
                     isLocal={player.id === me?.id}
-                    styleCount={4} // Placeholder
+                    cardCount={playerHandCounts[player.id]}
                     isTurn={isActive}
                   />
                 </div>

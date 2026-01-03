@@ -256,10 +256,18 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                           >
                             {t('fast_game_mode')}
                           </div>
+                          <div
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'tutorial' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
+                          >
+                            {t('tutorial_game_mode')}
+                          </div>
                         </div>
                       </div>
                       {settings.gameMode === 'fast' && (
                         <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
+                      )}
+                      {settings.gameMode === 'tutorial' && (
+                        <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
                       )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">

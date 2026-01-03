@@ -8,7 +8,7 @@ export const LobbySettingsSchema = z.object({
   timerPerTurn: z.boolean().default(false),
   happyEnding: z.boolean().default(false),
   enableVideoChat: z.boolean().default(true),
-  gameMode: z.enum(['main', 'fast']).default('main'),
+  gameMode: z.enum(['main', 'fast', 'tutorial']).default('main'),
   selectedDecks: z.array(z.string()).default([]),
 })
 

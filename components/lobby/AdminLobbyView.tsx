@@ -376,10 +376,19 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                           >
                             {t('fast_game_mode')}
                           </button>
+                          <button
+                            onClick={() => updateSettings({ gameMode: 'tutorial' })}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'tutorial' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            {t('tutorial_game_mode')}
+                          </button>
                         </div>
                       </div>
                       {settings.gameMode === 'fast' && (
                         <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
+                      )}
+                      {settings.gameMode === 'tutorial' && (
+                        <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
                       )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">

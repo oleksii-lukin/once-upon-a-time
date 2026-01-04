@@ -255,7 +255,16 @@
         "waiting_players": "Waiting for other players...",
         "current_storyteller": "Current Storyteller",
         "spectators": "Spectators",
-        "you": "You"
+        "you": "You",
+        "congratulations": "Congratulations!",
+        "winner_is": "{{name}} has won the story!",
+        "return_to_lobbies": "Return to Lobbies",
+        "game_over": "Game Over",
+        "stats": {
+            "title": "Story Statistics",
+            "cards_played": "Cards Played",
+            "total_turns": "Total Turns"
+        }
     },
     "card_types": {
         "ending": "Ending",

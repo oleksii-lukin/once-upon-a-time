@@ -255,7 +255,16 @@
         "waiting_players": "Ожидание других игроков...",
         "current_storyteller": "Текущий рассказчик",
         "spectators": "Зрители",
-        "you": "Вы"
+        "you": "Вы",
+        "congratulations": "Поздравляем!",
+        "winner_is": "{{name}} завершил(а) историю!",
+        "return_to_lobbies": "Вернуться к списку комнат",
+        "game_over": "Игра окончена",
+        "stats": {
+            "title": "Статистика истории",
+            "cards_played": "Карт сыграно",
+            "total_turns": "Всего ходов"
+        }
     },
     "card_types": {
         "ending": "Концовка",

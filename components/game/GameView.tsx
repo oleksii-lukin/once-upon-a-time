@@ -7,9 +7,11 @@ import PlayerHand from './PlayerHand'
 import TableArea from './TableArea'
 import GameSidebar from './GameSidebar'
 import TurnControls from './TurnControls'
+import GameCompletionOverlay from './GameCompletionOverlay'
 import { useGameEngine } from './useGameEngine'
 import type { Tables } from '@/supabase/types'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import { useRouter, useParams } from 'next/navigation'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -29,6 +31,9 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const [playedCards, setPlayedCards] = useState<CardData[]>([])
   const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
   const supabase = createClient()
+  const router = useRouter()
+  const params = useParams()
+  const lng = params.lng as string
 
   // Determine current player ID (user or guest)
   const currentPlayerId = currentUserId || currentGuestId || null
@@ -199,7 +204,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }, [hand, selectedCardId])
 
   const handlePlaySelected = async () => {
-    if (!selectedCardId) return
+    if (!selectedCardId || gameSession?.status === 'COMPLETED') return
     const card = hand.find(c => c.id === selectedCardId)
     if (card) {
       await onPlayCard(card)
@@ -208,7 +213,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }
 
   const onPlayCard = async (card: CardData) => {
-    if (card.type === 'ending') return
+    if (card.type === 'ending' || gameSession?.status === 'COMPLETED') return
 
     // Optimistic Update
     setHand(prev => prev.filter(c => c.id !== card.id))
@@ -218,6 +223,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }
 
   const onWin = async () => {
+    if (gameSession?.status === 'COMPLETED') return
     // Find ending card via type='ending' (which we fixed in fetching)
     const currentEndingCard = endingCard || hand.find(c => c.type === 'ending')
     if (currentEndingCard) {
@@ -230,6 +236,27 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     else {
       console.error('No ending card found in hand!')
     }
+  }
+
+  const cardsPlayedCount = useMemo(() => {
+    const counts: Record<string, number> = {}
+    playedCards.forEach((card) => {
+      if (card.played_by) {
+        counts[card.played_by] = (counts[card.played_by] || 0) + 1
+      }
+    })
+    return counts
+  }, [playedCards])
+
+  const winner = useMemo(() => {
+    if (gameSession?.winner_id) {
+      return players.find(p => p.id === gameSession.winner_id)
+    }
+    return undefined
+  }, [gameSession?.winner_id, players])
+
+  const handleReturnToLobbies = () => {
+    router.push(`/${lng}/lobbies`)
   }
 
   return (
@@ -251,7 +278,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         />
 
         {/* Turn Controls inside main area to avoid sidebar overlap */}
-        {!isSpectator && (
+        {!isSpectator && gameSession?.status !== 'COMPLETED' && (
           <TurnControls
             isMyTurn={!!isMyTurn}
             isStoryteller={!!isStoryteller}
@@ -283,6 +310,16 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         isAdmin={isAdmin}
         playerHandCounts={playerHandCounts}
       />
+
+      {gameSession?.status === 'COMPLETED' && (
+        <GameCompletionOverlay
+          winner={winner}
+          players={players}
+          cardsPlayedCount={cardsPlayedCount}
+          onReturnToLobbies={handleReturnToLobbies}
+        />
+      )}
     </div>
+
   )
 }

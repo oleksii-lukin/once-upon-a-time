@@ -207,10 +207,10 @@ export const useGameEngine = (
       console.error('Error finishing game:', error)
     }
     else {
-      // Also update lobby to FINISHED to clean up listings
+      // Also update lobby to finished to clean up listings
       await supabase
         .from('lobbies')
-        .update({ status: 'FINISHED' })
+        .update({ status: 'finished' })
         .eq('id', gameSession.lobby_id)
     }
   }

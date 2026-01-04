@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "@uploadthing/react": "^7.3.3",
     "accept-language": "^3.0.20",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.6.1",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.19.27",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

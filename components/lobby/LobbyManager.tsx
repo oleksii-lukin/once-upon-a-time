@@ -83,7 +83,7 @@ export default function LobbyManager({
   useEffect(() => {
     const header = typeof document !== 'undefined' ? document.getElementById('site-header') : null
     if (!header) return
-    if (lobby.status === 'playing') {
+    if (lobby.status === 'playing' || lobby.status === 'finished') {
       header.style.display = 'none'
     }
     else {
@@ -96,7 +96,7 @@ export default function LobbyManager({
     }
   }, [lobby.status])
 
-  if (lobby.status === 'playing') {
+  if (lobby.status === 'playing' || lobby.status === 'finished') {
     return <GameView lobby={lobby} players={players} currentUserId={userId} currentGuestId={guestId} />
   }
 

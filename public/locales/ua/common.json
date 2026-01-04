@@ -253,7 +253,16 @@
         "waiting_players": "Очікування інших гравців...",
         "current_storyteller": "Поточний оповідач",
         "spectators": "Глядачі",
-        "you": "Ви"
+        "you": "Ви",
+        "congratulations": "Вітаємо!",
+        "winner_is": "{{name}} завершив(ла) історію!",
+        "return_to_lobbies": "Повернутися до списку кімнат",
+        "game_over": "Гру закінчено",
+        "stats": {
+            "title": "Статистика історії",
+            "cards_played": "Карт зіграно",
+            "total_turns": "Всього ходів"
+        }
     },
     "card_types": {
         "ending": "Кінцівка",

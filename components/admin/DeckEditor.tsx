@@ -725,6 +725,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                       onChange={url => updateCategoryImage(cat.id, url)}
                       label=" "
                       className="mx-auto"
+                      objectFit="contain"
+                      sizingMode="fillWidth"
                     />
                   </div>
                 ))}

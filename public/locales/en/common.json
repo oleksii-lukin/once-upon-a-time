@@ -245,6 +245,19 @@
             "filter_all": "All",
             "delete_confirmation": "Are you sure you want to delete this card?",
             "delete_card": "Delete Card"
+        },
+        "imageEditor": {
+            "title": "Edit Image",
+            "error_loading": "Failed to load image for editing",
+            "tool_crop": "Crop",
+            "tool_magic": "Magic Remove",
+            "tool_trim": "Trim Borders",
+            "tool_trim_hint": "Remove empty borders",
+            "apply_crop": "Apply",
+            "tolerance": "Difference Tolerance",
+            "magic_hint": "Click color to remove",
+            "save_image": "Save Changes",
+            "cancel": "Cancel"
         }
     },
     "game": {

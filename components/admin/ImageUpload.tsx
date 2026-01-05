@@ -1,10 +1,11 @@
 'use client'
 
 import { useUploadThing } from '@/lib/uploadthing'
-import { X, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { X, Image as ImageIcon, Loader2, Wand2 } from 'lucide-react'
 import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
+import ImageEditor from './ImageEditor'
 
 interface ImageUploadProps {
   value?: string
@@ -12,11 +13,14 @@ interface ImageUploadProps {
   onRemove?: () => void
   label?: string
   className?: string
+  objectFit?: 'cover' | 'contain'
+  sizingMode?: 'fixedHeight' | 'fillWidth'
 }
 
-export default function ImageUpload({ value, onChange, onRemove, label, className }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, onRemove, label, className, objectFit = 'cover', sizingMode = 'fixedHeight' }: ImageUploadProps) {
   const [isDragActive, setIsDragActive] = useState(false)
   const [aspectRatio, setAspectRatio] = useState(3 / 4) // Default to card ratio (3:4)
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { t } = useTranslation()
@@ -77,14 +81,14 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
         ? (
           <div className="relative group">
             <div
-              className="relative rounded-lg overflow-hidden border-2 border-white/10 bg-background h-[266px] w-auto"
+              className={`relative rounded-lg overflow-hidden border-2 border-white/10 bg-background ${sizingMode === 'fixedHeight' ? 'h-[266px] w-auto' : 'w-full h-auto'}`}
               style={{ aspectRatio: aspectRatio }}
             >
               <Image
                 src={value}
                 alt={t('admin.deckEditor.imageUpload.uploadedImageAlt')}
                 fill
-                className="object-cover"
+                className={`object-${objectFit}`}
                 sizes="(max-height: 266px) 100vw, 266px"
                 onLoadingComplete={(img) => {
                   if (img.naturalWidth && img.naturalHeight) {
@@ -92,13 +96,24 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
                   }
                 }}
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+
+              {/* Actions Overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setIsEditorOpen(true)}
+                  className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                  title={t('edit_image') || "Edit Image"}
+                  type="button"
+                >
+                  <Wand2 className="w-5 h-5" />
+                </button>
                 <button
                   onClick={() => {
                     onChange('')
                     onRemove?.()
                   }}
                   className="p-2 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors"
+                  title={t('remove_image') || "Remove Image"}
                   type="button"
                 >
                   <X className="w-5 h-5" />
@@ -160,6 +175,23 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
             </p>
           </div>
         )}
+
+      {isEditorOpen && value && (
+        <ImageEditor
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          imageUrl={value}
+          onSave={async (file) => {
+            // Upload the edited file
+            try {
+              await startUpload([file])
+            } catch (e) {
+              console.error("Upload failed", e)
+              alert("Failed to upload edited image")
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

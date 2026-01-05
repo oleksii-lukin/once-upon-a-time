@@ -245,6 +245,19 @@
             "filter_all": "Все",
             "delete_confirmation": "Вы уверены, что хотите удалить эту карту?",
             "delete_card": "Удалить карту"
+        },
+        "imageEditor": {
+            "title": "Редактор изображений",
+            "error_loading": "Ошибка загрузки изображения",
+            "tool_crop": "Обрезать",
+            "tool_magic": "Магия",
+            "tool_trim": "Убрать поля",
+            "tool_trim_hint": "Убрать пустые поля вокруг",
+            "apply_crop": "Применить",
+            "tolerance": "Допуск",
+            "magic_hint": "Кликните цвет для удаления",
+            "save_image": "Сохранить",
+            "cancel": "Отмена"
         }
     },
     "game": {

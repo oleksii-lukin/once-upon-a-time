@@ -243,6 +243,19 @@
             "filter_all": "Всі",
             "delete_confirmation": "Ви впевнені, що хочете видалити цю карту?",
             "delete_card": "Видалити карту"
+        },
+        "imageEditor": {
+            "title": "Редактор зображень",
+            "error_loading": "Помилка завантаження зображення",
+            "tool_crop": "Обрізати",
+            "tool_magic": "Магія",
+            "tool_trim": "Прибрати поля",
+            "tool_trim_hint": "Прибрати порожні поля навколо",
+            "apply_crop": "Застосувати",
+            "tolerance": "Допуск",
+            "magic_hint": "Клікніть колір для видалення",
+            "save_image": "Зберегти",
+            "cancel": "Скасувати"
         }
     },
     "game": {

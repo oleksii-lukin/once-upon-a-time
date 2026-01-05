@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { getTranslation } from '@/app/i18n/client'
@@ -10,7 +11,17 @@ import CustomUserButton from '@/components/clerk/CustomUserButton'
 export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = getTranslation(lng, 'common')
   const { user } = useUser()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const isAdmin = (user?.publicMetadata as { is_admin?: boolean })?.is_admin === true
+
+  const redirectedPathName = (locale: string) => {
+    if (!pathname) return `/${locale}`
+    const segments = pathname.split('/')
+    segments[1] = locale
+    const newPath = segments.join('/')
+    return searchParams?.toString() ? `${newPath}?${searchParams.toString()}` : newPath
+  }
 
   return (
     <header id="site-header" className="w-full border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-background/80 backdrop-blur supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-background/70">
@@ -49,7 +60,7 @@ export default function SiteHeader({ lng }: { lng: string }) {
           <div className="flex gap-2">
             {languages.filter(l => l !== lng).map(l => (
               <span key={l}>
-                <Link href={`/${l}`} className="text-gray-600 dark:text-white/80 hover:text-primary dark:hover:text-primary uppercase text-xs font-semibold">
+                <Link href={redirectedPathName(l)} className="text-gray-600 dark:text-white/80 hover:text-primary dark:hover:text-primary uppercase text-xs font-semibold">
                   {l}
                 </Link>
               </span>

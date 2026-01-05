@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
 
 import SiteHeader from '@/components/layout/SiteHeader'
 import '../globals.css'
@@ -45,30 +46,20 @@ export default async function RootLayout({
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-          {/* Inline script to set initial theme before paint to avoid flash */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-(() => {
-  try {
-    const storageKey = 'theme';
-    const stored = localStorage.getItem(storageKey);
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldDark = stored ? stored === 'dark' : prefersDark;
-    const root = document.documentElement;
-    if (shouldDark) root.classList.add('dark'); else root.classList.remove('dark');
-  } catch {}
-})();
-              `,
-            }}
-          />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
         >
-          <SiteHeader lng={lng} />
-          {children}
-          <Toaster />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <SiteHeader lng={lng} />
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

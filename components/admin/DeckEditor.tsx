@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@clerk/nextjs'
 import { Database } from '@/supabase/types'
@@ -49,11 +50,22 @@ type FormData = {
 
 export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   const { getToken } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const activeTab = (searchParams.get('tab') as 'cards' | 'settings') || 'cards'
+
+  const setActiveTab = (tab: 'cards' | 'settings') => {
+    const params = new URLSearchParams(searchParams)
+    params.set('tab', tab)
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
   const [cards, setCards] = useState<Card[]>([])
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [activeLang, setActiveLang] = useState<LangCode>('en')
   const { t } = getTranslation(lng, 'common')
-  const [activeTab, setActiveTab] = useState<'cards' | 'settings'>('cards')
+
   const [deckSettings, setDeckSettings] = useState({
     name: deck.name,
     bg_image_url: deck.bg_image_url || '',

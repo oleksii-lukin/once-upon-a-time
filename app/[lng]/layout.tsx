@@ -40,7 +40,7 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang={lng} dir={dir(lng)} className={jetbrainsMono.variable}>
+      <html lang={lng} dir={dir(lng)} className={jetbrainsMono.variable} suppressHydrationWarning>
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -10,7 +10,7 @@ import {
   DoorOpen as DoorOpenIcon,
   Settings as SettingsIcon,
 } from 'lucide-react'
-import AdminSidebarNav from '@/components/admin/AdminSidebarNav'
+import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export default async function AdminLayout({ children, params }: { children: ReactNode, params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -37,21 +37,17 @@ export default async function AdminLayout({ children, params }: { children: Reac
 
   return (
     <div className="relative flex h-screen w-full bg-background overflow-hidden">
-      <aside className="flex w-64 flex-col border-r border-border bg-background">
-        <div className="flex h-16 items-center px-6">
-          <h1 className="text-foreground text-lg font-bold">{t('storycraft_admin')}</h1>
-        </div>
-        <AdminSidebarNav
-          lng={lng}
-          translations={{
-            dashboard: t('dashboard'),
-            decks: t('decks'),
-            players: t('players'),
-            lobbies: t('lobbies'),
-            settings: t('settings')
-          }}
-        />
-      </aside>
+      <AdminSidebar
+        lng={lng}
+        title={t('title')}
+        translations={{
+          dashboard: t('dashboard'),
+          decks: t('decks'),
+          players: t('players'),
+          lobbies: t('lobbies'),
+          settings: t('settings')
+        }}
+      />
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>

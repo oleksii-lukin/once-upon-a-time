@@ -232,7 +232,11 @@
                 "cardNameExample": "например, Волшебный меч",
                 "cardDescription": "Описание карты...",
                 "usageExamples": "Примеры использования этой карты..."
-            }
+            },
+            "search_cards_placeholder": "Поиск по названию...",
+            "filter_all": "Все",
+            "delete_confirmation": "Вы уверены, что хотите удалить эту карту?",
+            "delete_card": "Удалить карту"
         }
     },
     "game": {

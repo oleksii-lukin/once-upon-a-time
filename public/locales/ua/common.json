@@ -230,7 +230,11 @@
                 "cardNameExample": "наприклад, Чарівний меч",
                 "cardDescription": "Опис карти...",
                 "usageExamples": "Приклади використання цієї карти..."
-            }
+            },
+            "search_cards_placeholder": "Пошук за назвою...",
+            "filter_all": "Всі",
+            "delete_confirmation": "Ви впевнені, що хочете видалити цю карту?",
+            "delete_card": "Видалити карту"
         }
     },
     "game": {

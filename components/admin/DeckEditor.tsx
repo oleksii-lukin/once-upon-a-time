@@ -92,6 +92,62 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
     }
   }, [fetchCards])
 
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(['all']))
+
+  // Define categories for filter checkboxes
+  const categories = [
+    { id: 'all', label: t('admin.deckEditor.filter_all') },
+    { id: 'ending', label: t('game.ending_card_label') },
+    { id: 'protagonist', label: t('admin.deckEditor.categories.protagonist') },
+    { id: 'antagonist', label: t('admin.deckEditor.categories.antagonist') },
+    { id: 'setting', label: t('admin.deckEditor.categories.setting') },
+    { id: 'object', label: t('admin.deckEditor.categories.object') },
+    { id: 'catalyst', label: t('admin.deckEditor.categories.catalyst') },
+    { id: 'trait', label: t('admin.deckEditor.categories.trait') },
+  ]
+
+  const toggleCategory = (categoryId: string) => {
+    const newCategories = new Set(selectedCategories)
+
+    if (categoryId === 'all') {
+      // If clicking "All", clear others and select only All
+      return setSelectedCategories(new Set(['all']))
+    }
+
+    // If clicking a specific category
+    if (newCategories.has('all')) {
+      newCategories.delete('all')
+    }
+
+    if (newCategories.has(categoryId)) {
+      newCategories.delete(categoryId)
+    } else {
+      newCategories.add(categoryId)
+    }
+
+    // If nothing selected, revert to All
+    if (newCategories.size === 0) {
+      newCategories.add('all')
+    }
+
+    setSelectedCategories(newCategories)
+  }
+
+  const filteredCards = cards.filter(card => {
+    const matchesSearch = card.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+    let matchesCategory = false
+    if (selectedCategories.has('all')) {
+      matchesCategory = true
+    } else {
+      const cardTypeOrCategory = card.type === 'ending' ? 'ending' : (card.category || 'protagonist')
+      matchesCategory = selectedCategories.has(cardTypeOrCategory)
+    }
+
+    return matchesSearch && matchesCategory
+  })
+
   const handleCardSelect = (card: Card | null) => {
     setSelectedCard(card)
     setActiveLang('en')
@@ -208,6 +264,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm(t('admin.deckEditor.delete_confirmation'))) return;
+
     const token = await getToken({ template: 'supabase' })
     if (!token) {
       alert('Authentication required. Please sign in again.')
@@ -252,82 +310,121 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   }
 
   return (
-    <div className="h-full grid grid-rows-2 gap-8">
-      <div className="flex flex-col gap-4 min-h-0">
-        <h2 className="text-foreground text-xl font-bold">
-          {t('cards')}
-          {' '}
-          (
-          {cards.length}
-          )
-        </h2>
+    <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden">
+      {/* Left Column: Card List */}
+      <div className="w-full md:w-1/3 flex flex-col gap-4 min-h-0 h-full">
+        <div className="flex flex-col gap-3 shrink-0">
+          <h2 className="text-foreground text-xl font-bold flex justify-between items-center">
+            <span>{t('cards')} ({filteredCards.length})</span>
+          </h2>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('admin.deckEditor.search_cards_placeholder')}
+            className="w-full px-3 py-2 rounded-md bg-muted/50 border border-border text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {/* Category Filter Checkboxes */}
+          <div className="flex flex-wrap gap-2 text-xs">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => toggleCategory(cat.id)}
+                className={`px-2 py-1 rounded border transition-colors ${selectedCategories.has(cat.id)
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-muted-foreground border-border hover:border-primary/50'
+                  }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex-1 overflow-auto rounded-lg border border-border bg-card">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
               <TableRow className="bg-muted/40 text-left">
-                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">{t('type')}</TableHead>
                 <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">{t('name')}</TableHead>
-                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">{t('description')}</TableHead>
-                <TableHead className="px-4 py-3 text-sm font-medium text-muted-foreground">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-border">
-              {cards.map(card => (
+              {filteredCards.map(card => (
                 <TableRow
                   key={card.id}
-                  className={`transition-colors cursor-pointer ${selectedCard?.id === card.id ? 'bg-muted/50' : ''}`}
+                  className={`transition-colors cursor-pointer ${selectedCard?.id === card.id ? 'bg-primary/10' : 'hover:bg-muted/30'}`}
                   onClick={() => handleCardSelect(card)}
                 >
-                  <TableCell className="px-4 py-3 text-sm text-muted-foreground">
-                    {card.type === 'ending'
-                      ? t('game.ending_card_label')
-                      : (
-                          card.category
-                            ? t(`admin.deckEditor.categories.${card.category}`)
-                            : t('admin.deckEditor.type.story')
-                        )}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-foreground font-medium">{card.name}</TableCell>
-                  <TableCell className="px-4 py-3 text-sm text-muted-foreground truncate max-w-xs">{card.description}</TableCell>
-                  <TableCell className="px-4 py-3">
-                    <Button
-                      variant="destructive"
-                      size="xs"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(card.id)
-                      }}
-                    >
-                      {t('delete')}
-                    </Button>
+                  <TableCell className="px-4 py-3 text-sm text-foreground font-medium">
+                    <div className="flex justify-between items-center">
+                      <span>{card.name}</span>
+                      {/* Tiny badge for type */}
+                      <span className="text-[10px] uppercase opacity-50 border border-border px-1 rounded ml-2">
+                        {card.type === 'ending'
+                          ? 'END'
+                          : (card.category || 'STY').substring(0, 3)}
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
-              {cards.length === 0 && (
+              {filteredCards.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
-                    {t('no_cards_yet')}
+                  <TableCell className="px-4 py-6 text-center text-muted-foreground">
+                    {searchQuery || selectedCategories.size > 0 ? t('no_search_results') : t('no_cards_yet')}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
+
+        {/* Mobile only: Add New Button at bottom of list if needed, or rely on right panel */}
+        <div className="md:hidden">
+          <Button onClick={() => handleCardSelect(null)} className="w-full">{t('add_new_card')}</Button>
+        </div>
       </div>
 
-      <div className="bg-card p-6 rounded-xl border border-border overflow-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-foreground text-lg font-bold">
-            {selectedCard ? t('edit_card') : t('add_new_card')}
+      {/* Right Column: Editor */}
+      <div className="flex-1 bg-card p-6 rounded-xl border border-border overflow-y-auto h-full shadow-sm">
+        <div className="flex items-center justify-between mb-6 sticky top-0 bg-card z-10 py-2 border-b border-border/50">
+          <h3 className="text-foreground text-lg font-bold flex items-center gap-2">
+            {selectedCard ? (
+              <>
+                <span className="text-muted-foreground font-normal text-base">{t('edit_card')}:</span>
+                <span className="truncate max-w-[200px]">{selectedCard.name}</span>
+              </>
+            ) : t('add_new_card')}
           </h3>
-          {selectedCard && (
-            <button
-              onClick={() => handleCardSelect(null)}
-              className="text-muted-foreground hover:text-foreground text-sm"
+          <div className="flex gap-2 items-center">
+            {selectedCard && (
+              <>
+                <Button
+                  variant="destructive"
+                  className="mr-2 border-r border-border pr-3"
+                  size="sm"
+                  onClick={() => handleDelete(selectedCard.id)}
+                >
+                  {t('admin.deckEditor.delete_card')}
+                </Button>
+                <div className="h-6 w-px bg-border mx-1"></div>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleCardSelect(null)}
+                  size="sm"
+                >
+                  {t('cancel_edit')}
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={handleSave}
+              disabled={!formData.name}
+              size="sm"
             >
-              {t('cancel_edit')}
-            </button>
-          )}
+              {selectedCard ? t('update_card') : t('add_card')}
+            </Button>
+          </div>
         </div>
 
         <div className="flex gap-2 mb-6 border-b border-border pb-2">
@@ -338,34 +435,31 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
                 ? 'bg-primary text-white'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-              }`}
+                }`}
             >
               {lang.toUpperCase()}
             </button>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <label className="block">
-              <span className="text-muted-foreground text-sm font-medium">
-                {t('card_name')}
-                {' '}
-                (
-                {activeLang.toUpperCase()}
-                )
+              <span className="text-muted-foreground text-sm font-medium block mb-1">
+                {t('card_name')} ({activeLang.toUpperCase()})
               </span>
               <input
                 type="text"
                 value={getValue('name')}
                 onChange={e => updateField('name', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
+                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
                 placeholder={t('admin.deckEditor.placeholders.cardNameExample')}
               />
             </label>
+
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-muted-foreground text-sm font-medium">{t('type')}</span>
+                <span className="text-muted-foreground text-sm font-medium block mb-1">{t('type')}</span>
                 <select
                   value={formData.type}
                   onChange={e =>
@@ -373,7 +467,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                       ...formData,
                       type: (e.target.value === 'ending' ? 'ending' : 'story'),
                     })}
-                  className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
+                  className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
                 >
                   <option value="story">{t('admin.deckEditor.type.story')}</option>
                   <option value="ending">{t('game.ending_card_label')}</option>
@@ -381,7 +475,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               </label>
               {formData.type === 'story' && (
                 <label className="block">
-                  <span className="text-muted-foreground text-sm font-medium">{t('category')}</span>
+                  <span className="text-muted-foreground text-sm font-medium block mb-1">{t('category')}</span>
                   <select
                     value={formData.category || 'protagonist'}
                     onChange={e =>
@@ -389,7 +483,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                         ...formData,
                         category: (e.target.value as FormData['category']),
                       })}
-                    className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary"
+                    className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
                   >
                     <option value="protagonist">{t('admin.deckEditor.categories.protagonist')}</option>
                     <option value="antagonist">{t('admin.deckEditor.categories.antagonist')}</option>
@@ -401,66 +495,50 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                 </label>
               )}
             </div>
+
             <div className="space-y-2">
-              <span className="text-muted-foreground text-sm font-medium">{t('card_image')}</span>
+              <span className="text-muted-foreground text-sm font-medium block">{t('card_image')}</span>
               <ImageUpload
                 value={formData.image_url}
                 onChange={url => setFormData({ ...formData, image_url: url })}
               />
-              <label className="block">
-                <span className="text-muted-foreground text-xs">{t('or_paste_url')}</span>
+              <label className="block pt-2">
+                <span className="text-muted-foreground text-xs block mb-1">{t('or_paste_url')}</span>
                 <input
                   type="text"
                   value={formData.image_url}
                   onChange={e => setFormData({ ...formData, image_url: e.target.value })}
-                  className="mt-1 block w-full rounded-lg bg-background border-border text-foreground text-sm focus:ring-primary focus:border-primary"
+                  className="w-full rounded-md bg-background border border-border p-2 text-sm text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
                   placeholder={t('url_placeholder')}
                 />
               </label>
             </div>
           </div>
-          <div className="space-y-4">
+
+          <div className="space-y-6">
             <label className="block">
-              <span className="text-muted-foreground text-sm font-medium">
-                {t('description')}
-                {' '}
-                (
-                {activeLang.toUpperCase()}
-                )
+              <span className="text-muted-foreground text-sm font-medium block mb-1">
+                {t('description')} ({activeLang.toUpperCase()})
               </span>
               <textarea
                 value={getValue('description')}
                 onChange={e => updateField('description', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary h-24"
+                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
                 placeholder={t('admin.deckEditor.placeholders.cardDescription')}
               />
             </label>
             <label className="block">
-              <span className="text-muted-foreground text-sm font-medium">
-                {t('usage_examples')}
-                {' '}
-                (
-                {activeLang.toUpperCase()}
-                )
+              <span className="text-muted-foreground text-sm font-medium block mb-1">
+                {t('usage_examples')} ({activeLang.toUpperCase()})
               </span>
               <textarea
                 value={getValue('usage_examples')}
                 onChange={e => updateField('usage_examples', e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-background border-border text-foreground focus:ring-primary focus:border-primary h-24"
+                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
                 placeholder={t('admin.deckEditor.placeholders.usageExamples')}
               />
             </label>
           </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={!formData.name}
-            className="px-6 py-2 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {selectedCard ? t('update_card') : t('add_card')}
-          </button>
         </div>
       </div>
     </div>

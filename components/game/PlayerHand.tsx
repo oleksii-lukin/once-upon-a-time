@@ -15,6 +15,7 @@ interface PlayerHandProps {
   isMyTurn: boolean
   deck?: {
     card_back_image_url?: string | null
+    category_images?: Record<string, string> | null
   }
 }
 
@@ -59,6 +60,7 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                   isHoverable={isMyTurn}
                   onClick={() => isMyTurn && onSelectCard(card)}
                   cardBackImageUrl={deck?.card_back_image_url}
+                  categoryImages={deck?.category_images as Record<string, string> | null}
                   className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-yellow-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_20px_rgba(255,255,255,0.4)]' : ''}`}
                 />
                 {isEnding && (

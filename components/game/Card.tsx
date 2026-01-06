@@ -11,8 +11,16 @@ function normalizeTypeKey(raw?: string) {
     catalyst: 'catalyst',
     characters: 'character',
     character: 'character',
+    protagonists: 'protagonist',
+    protagonist: 'protagonist',
+    antagonists: 'antagonist',
+    antagonist: 'antagonist',
     settings: 'setting',
     setting: 'setting',
+    objects: 'object',
+    object: 'object',
+    traits: 'trait',
+    trait: 'trait',
     aspects: 'aspect',
     aspect: 'aspect',
     card: 'card',
@@ -28,12 +36,14 @@ interface CardProps {
   onClick?: () => void
   className?: string
   cardBackImageUrl?: string | null
+  categoryImages?: Record<string, string> | null
 }
 
 import { useTranslation } from 'react-i18next'
 import { getLocalizedCardContent } from '@/utils/gameUtils'
+import Image from 'next/image'
 
-export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl }: CardProps) {
+export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
 
@@ -80,8 +90,20 @@ export default function Card({ card, isHoverable = false, onClick, className = '
 
       {/* Category Icon - Top Left */}
       <div className="absolute top-[3.5%] left-[3.5%] z-30 w-[12%] aspect-square flex items-center justify-center">
-        {/* Placeholder circle for category */}
-        <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
+        {categoryImages?.[typeKey]
+          ? (
+              <Image
+                src={categoryImages[typeKey]}
+                alt={localizedType}
+                fill
+                className="object-contain"
+                title={localizedType}
+              />
+            )
+          : (
+            /* Fallback to placeholder circle if no category image is available */
+              <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
+            )}
       </div>
 
     </div>

@@ -289,13 +289,32 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       </div>
 
       <main className="flex-1 flex flex-col justify-between overflow-hidden relative z-10">
-        <TableArea playedCards={playedCards} storytellerPlayer={storytellerPlayer} players={players} deck={deck || undefined} />
+        <TableArea
+          playedCards={playedCards}
+          storytellerPlayer={storytellerPlayer}
+          players={players}
+          deck={
+            deck
+              ? {
+                  card_back_image_url: deck.card_back_image_url,
+                  category_images: deck.category_images as Record<string, string> | null,
+                }
+              : undefined
+          }
+        />
         <PlayerHand
           cards={hand}
           onSelectCard={onSelectCard}
           selectedCardId={selectedCardId}
           isMyTurn={isMyTurn}
-          deck={deck || undefined}
+          deck={
+            deck
+              ? {
+                  card_back_image_url: deck.card_back_image_url,
+                  category_images: deck.category_images as Record<string, string> | null,
+                }
+              : undefined
+          }
         />
 
         {/* Turn Controls inside main area to avoid sidebar overlap */}

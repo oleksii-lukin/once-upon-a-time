@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   Example,
@@ -78,22 +79,22 @@ export function ComponentExample() {
 }
 
 function CardExample() {
+  const { t } = useTranslation()
+
   return (
-    <Example title="Card" className="items-center justify-center">
+    <Example title={t('tw_examples.card.title') || 'Card'} className="items-center justify-center">
       <Card className="relative w-full max-w-sm overflow-hidden pt-0">
         <div className="bg-primary absolute inset-0 z-30 aspect-video opacity-50 mix-blend-color" />
         <img
           src="https://images.unsplash.com/photo-1604076850742-4c7221f3101b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="Photo by mymind on Unsplash"
-          title="Photo by mymind on Unsplash"
+          alt={t('tw_examples.card.photo_by_mymind') || 'Photo by mymind on Unsplash'}
+          title={t('tw_examples.card.photo_by_mymind') || 'Photo by mymind on Unsplash'}
           className="relative z-20 aspect-video w-full object-cover brightness-60 grayscale"
         />
         <CardHeader>
-          <CardTitle>Observability Plus is replacing Monitoring</CardTitle>
+          <CardTitle>{t('tw_examples.card.card_title') || 'Observability Plus is replacing Monitoring'}</CardTitle>
           <CardDescription>
-            Switch to the improved way to explore your data, with natural
-            language. Monitoring will no longer be available on the Pro plan in
-            November, 2025
+            {t('tw_examples.card.card_description') || 'Switch to the improved way to explore your data, with natural language. Monitoring will no longer be available on the Pro plan in November, 2025'}
           </CardDescription>
         </CardHeader>
         <CardFooter>
@@ -101,7 +102,7 @@ function CardExample() {
             <AlertDialogTrigger asChild>
               <Button>
                 <PlusIcon data-icon="inline-start" />
-                Show Dialog
+                {t('tw_examples.card.show_dialog') || 'Show Dialog'}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent size="sm">
@@ -109,20 +110,19 @@ function CardExample() {
                 <AlertDialogMedia>
                   <BluetoothIcon />
                 </AlertDialogMedia>
-                <AlertDialogTitle>Allow accessory to connect?</AlertDialogTitle>
+                <AlertDialogTitle>{t('tw_examples.card.allow_connect_title') || 'Allow accessory to connect?'}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Do you want to allow the USB accessory to connect to this
-                  device?
+                  {t('tw_examples.card.allow_connect_description') || 'Do you want to allow the USB accessory to connect to this device?'}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Don&apos;t allow</AlertDialogCancel>
-                <AlertDialogAction>Allow</AlertDialogAction>
+                <AlertDialogCancel>{t('tw_examples.card.dont_allow') || 'Don\'t allow'}</AlertDialogCancel>
+                <AlertDialogAction>{t('tw_examples.card.allow') || 'Allow'}</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
           <Badge variant="secondary" className="ml-auto">
-            Warning
+            {t('tw_examples.card.warning') || 'Warning'}
           </Badge>
         </CardFooter>
       </Card>
@@ -139,6 +139,7 @@ const frameworks = [
 ] as const
 
 function FormExample() {
+  const { t } = useTranslation()
   const [notifications, setNotifications] = React.useState({
     email: true,
     sms: false,
@@ -147,63 +148,63 @@ function FormExample() {
   const [theme, setTheme] = React.useState('light')
 
   return (
-    <Example title="Form">
+    <Example title={t('tw_examples.form.title') || 'Form'}>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>User Information</CardTitle>
-          <CardDescription>Please fill in your details below</CardDescription>
+          <CardTitle>{t('tw_examples.form.user_info_title') || 'User Information'}</CardTitle>
+          <CardDescription>{t('tw_examples.form.user_info_description') || 'Please fill in your details below'}</CardDescription>
           <CardAction>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <MoreVerticalIcon />
-                  <span className="sr-only">More options</span>
+                  <span className="sr-only">{t('tw_examples.form.more_options') || 'More options'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>File</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('tw_examples.form.file') || 'File'}</DropdownMenuLabel>
                   <DropdownMenuItem>
                     <FileIcon />
-                    New File
-                    <DropdownMenuShortcut>⌘N</DropdownMenuShortcut>
+                    {t('tw_examples.form.new') || 'New'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_new') || '⌘N'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <FolderIcon />
-                    New Folder
-                    <DropdownMenuShortcut>⇧⌘N</DropdownMenuShortcut>
+                    {t('tw_examples.form.new') || 'New'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_new_folder') || '⇧⌘N'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <FolderOpenIcon />
-                      Open Recent
+                      {t('tw_examples.form.open_recent') || 'Open Recent'}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>Recent Projects</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('tw_examples.form.recent_projects') || 'Recent Projects'}</DropdownMenuLabel>
                           <DropdownMenuItem>
                             <FileCodeIcon />
-                            Project Alpha
+                            {t('tw_examples.form.project_alpha') || 'Project Alpha'}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <FileCodeIcon />
-                            Project Beta
+                            {t('tw_examples.form.project_beta') || 'Project Beta'}
                           </DropdownMenuItem>
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                               <MoreHorizontalIcon />
-                              More Projects
+                              {t('tw_examples.form.more_projects') || 'More Projects'}
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                               <DropdownMenuSubContent>
                                 <DropdownMenuItem>
                                   <FileCodeIcon />
-                                  Project Gamma
+                                  {t('tw_examples.form.project_gamma') || 'Project Gamma'}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
                                   <FileCodeIcon />
-                                  Project Delta
+                                  {t('tw_examples.form.project_delta') || 'Project Delta'}
                                 </DropdownMenuItem>
                               </DropdownMenuSubContent>
                             </DropdownMenuPortal>
@@ -213,7 +214,7 @@ function FormExample() {
                         <DropdownMenuGroup>
                           <DropdownMenuItem>
                             <FolderSearchIcon />
-                            Browse...
+                            {t('tw_examples.form.browse') || 'Browse...'}
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuSubContent>
@@ -222,18 +223,18 @@ function FormExample() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <SaveIcon />
-                    Save
-                    <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+                    {t('tw_examples.form.save') || 'Save'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_save') || '⌘S'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <DownloadIcon />
-                    Export
-                    <DropdownMenuShortcut>⇧⌘E</DropdownMenuShortcut>
+                    {t('tw_examples.form.export') || 'Export'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_export') || '⇧⌘E'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>View</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('tw_examples.form.view') || 'View'}</DropdownMenuLabel>
                   <DropdownMenuCheckboxItem
                     checked={notifications.email}
                     onCheckedChange={checked =>
@@ -243,7 +244,7 @@ function FormExample() {
                       })}
                   >
                     <EyeIcon />
-                    Show Sidebar
+                    {t('tw_examples.form.show_sidebar') || 'Show Sidebar'}
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuCheckboxItem
                     checked={notifications.sms}
@@ -254,32 +255,32 @@ function FormExample() {
                       })}
                   >
                     <LayoutIcon />
-                    Show Status Bar
+                    {t('tw_examples.form.show_status_bar') || 'Show Status Bar'}
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <PaletteIcon />
-                      Theme
+                      {t('tw_examples.form.theme') || 'Theme'}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('tw_examples.form.appearance') || 'Appearance'}</DropdownMenuLabel>
                           <DropdownMenuRadioGroup
                             value={theme}
                             onValueChange={setTheme}
                           >
                             <DropdownMenuRadioItem value="light">
                               <SunIcon />
-                              Light
+                              {t('tw_examples.form.light') || 'Light'}
                             </DropdownMenuRadioItem>
                             <DropdownMenuRadioItem value="dark">
                               <MoonIcon />
-                              Dark
+                              {t('tw_examples.form.dark') || 'Dark'}
                             </DropdownMenuRadioItem>
                             <DropdownMenuRadioItem value="system">
                               <MonitorIcon />
-                              System
+                              {t('tw_examples.form.system') || 'System'}
                             </DropdownMenuRadioItem>
                           </DropdownMenuRadioGroup>
                         </DropdownMenuGroup>
@@ -289,43 +290,43 @@ function FormExample() {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('tw_examples.form.account') || 'Account'}</DropdownMenuLabel>
                   <DropdownMenuItem>
                     <UserIcon />
-                    Profile
-                    <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                    {t('tw_examples.form.profile') || 'Profile'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_profile') || '⇧⌘P'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <CreditCardIcon />
-                    Billing
+                    {t('tw_examples.form.billing') || 'Billing'}
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <SettingsIcon />
-                      Settings
+                      {t('tw_examples.form.settings') || 'Settings'}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         <DropdownMenuGroup>
-                          <DropdownMenuLabel>Preferences</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t('tw_examples.form.preferences') || 'Preferences'}</DropdownMenuLabel>
                           <DropdownMenuItem>
                             <KeyboardIcon />
-                            Keyboard Shortcuts
+                            {t('tw_examples.form.keyboard_shortcuts') || 'Keyboard Shortcuts'}
                           </DropdownMenuItem>
                           <DropdownMenuItem>
                             <LanguagesIcon />
-                            Language
+                            {t('tw_examples.form.language') || 'Language'}
                           </DropdownMenuItem>
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
                               <BellIcon />
-                              Notifications
+                              {t('tw_examples.form.notifications') || 'Notifications'}
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                               <DropdownMenuSubContent>
                                 <DropdownMenuGroup>
                                   <DropdownMenuLabel>
-                                    Notification Types
+                                    {t('tw_examples.form.notification_types') || 'Notification Types'}
                                   </DropdownMenuLabel>
                                   <DropdownMenuCheckboxItem
                                     checked={notifications.push}
@@ -336,7 +337,7 @@ function FormExample() {
                                       })}
                                   >
                                     <BellIcon />
-                                    Push Notifications
+                                    {t('tw_examples.form.push_notifications') || 'Push Notifications'}
                                   </DropdownMenuCheckboxItem>
                                   <DropdownMenuCheckboxItem
                                     checked={notifications.email}
@@ -347,7 +348,7 @@ function FormExample() {
                                       })}
                                   >
                                     <MailIcon />
-                                    Email Notifications
+                                    {t('tw_examples.form.email_notifications') || 'Email Notifications'}
                                   </DropdownMenuCheckboxItem>
                                 </DropdownMenuGroup>
                               </DropdownMenuSubContent>
@@ -358,7 +359,7 @@ function FormExample() {
                         <DropdownMenuGroup>
                           <DropdownMenuItem>
                             <ShieldIcon />
-                            Privacy & Security
+                            {t('tw_examples.form.privacy_security') || 'Privacy & Security'}
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                       </DropdownMenuSubContent>
@@ -369,19 +370,19 @@ function FormExample() {
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
                     <HelpCircleIcon />
-                    Help & Support
+                    {t('tw_examples.form.help_support') || 'Help & Support'}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <FileTextIcon />
-                    Documentation
+                    {t('tw_examples.form.documentation') || 'Documentation'}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem variant="destructive">
                     <LogOutIcon />
-                    Sign Out
-                    <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+                    {t('tw_examples.form.sign_out') || 'Sign Out'}
+                    <DropdownMenuShortcut>{t('tw_examples.form.shortcut_sign_out') || '⇧⌘Q'}</DropdownMenuShortcut>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
@@ -393,7 +394,7 @@ function FormExample() {
             <FieldGroup>
               <div className="grid grid-cols-2 gap-4">
                 <Field orientation="horizontal">
-                  <FieldLabel htmlFor="form-email-notifs">Email notifications</FieldLabel>
+                  <FieldLabel htmlFor="form-email-notifs">{t('tw_examples.form.email_notifications') || 'Email notifications'}</FieldLabel>
                   <Switch
                     id="form-email-notifs"
                     checked={notifications.email}
@@ -405,25 +406,25 @@ function FormExample() {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="small-form-name">Name</FieldLabel>
+                  <FieldLabel htmlFor="small-form-name">{t('tw_examples.form.name') || 'Name'}</FieldLabel>
                   <Input
                     id="small-form-name"
-                    placeholder="Enter your name"
+                    placeholder={t('tw_examples.form.name_placeholder') || 'Enter your name'}
                     required
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="small-form-role">Role</FieldLabel>
+                  <FieldLabel htmlFor="small-form-role">{t('tw_examples.form.role') || 'Role'}</FieldLabel>
                   <Select defaultValue="">
                     <SelectTrigger id="small-form-role">
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue placeholder={t('tw_examples.form.role_placeholder') || 'Select a role'} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="developer">Developer</SelectItem>
-                        <SelectItem value="designer">Designer</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="developer">{t('tw_examples.form.developer') || 'Developer'}</SelectItem>
+                        <SelectItem value="designer">{t('tw_examples.form.designer') || 'Designer'}</SelectItem>
+                        <SelectItem value="manager">{t('tw_examples.form.manager') || 'Manager'}</SelectItem>
+                        <SelectItem value="other">{t('tw_examples.form.other') || 'Other'}</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -431,16 +432,16 @@ function FormExample() {
               </div>
               <Field>
                 <FieldLabel htmlFor="small-form-framework">
-                  Framework
+                  {t('tw_examples.form.framework') || 'Framework'}
                 </FieldLabel>
                 <Combobox items={frameworks}>
                   <ComboboxInput
                     id="small-form-framework"
-                    placeholder="Select a framework"
+                    placeholder={t('tw_examples.form.framework_placeholder') || 'Select a framework'}
                     required
                   />
                   <ComboboxContent>
-                    <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
+                    <ComboboxEmpty>{t('tw_examples.form.no_frameworks_found') || 'No frameworks found.'}</ComboboxEmpty>
                     <ComboboxList>
                       {item => (
                         <ComboboxItem key={item} value={item}>
@@ -452,16 +453,16 @@ function FormExample() {
                 </Combobox>
               </Field>
               <Field>
-                <FieldLabel htmlFor="small-form-comments">Comments</FieldLabel>
+                <FieldLabel htmlFor="small-form-comments">{t('tw_examples.form.comments') || 'Comments'}</FieldLabel>
                 <Textarea
                   id="small-form-comments"
-                  placeholder="Add any additional comments"
+                  placeholder={t('tw_examples.form.comments_placeholder') || 'Add any additional comments'}
                 />
               </Field>
               <Field orientation="horizontal">
-                <Button type="submit">Submit</Button>
+                <Button type="submit">{t('tw_examples.form.submit') || 'Submit'}</Button>
                 <Button variant="outline" type="button">
-                  Cancel
+                  {t('tw_examples.form.cancel') || 'Cancel'}
                 </Button>
               </Field>
             </FieldGroup>

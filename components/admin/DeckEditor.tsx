@@ -716,7 +716,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
             <div className="flex flex-col md:flex-row justify-between gap-8">
               <div>
                 <span className="text-muted-foreground text-sm font-medium block mb-2">{t('deck_background') || 'Deck Background'}</span>
-                <div className="text-xs text-muted-foreground mb-2">Used for game board background</div>
+                <div className="text-xs text-muted-foreground mb-2">{t('deck_background_description') || 'Used for game board background'}</div>
                 <ImageUpload
                   value={deckSettings.bg_image_url}
                   onChange={url => setDeckSettings({ ...deckSettings, bg_image_url: url })}
@@ -726,7 +726,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               <div className="flex flex-col items-start md:items-end">
                 <div className="text-left md:text-right">
                   <span className="text-muted-foreground text-sm font-medium block mb-2">{t('card_foreground_border') || 'Card Foreground'}</span>
-                  <div className="text-xs text-muted-foreground mb-2">Used as card border/frame</div>
+                  <div className="text-xs text-muted-foreground mb-2">{t('card_foreground_description') || 'Used as card border/frame'}</div>
                 </div>
                 <ImageUpload
                   value={deckSettings.card_back_image_url}

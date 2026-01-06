@@ -68,12 +68,25 @@ export default function Card({ card, isHoverable = false, onClick, className = '
 
       {/* Main Card Image Area - Centered in the frame */}
       <div className="absolute inset-0 flex items-center justify-center z-10 pt-[15%]">
-        <div
-          className="w-[72%] h-[55%] bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
-          style={{
-            backgroundImage: `url("${card.image_url || '/placeholder-card.jpg'}")`,
-          }}
-        />
+        <div className="relative w-[72%] h-[55%] rounded-sm shadow-inner">
+          {typeof card.image_url === 'string' && card.image_url
+            ? (
+                <Image
+                  src={card.image_url}
+                  alt={localizedContent.name || 'Card image'}
+                  fill
+                  className="object-cover brightness-90 contrast-110 sepia-[.2]"
+                />
+              )
+            : (
+                <div
+                  className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
+                  style={{
+                    backgroundImage: `url("/placeholder-card.jpg")`,
+                  }}
+                />
+              )}
+        </div>
       </div>
 
       {/* Card Name - Top Area */}

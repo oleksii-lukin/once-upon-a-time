@@ -10,6 +10,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
 import { Check, Loader2 } from 'lucide-react'
+import SaveButton from '@/components/common/SaveButton'
 
 type Deck = Database['public']['Tables']['decks']['Row'] & {
   bg_image_url?: string | null
@@ -87,6 +88,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       ua: { name: '', description: '', usage_examples: '' },
     },
   })
+  const [isSavingCard, setIsSavingCard] = useState(false)
+  const [isCardSaved, setIsCardSaved] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const fetchCards = useCallback(async () => {
@@ -227,9 +230,13 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       return
     }
 
+    setIsSavingCard(true)
+    setIsCardSaved(false)
+
     const token = await getToken({ template: 'supabase' })
     if (!token) {
       alert('Authentication required. Please sign in again.')
+      setIsSavingCard(false)
       return
     }
     const supabase = createClient(token)
@@ -263,6 +270,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         .eq('id', selectedCard.id)
         .select()
 
+      setIsSavingCard(false)
+
       if (error) {
         console.error('Error updating card:', error)
         alert(`Failed to update card: ${error.message}`)
@@ -270,7 +279,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       else {
         // console.log('Update success:', data)
         await fetchCards()
-        // Keep the form as is, but maybe show a success indicator?
+        setIsCardSaved(true)
+        setTimeout(() => setIsCardSaved(false), 2000)
       }
     }
     else {
@@ -282,6 +292,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         })
         .select()
 
+      setIsSavingCard(false)
+
       if (error) {
         console.error('Error creating card:', error)
         alert(`Failed to create card: ${error.message}`)
@@ -289,6 +301,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       else {
         // console.log('Create success:', data)
         await fetchCards()
+        setIsCardSaved(true)
+        setTimeout(() => setIsCardSaved(false), 2000)
         handleCardSelect(null) // Clear form after add
       }
     }
@@ -521,13 +535,14 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                     </Button>
                   </>
                 )}
-                <Button
+                <SaveButton
                   onClick={handleSave}
                   disabled={!formData.name}
+                  isSaving={isSavingCard}
+                  isSaved={isCardSaved}
+                  saveText={selectedCard ? t('update_card') : t('add_card')}
                   size="sm"
-                >
-                  {selectedCard ? t('update_card') : t('add_card')}
-                </Button>
+                />
               </div>
             </div>
 
@@ -656,16 +671,6 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                 </label>
               </div>
             </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleSave}
-                disabled={!formData.name}
-                className="px-6 py-2 rounded-lg bg-primary text-white font-bold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {selectedCard ? t('update_card') : t('add_card')}
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -674,30 +679,16 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         <div className="flex-1 bg-card p-6 rounded-xl border border-border overflow-y-auto h-full shadow-sm">
           <div className="flex items-center justify-between mb-6 sticky top-0 bg-card z-10 py-2 border-b border-border/50">
             <h3 className="text-lg font-bold">{t('deck_settings') || 'Deck Settings'}</h3>
-            <Button
+            <SaveButton
               onClick={handleSaveDeckSettings}
-              size="sm"
               disabled={isSavingSettings}
-              className="min-w-[140px]"
-            >
-              {isSavingSettings
-                ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('saving') || 'Saving...'}
-                    </>
-                  )
-                : isSettingsSaved
-                  ? (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        {t('saved') || 'Saved'}
-                      </>
-                    )
-                  : (
-                      t('save_settings') || 'Save Settings'
-                    )}
-            </Button>
+              isSaving={isSavingSettings}
+              isSaved={isSettingsSaved}
+              saveText={t('save_settings') || 'Save Settings'}
+              savingText={t('saving') || 'Saving...'}
+              savedText={t('saved') || 'Saved'}
+              size="sm"
+            />
           </div>
 
           <div className="space-y-8 max-w-5xl">

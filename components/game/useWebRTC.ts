@@ -178,7 +178,7 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
   useEffect(() => {
     if (!enabled || !myPlayerId) return
 
-    // If spectator and not admin, we might still want to establishment peer connections 
+    // If spectator and not admin, we might still want to establishment peer connections
     // to receive streams, but we don't need a local record if we are just receiving?
     // SimplePeer can work without a stream to send.
 

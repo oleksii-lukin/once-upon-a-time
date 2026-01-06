@@ -81,7 +81,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
       .from('lobbies')
       .update({
         settings: updated,
-        ...(newSettings.gameMode ? { game_mode: newSettings.gameMode } : {})
+        ...(newSettings.gameMode ? { game_mode: newSettings.gameMode } : {}),
       })
       .eq('id', lobby.id)
 

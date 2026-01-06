@@ -66,8 +66,8 @@ export default function Card({ card, isHoverable = false, onClick, className = '
       </div>
 
       {/* Card Name - Top Area */}
-      {/* Dark text typically works better on parchment-like borders, assuming Border.jpg is light/parchment styling based on the genre. 
-          If it's black, we need white text. User said "currently cards are text on black background", implies moving away from that. 
+      {/* Dark text typically works better on parchment-like borders, assuming Border.jpg is light/parchment styling based on the genre.
+          If it's black, we need white text. User said "currently cards are text on black background", implies moving away from that.
           Usually borders are gold/ornate. Text color is a guess. I'll use a class that I can easily flip.
           "It has place for card name placeholder at the top"
       */}

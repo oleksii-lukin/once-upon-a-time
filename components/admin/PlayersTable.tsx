@@ -5,8 +5,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
+} from '@/components/ui/table'
+import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 
 interface Player {
   user_id: string
@@ -36,17 +36,19 @@ export function PlayersTable({ players, translations }: PlayersTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {players.map((player) => (
+          {players.map(player => (
             <TableRow key={player.user_id}>
               <TableCell>
                 <div className="size-8 rounded-full overflow-hidden bg-muted">
-                  {player.avatar_url ? (
-                    <img src={player.avatar_url} alt={player.display_name || ''} className="size-full object-cover" />
-                  ) : (
-                    <div className="size-full flex items-center justify-center text-xs font-bold">
-                      {(player.display_name || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  {player.avatar_url
+                    ? (
+                        <img src={player.avatar_url} alt={player.display_name || ''} className="size-full object-cover" />
+                      )
+                    : (
+                        <div className="size-full flex items-center justify-center text-xs font-bold">
+                          {(player.display_name || '?').charAt(0).toUpperCase()}
+                        </div>
+                      )}
                 </div>
               </TableCell>
               <TableCell className="font-medium">{player.display_name || player.user_id}</TableCell>

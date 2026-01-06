@@ -40,13 +40,13 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
 
       const canvas = canvasRef.current
       if (!canvas) {
-        console.error("Canvas ref is null")
+        console.error('Canvas ref is null')
         return
       }
 
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
       if (!ctx) {
-        console.error("Could not get 2d context")
+        console.error('Could not get 2d context')
         return
       }
 
@@ -67,8 +67,8 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       }
 
       img.onerror = (e) => {
-        console.error("Failed to load image for editing", e)
-        console.error("Failed to load image for editing", e)
+        console.error('Failed to load image for editing', e)
+        console.error('Failed to load image for editing', e)
         alert(t('admin.imageEditor.error_loading'))
       }
     }
@@ -81,7 +81,6 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       setHistoryIndex(-1)
     }
   }, [isOpen, imageUrl])
-
 
   const saveState = () => {
     if (!canvasRef.current) return
@@ -136,7 +135,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
         x: Math.min(cropStart.x, currentX),
         y: Math.min(cropStart.y, currentY),
         w: Math.abs(currentX - cropStart.x),
-        h: Math.abs(currentY - cropStart.y)
+        h: Math.abs(currentY - cropStart.y),
       })
     }
   }
@@ -161,8 +160,6 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
     setMode('view')
     saveState()
   }
-
-
 
   const autoTrim = () => {
     if (!canvasRef.current) return
@@ -196,7 +193,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       return
     }
 
-    // Add 1px padding optionally, or just strict trim? 
+    // Add 1px padding optionally, or just strict trim?
     // Usually strict trim is expected for "remove borders".
 
     // Bounds check just in case
@@ -242,9 +239,9 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
         const b = data[idx + 2]
 
         const dist = Math.sqrt(
-          Math.pow(r - targetR, 2) +
-          Math.pow(g - targetG, 2) +
-          Math.pow(b - targetB, 2)
+          Math.pow(r - targetR, 2)
+          + Math.pow(g - targetG, 2)
+          + Math.pow(b - targetB, 2),
         )
         // tolerance X means match within distance X * 4.4 roughly matching the global logic
         return dist <= tol * 4.4
@@ -253,19 +250,20 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       if (!isContiguous) {
         // Global replacement (existing logic)
         for (let i = 0; i < data.length; i += 4) {
-          // Re-implementing logic here to use the shared isMatch if possible, 
+          // Re-implementing logic here to use the shared isMatch if possible,
           // but keeping loop simple for performance as before
           if (isMatch(i)) {
             data[i + 3] = 0
           }
         }
-      } else {
+      }
+      else {
         // Contiguous replacement (Flood Fill)
         const startX = Math.floor(clickX)
         const startY = Math.floor(clickY)
         const startIdx = (startY * width + startX) * 4
 
-        // If start pixel doesn't match or is already transparent? 
+        // If start pixel doesn't match or is already transparent?
         // Usually we want to erase the color we clicked on.
         // But if we clicked on transparent, maybe we shouldn't do anything?
         // Let's assume we proceed if it matches target (which it should, as it IS target).
@@ -302,14 +300,13 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
     }
   }
 
-
   const handleSave = async () => {
     if (!canvasRef.current) return
     setIsProcessing(true)
 
     canvasRef.current.toBlob(async (blob) => {
       if (blob) {
-        const file = new File([blob], "edited_image.png", { type: 'image/png' })
+        const file = new File([blob], 'edited_image.png', { type: 'image/png' })
         await onSave(file)
         onClose()
       }
@@ -403,7 +400,13 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
 
           {mode === 'magic' && (
             <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg">
-              <span className="text-xs font-medium whitespace-nowrap">{t('admin.imageEditor.tolerance')}: {tolerance}%</span>
+              <span className="text-xs font-medium whitespace-nowrap">
+                {t('admin.imageEditor.tolerance')}
+                :
+                {' '}
+                {tolerance}
+                %
+              </span>
               <Slider
                 value={tolerance}
                 onValueChange={setTolerance}
@@ -437,6 +440,6 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
           </div>
         </div>
       </DialogContent>
-    </Dialog >
+    </Dialog>
   )
 }

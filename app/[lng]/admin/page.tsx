@@ -13,12 +13,12 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
     { count: playersCount },
     { count: activeLobbiesCount },
     { count: decksCount },
-    { count: cardsCount }
+    { count: cardsCount },
   ] = await Promise.all([
     supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
     supabase.from('lobbies').select('*', { count: 'exact', head: true }).neq('status', 'finished'),
     supabase.from('decks').select('*', { count: 'exact', head: true }),
-    supabase.from('cards').select('*', { count: 'exact', head: true })
+    supabase.from('cards').select('*', { count: 'exact', head: true }),
   ])
 
   return (

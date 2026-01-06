@@ -66,7 +66,7 @@ export default function GameCompletionOverlay({
 
         <div className="mb-6 flex flex-col items-center">
           <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mb-4 border border-yellow-500/30 animate-bounce">
-            < Trophy className="w-10 h-10 text-yellow-500" />
+            <Trophy className="w-10 h-10 text-yellow-500" />
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-2 text-center tracking-tight">
             {t('game.congratulations')}
@@ -93,7 +93,11 @@ export default function GameCompletionOverlay({
             <div className="flex gap-4 text-sm text-white/60">
               <div className="flex items-center gap-1">
                 <BarChart3 className="w-4 h-4" />
-                <span>{cardsPlayedCount[winner?.id || ''] || 0} {t('game.stats.cards_played')}</span>
+                <span>
+                  {cardsPlayedCount[winner?.id || ''] || 0}
+                  {' '}
+                  {t('game.stats.cards_played')}
+                </span>
               </div>
             </div>
           </div>
@@ -113,9 +117,9 @@ export default function GameCompletionOverlay({
                 <div
                   key={player.id}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${player.id === winner?.id
-                      ? 'bg-yellow-500/10 border-yellow-500/30'
-                      : 'bg-white/5 border-white/5 hover:bg-white/10'
-                    }`}
+                    ? 'bg-yellow-500/10 border-yellow-500/30'
+                    : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <PlayerAvatar player={player} size="sm" />

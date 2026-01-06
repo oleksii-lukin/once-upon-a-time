@@ -387,7 +387,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                             className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${selectedDeckIds.includes(deck.id)
                               ? 'bg-primary/20 border-primary'
                               : 'border-transparent'
-                              }`}
+                            }`}
                           >
                             <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
                             <span className="text-foreground font-medium">{deck.name}</span>

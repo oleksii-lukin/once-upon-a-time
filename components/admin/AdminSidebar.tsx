@@ -12,7 +12,7 @@ import {
   Settings as SettingsIcon,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -34,11 +34,11 @@ function NavItem({ href, label, icon: Icon, lng, isCollapsed }: NavItemProps) {
       href={href}
       title={isCollapsed ? label : undefined}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors min-h-[40px]",
+        'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors min-h-[40px]',
         isExactActive
-          ? "bg-muted text-foreground"
-          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-        isCollapsed ? "justify-center px-2" : ""
+          ? 'bg-muted text-foreground'
+          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+        isCollapsed ? 'justify-center px-2' : '',
       )}
     >
       <Icon className="w-5 h-5 shrink-0" />
@@ -53,14 +53,15 @@ export default function AdminSidebar({ lng, title, translations }: { lng: string
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-border bg-background transition-all duration-300 ease-in-out relative",
-        isCollapsed ? "w-16" : "w-64"
+        'flex flex-col border-r border-border bg-background transition-all duration-300 ease-in-out relative',
+        isCollapsed ? 'w-16' : 'w-64',
       )}
     >
       <div className={cn(
-        "flex h-16 items-center px-4 border-b border-border/50",
-        isCollapsed ? "justify-center" : "justify-between"
-      )}>
+        'flex h-16 items-center px-4 border-b border-border/50',
+        isCollapsed ? 'justify-center' : 'justify-between',
+      )}
+      >
         {!isCollapsed && (
           <h1 className="text-foreground text-lg font-bold truncate pr-2">
             {title}
@@ -85,7 +86,7 @@ export default function AdminSidebar({ lng, title, translations }: { lng: string
       </nav>
 
       <div className="p-4 border-t border-border/50 text-xs text-muted-foreground text-center">
-        {!isCollapsed ? "v0.1.0" : "v0.1"}
+        {!isCollapsed ? 'v0.1.0' : 'v0.1'}
       </div>
     </aside>
   )

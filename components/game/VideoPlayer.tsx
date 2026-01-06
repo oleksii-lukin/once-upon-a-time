@@ -29,20 +29,20 @@ export default function VideoPlayer({ stream, player, isLocal = false, cardCount
       {/* Video Feed */}
       {stream
         ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={isLocal} // Always mute local video to prevent echo
-            className={`w-full h-full object-cover transform ${isLocal ? 'scale-x-[-1]' : ''}`} // Mirror local video
-          />
-        )
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted={isLocal} // Always mute local video to prevent echo
+              className={`w-full h-full object-cover transform ${isLocal ? 'scale-x-[-1]' : ''}`} // Mirror local video
+            />
+          )
         : (
           // Fallback if no stream (e.g. loading or camera disabled)
-          <div className="w-full h-full flex items-center justify-center bg-gray-900">
-            <PlayerAvatar player={player} size="lg" />
-          </div>
-        )}
+            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+              <PlayerAvatar player={player} size="lg" />
+            </div>
+          )}
 
       {/* Overlay Info */}
       <div className="absolute inset-x-0 bottom-0 p-2 bg-linear-to-t from-black/70 to-transparent">

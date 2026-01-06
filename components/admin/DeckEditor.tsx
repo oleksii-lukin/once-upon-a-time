@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
 import { Check, Loader2 } from 'lucide-react'
 
-
 type Deck = Database['public']['Tables']['decks']['Row'] & {
   bg_image_url?: string | null
   card_back_image_url?: string | null
@@ -70,7 +69,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
     name: deck.name,
     bg_image_url: deck.bg_image_url || '',
     card_back_image_url: deck.card_back_image_url || '',
-    category_images: (deck.category_images as Record<string, string>) || {}
+    category_images: (deck.category_images as Record<string, string>) || {},
   })
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [isSettingsSaved, setIsSettingsSaved] = useState(false)
@@ -152,7 +151,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
 
     if (newCategories.has(categoryId)) {
       newCategories.delete(categoryId)
-    } else {
+    }
+    else {
       newCategories.add(categoryId)
     }
 
@@ -164,13 +164,14 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
     setSelectedCategories(newCategories)
   }
 
-  const filteredCards = cards.filter(card => {
+  const filteredCards = cards.filter((card) => {
     const matchesSearch = card.name.toLowerCase().includes(searchQuery.toLowerCase())
 
     let matchesCategory = false
     if (selectedCategories.has('all')) {
       matchesCategory = true
-    } else {
+    }
+    else {
       const cardTypeOrCategory = card.type === 'ending' ? 'ending' : (card.category || 'protagonist')
       matchesCategory = selectedCategories.has(cardTypeOrCategory)
     }
@@ -294,7 +295,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('admin.deckEditor.delete_confirmation'))) return;
+    if (!confirm(t('admin.deckEditor.delete_confirmation'))) return
 
     const token = await getToken({ template: 'supabase' })
     if (!token) {
@@ -356,7 +357,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
         name: deckSettings.name,
         bg_image_url: deckSettings.bg_image_url || null,
         card_back_image_url: deckSettings.card_back_image_url || null,
-        category_images: deckSettings.category_images
+        category_images: deckSettings.category_images,
       })
       .eq('id', deck.id)
 
@@ -364,7 +365,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
 
     if (error) {
       alert(`Failed to update deck: ${error.message}`)
-    } else {
+    }
+    else {
       setIsSettingsSaved(true)
       setTimeout(() => setIsSettingsSaved(false), 2000)
     }
@@ -375,8 +377,8 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       ...prev,
       category_images: {
         ...prev.category_images,
-        [catId]: url
-      }
+        [catId]: url,
+      },
     }))
   }
 
@@ -392,18 +394,18 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
             className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${activeTab === 'cards'
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-              }`}
+            }`}
           >
-            {t('cards') || "Cards"}
+            {t('cards') || 'Cards'}
           </button>
           <button
             onClick={() => setActiveTab('settings')}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${activeTab === 'settings'
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-              }`}
+            }`}
           >
-            {t('settings') || "Settings"}
+            {t('settings') || 'Settings'}
           </button>
         </div>
 
@@ -420,7 +422,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('admin.deckEditor.search_cards_placeholder')}
                 className="w-full px-3 py-2 rounded-md bg-muted/50 border border-border text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               />
@@ -432,7 +434,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                     className={`px-2 py-1 rounded border transition-colors ${selectedCategories.has(cat.id)
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                      }`}
+                    }`}
                   >
                     {cat.label}
                   </button>
@@ -486,12 +488,17 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
           <div className="flex-1 bg-card p-6 rounded-xl border border-border overflow-y-auto h-full shadow-sm">
             <div className="flex items-center justify-between mb-6 sticky top-0 bg-card z-10 py-2 border-b border-border/50">
               <h3 className="text-foreground text-lg font-bold flex items-center gap-2">
-                {selectedCard ? (
-                  <>
-                    <span className="text-muted-foreground font-normal text-base">{t('edit_card')}:</span>
-                    <span className="truncate max-w-[200px]">{selectedCard.name}</span>
-                  </>
-                ) : t('add_new_card')}
+                {selectedCard
+                  ? (
+                      <>
+                        <span className="text-muted-foreground font-normal text-base">
+                          {t('edit_card')}
+                          :
+                        </span>
+                        <span className="truncate max-w-[200px]">{selectedCard.name}</span>
+                      </>
+                    )
+                  : t('add_new_card')}
               </h3>
               <div className="flex gap-2 items-center">
                 {selectedCard && (
@@ -532,7 +539,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
                     ? 'bg-primary text-white'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                    }`}
+                  }`}
                 >
                   {lang.toUpperCase()}
                 </button>
@@ -543,7 +550,11 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               <div className="space-y-6">
                 <label className="block">
                   <span className="text-muted-foreground text-sm font-medium block mb-1">
-                    {t('card_name')} ({activeLang.toUpperCase()})
+                    {t('card_name')}
+                    {' '}
+                    (
+                    {activeLang.toUpperCase()}
+                    )
                   </span>
                   <input
                     type="text"
@@ -615,7 +626,11 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
               <div className="space-y-6">
                 <label className="block">
                   <span className="text-muted-foreground text-sm font-medium block mb-1">
-                    {t('description')} ({activeLang.toUpperCase()})
+                    {t('description')}
+                    {' '}
+                    (
+                    {activeLang.toUpperCase()}
+                    )
                   </span>
                   <textarea
                     value={getValue('description')}
@@ -626,7 +641,11 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
                 </label>
                 <label className="block">
                   <span className="text-muted-foreground text-sm font-medium block mb-1">
-                    {t('usage_examples')} ({activeLang.toUpperCase()})
+                    {t('usage_examples')}
+                    {' '}
+                    (
+                    {activeLang.toUpperCase()}
+                    )
                   </span>
                   <textarea
                     value={getValue('usage_examples')}
@@ -654,33 +673,37 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
       {activeTab === 'settings' && (
         <div className="flex-1 bg-card p-6 rounded-xl border border-border overflow-y-auto h-full shadow-sm">
           <div className="flex items-center justify-between mb-6 sticky top-0 bg-card z-10 py-2 border-b border-border/50">
-            <h3 className="text-lg font-bold">{t('deck_settings') || "Deck Settings"}</h3>
+            <h3 className="text-lg font-bold">{t('deck_settings') || 'Deck Settings'}</h3>
             <Button
               onClick={handleSaveDeckSettings}
               size="sm"
               disabled={isSavingSettings}
               className="min-w-[140px]"
             >
-              {isSavingSettings ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('saving') || "Saving..."}
-                </>
-              ) : isSettingsSaved ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  {t('saved') || "Saved"}
-                </>
-              ) : (
-                t('save_settings') || "Save Settings"
-              )}
+              {isSavingSettings
+                ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('saving') || 'Saving...'}
+                    </>
+                  )
+                : isSettingsSaved
+                  ? (
+                      <>
+                        <Check className="mr-2 h-4 w-4" />
+                        {t('saved') || 'Saved'}
+                      </>
+                    )
+                  : (
+                      t('save_settings') || 'Save Settings'
+                    )}
             </Button>
           </div>
 
           <div className="space-y-8 max-w-5xl">
             {/* Deck Name */}
             <label className="block max-w-xl">
-              <span className="text-muted-foreground text-sm font-medium block mb-1">{t('deck_name') || "Deck Name"}</span>
+              <span className="text-muted-foreground text-sm font-medium block mb-1">{t('deck_name') || 'Deck Name'}</span>
               <input
                 type="text"
                 value={deckSettings.name}
@@ -692,30 +715,30 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
             {/* Main Images */}
             <div className="flex flex-col md:flex-row justify-between gap-8">
               <div>
-                <span className="text-muted-foreground text-sm font-medium block mb-2">{t('deck_background') || "Deck Background"}</span>
+                <span className="text-muted-foreground text-sm font-medium block mb-2">{t('deck_background') || 'Deck Background'}</span>
                 <div className="text-xs text-muted-foreground mb-2">Used for game board background</div>
                 <ImageUpload
                   value={deckSettings.bg_image_url}
                   onChange={url => setDeckSettings({ ...deckSettings, bg_image_url: url })}
-                  label={t('upload_background') || "Upload Background"}
+                  label={t('upload_background') || 'Upload Background'}
                 />
               </div>
               <div className="flex flex-col items-start md:items-end">
                 <div className="text-left md:text-right">
-                  <span className="text-muted-foreground text-sm font-medium block mb-2">{t('card_foreground_border') || "Card Foreground"}</span>
+                  <span className="text-muted-foreground text-sm font-medium block mb-2">{t('card_foreground_border') || 'Card Foreground'}</span>
                   <div className="text-xs text-muted-foreground mb-2">Used as card border/frame</div>
                 </div>
                 <ImageUpload
                   value={deckSettings.card_back_image_url}
                   onChange={url => setDeckSettings({ ...deckSettings, card_back_image_url: url })}
-                  label={t('upload_border') || "Upload Border"}
+                  label={t('upload_border') || 'Upload Border'}
                 />
               </div>
             </div>
 
             {/* Category Images */}
             <div>
-              <h4 className="font-medium text-base mb-4 pt-4 border-t border-border">{t('category_images') || "Category Images"}</h4>
+              <h4 className="font-medium text-base mb-4 pt-4 border-t border-border">{t('category_images') || 'Category Images'}</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {categories.filter(c => c.id !== 'all').map(cat => (
                   <div key={cat.id} className="p-3 rounded border border-border bg-muted/20">

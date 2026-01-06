@@ -19,10 +19,10 @@ export default async function AdminLayout({ children, params }: { children: Reac
 
   // Check if user is admin via Clerk session claims (JWT)
   // We check both the root and publicMetadata to be robust
-  let isAdmin = sessionClaims?.is_admin === true ||
-    sessionClaims?.is_admin === 'true' ||
-    (sessionClaims?.publicMetadata as any)?.is_admin === true ||
-    (sessionClaims?.publicMetadata as any)?.is_admin === 'true'
+  let isAdmin = sessionClaims?.is_admin === true
+    || sessionClaims?.is_admin === 'true'
+    || (sessionClaims?.publicMetadata as any)?.is_admin === true
+    || (sessionClaims?.publicMetadata as any)?.is_admin === 'true'
 
   // Fallback to currentUser() if JWT claims don't have it yet (e.g. fresh update)
   if (!isAdmin) {
@@ -45,7 +45,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
           decks: t('decks'),
           players: t('players'),
           lobbies: t('lobbies'),
-          settings: t('settings')
+          settings: t('settings'),
         }}
       />
       <main className="flex-1 overflow-y-auto">

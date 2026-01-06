@@ -33,7 +33,7 @@ export default async function AdminPlayersPage({ params }: { params: Promise<{ l
           games_played: t('games_played'),
           games_won: t('games_won'),
           joined: t('joined'),
-          no_players_found: t('no_players_found')
+          no_players_found: t('no_players_found'),
         }}
       />
     </div>

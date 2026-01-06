@@ -10,6 +10,7 @@ import {
   Users as UsersIcon,
   DoorOpen as DoorOpenIcon,
   Settings as SettingsIcon,
+  Brain as BrainIcon,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -82,6 +83,7 @@ export default function AdminSidebar({ lng, title, translations }: { lng: string
         <NavItem href={`/${lng}/admin/decks`} label={translations.decks} icon={PaletteIcon} lng={lng} isCollapsed={isCollapsed} />
         <NavItem href={`/${lng}/admin/players`} label={translations.players} icon={UsersIcon} lng={lng} isCollapsed={isCollapsed} />
         <NavItem href={`/${lng}/admin/lobbies`} label={translations.lobbies} icon={DoorOpenIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/ai`} label={translations.ai} icon={BrainIcon} lng={lng} isCollapsed={isCollapsed} />
         <NavItem href={`/${lng}/admin/settings`} label={translations.settings} icon={SettingsIcon} lng={lng} isCollapsed={isCollapsed} />
       </nav>
 

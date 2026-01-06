@@ -9,6 +9,7 @@ import {
   Users as UsersIcon,
   DoorOpen as DoorOpenIcon,
   Settings as SettingsIcon,
+  Brain as BrainIcon,
 } from 'lucide-react'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
@@ -45,6 +46,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
           decks: t('decks'),
           players: t('players'),
           lobbies: t('lobbies'),
+          ai: t('ai') || 'AI',
           settings: t('settings'),
         }}
       />

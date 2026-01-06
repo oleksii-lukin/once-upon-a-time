@@ -48,7 +48,7 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
               const playerName = playedByPlayer ? getPlayerDisplayName(playedByPlayer) : t('game.unknown_player')
 
               return (
-                <div key={card.id} className="w-32 flex flex-col gap-1 group relative">
+                <div key={card.id} className="w-80 flex flex-col gap-1 group relative">
                   <Card card={card} cardBackImageUrl={deck?.card_back_image_url} categoryImages={deck?.category_images as Record<string, string> | null} />
                   {/* Tooltip-like indicator for who played the card */}
                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-20">

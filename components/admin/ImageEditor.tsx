@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import { Crop, Wand2, Undo, Save, Loader2, X, RefreshCw, Scissors } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -22,6 +24,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageHistory, setImageHistory] = useState<ImageData[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [isContiguous, setIsContiguous] = useState(true)
 
   // Crop state
   const [cropStart, setCropStart] = useState<{ x: number, y: number } | null>(null)
@@ -229,31 +232,68 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       const imgData = ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height)
       const data = imgData.data
       const tol = tolerance[0]
+      const width = canvasRef.current.width
+      const height = canvasRef.current.height
 
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i]
-        const g = data[i + 1]
-        const b = data[i + 2]
+      // Helper to check color match
+      const isMatch = (idx: number) => {
+        const r = data[idx]
+        const g = data[idx + 1]
+        const b = data[idx + 2]
 
-        // Euclidean distance (simple)
-        // Sqrt((r1-r2)^2 + ...)
-        // Or just sum of diffs for speed? Let's use simple diff sum or proper color distance.
-        // Using sum of absolute differences is fast and often 'good enough' for this UI.
-        // const diff = Math.abs(r - targetR) + Math.abs(g - targetG) + Math.abs(b - targetB)
-
-        // Let's use Euclidean for better accuracy
         const dist = Math.sqrt(
           Math.pow(r - targetR, 2) +
           Math.pow(g - targetG, 2) +
           Math.pow(b - targetB, 2)
         )
+        // tolerance X means match within distance X * 4.4 roughly matching the global logic
+        return dist <= tol * 4.4
+      }
 
-        // Normalize distance to 0-100 range roughly? max dist is sqrt(255^2 * 3) ~ 441
-        // Tolerance slider 0-100.
-        // Let's say tolerance X means match within distance X * 4.4
+      if (!isContiguous) {
+        // Global replacement (existing logic)
+        for (let i = 0; i < data.length; i += 4) {
+          // Re-implementing logic here to use the shared isMatch if possible, 
+          // but keeping loop simple for performance as before
+          if (isMatch(i)) {
+            data[i + 3] = 0
+          }
+        }
+      } else {
+        // Contiguous replacement (Flood Fill)
+        const startX = Math.floor(clickX)
+        const startY = Math.floor(clickY)
+        const startIdx = (startY * width + startX) * 4
 
-        if (dist <= tol * 4.4) {
-          data[i + 3] = 0 // Set Alpha to 0
+        // If start pixel doesn't match or is already transparent? 
+        // Usually we want to erase the color we clicked on.
+        // But if we clicked on transparent, maybe we shouldn't do anything?
+        // Let's assume we proceed if it matches target (which it should, as it IS target).
+        // Actually, logic above defined target from clicked pixel.
+
+        if (data[startIdx + 3] !== 0) { // Only if not already transparent
+          const stack = [[startX, startY]]
+          const visited = new Uint8Array(width * height) // 0 = unvisited, 1 = visited
+
+          while (stack.length > 0) {
+            const [x, y] = stack.pop()!
+            const idx = (y * width + x) * 4
+            const visitedIdx = y * width + x
+
+            if (x < 0 || x >= width || y < 0 || y >= height) continue
+            if (visited[visitedIdx]) continue
+            visited[visitedIdx] = 1
+
+            if (isMatch(idx)) {
+              data[idx + 3] = 0 // Erase
+
+              // Add neighbors
+              stack.push([x + 1, y])
+              stack.push([x - 1, y])
+              stack.push([x, y + 1])
+              stack.push([x, y - 1])
+            }
+          }
         }
       }
 
@@ -372,6 +412,19 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
                 className="w-[200px]"
               />
               <span className="text-xs text-muted-foreground">{t('admin.imageEditor.magic_hint')}</span>
+
+              <div className="w-px h-6 bg-border mx-2" />
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="contiguous-mode"
+                  checked={isContiguous}
+                  onCheckedChange={setIsContiguous}
+                />
+                <Label htmlFor="contiguous-mode" className="text-xs cursor-pointer">
+                  {t('admin.imageEditor.contiguous')}
+                </Label>
+              </div>
             </div>
           )}
 

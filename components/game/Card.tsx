@@ -27,12 +27,13 @@ interface CardProps {
   isHoverable?: boolean
   onClick?: () => void
   className?: string
+  cardBackImageUrl?: string | null
 }
 
 import { useTranslation } from 'react-i18next'
 import { getLocalizedCardContent } from '@/utils/gameUtils'
 
-export default function Card({ card, isHoverable = false, onClick, className = '' }: CardProps) {
+export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
 
@@ -52,7 +53,7 @@ export default function Card({ card, isHoverable = false, onClick, className = '
       {/* Base Border Background */}
       <div
         className="absolute inset-0 bg-cover bg-center z-20 pointer-events-none"
-        style={{ backgroundImage: `url("/images/cards/Border.jpg")` }}
+        style={{ backgroundImage: `url("${cardBackImageUrl || '/images/cards/Border.jpg'}")` }}
       />
 
       {/* Main Card Image Area - Centered in the frame */}

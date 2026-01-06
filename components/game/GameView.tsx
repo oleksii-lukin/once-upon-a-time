@@ -17,6 +17,7 @@ type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
 type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, played_by?: string }
 type GameSession = Database['public']['Tables']['game_sessions']['Row']
+type Deck = Database['public']['Tables']['decks']['Row']
 
 interface GameViewProps {
   lobby: Lobby
@@ -30,6 +31,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const [hand, setHand] = useState<CardData[]>([])
   const [playedCards, setPlayedCards] = useState<CardData[]>([])
   const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
+  const [deck, setDeck] = useState<Deck | null>(null)
   const supabase = createClient()
   const router = useRouter()
   const params = useParams()
@@ -58,6 +60,20 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       fetchAdminStatus()
     }
   }, [currentUserId, supabase])
+
+  useEffect(() => {
+    if (lobby.deck_id) {
+      const fetchDeck = async () => {
+        const { data } = await supabase
+          .from('decks')
+          .select('*')
+          .eq('id', lobby.deck_id)
+          .single()
+        if (data) setDeck(data)
+      }
+      fetchDeck()
+    }
+  }, [lobby.deck_id, supabase])
 
   const fetchGameState = useCallback(async () => {
     // Get game session for this lobby
@@ -264,7 +280,11 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"
-        style={{ backgroundImage: 'url(\'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys\')' }}
+        style={{
+          backgroundImage: deck?.bg_image_url
+            ? `url('${deck.bg_image_url}')`
+            : 'url(\'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys\')',
+        }}
       >
       </div>
 

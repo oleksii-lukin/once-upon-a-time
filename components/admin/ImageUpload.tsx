@@ -88,9 +88,11 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
                 src={value}
                 alt={t('admin.deckEditor.imageUpload.uploadedImageAlt')}
                 fill
+                loading='eager'
                 className={`object-${objectFit}`}
                 sizes="(max-height: 266px) 100vw, 266px"
-                onLoadingComplete={(img) => {
+                onLoad={(event) => {
+                  const img = event.currentTarget as HTMLImageElement
                   if (img.naturalWidth && img.naturalHeight) {
                     setAspectRatio(img.naturalWidth / img.naturalHeight)
                   }

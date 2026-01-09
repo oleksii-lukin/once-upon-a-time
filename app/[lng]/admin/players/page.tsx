@@ -21,7 +21,7 @@ export default async function AdminPlayersPage({ params }: { params: Promise<{ l
       <div className="flex flex-col gap-1 mb-8">
         <h1 className="text-3xl font-bold tracking-tight">{t('players')}</h1>
         <p className="text-muted-foreground">
-          {t('admin_players_subtitle') || 'Manage and view all registered players'}
+          {t('admin_players_subtitle')}
         </p>
       </div>
 

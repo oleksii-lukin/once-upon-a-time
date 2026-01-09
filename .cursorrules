@@ -50,3 +50,9 @@
 - Use Clerk for authentication
 - Use Clerk's built-in hooks for authentication
 - Use Clerk's built-in components for authentication
+
+## Localization
+- Use Next.js i18next for localization
+- Use getTranslation function for server side code
+- Use useTranslation hook for client side code
+- Use simple pattern of `{t('translation_key')}` for translation, don't use fallbacks like `{t('translation_key') || 'Fallback Translation'}`

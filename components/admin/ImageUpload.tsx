@@ -104,7 +104,7 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
                   <button
                     onClick={() => setIsEditorOpen(true)}
                     className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-                    title={t('edit_image') || 'Edit Image'}
+                    title={t('admin.deckEditor.imageUpload.edit_image')}
                     type="button"
                   >
                     <Wand2 className="w-5 h-5" />
@@ -115,7 +115,7 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
                       onRemove?.()
                     }}
                     className="p-2 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors"
-                    title={t('remove_image') || 'Remove Image'}
+                    title={t('admin.deckEditor.imageUpload.remove_image')}
                     type="button"
                   >
                     <X className="w-5 h-5" />

@@ -14,7 +14,7 @@ export default async function AdminSettingsPage({ params }: { params: Promise<{ 
       <div className="flex flex-col gap-1 mb-8">
         <h1 className="text-3xl font-bold tracking-tight">{t('settings')}</h1>
         <p className="text-muted-foreground">
-          {t('admin_settings_subtitle') || 'Global application settings and configuration'}
+          {t('admin_settings_subtitle')}
         </p>
       </div>
 

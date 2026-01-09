@@ -26,7 +26,7 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
       <div className="flex flex-col gap-1 mb-8">
         <h1 className="text-3xl font-bold tracking-tight">{t('dashboard')}</h1>
         <p className="text-muted-foreground">
-          {t('admin_dashboard_subtitle') || 'Application overview and statistics'}
+          {t('admin_dashboard_subtitle')}
         </p>
       </div>
 
@@ -35,25 +35,25 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
           title={t('players')}
           value={playersCount || 0}
           icon={Users}
-          description={t('total_registered_players') || 'Total registered players'}
+          description={t('total_registered_players')}
         />
         <StatsCard
           title={t('active_lobbies')}
           value={activeLobbiesCount || 0}
           icon={DoorOpen}
-          description={t('lobbies_currently_active') || 'Lobbies currently active'}
+          description={t('lobbies_currently_active')}
         />
         <StatsCard
           title={t('decks')}
           value={decksCount || 0}
           icon={Palette}
-          description={t('total_decks_available') || 'Total decks available'}
+          description={t('total_decks_available')}
         />
         <StatsCard
-          title={t('total_cards') || 'Total Cards'}
+          title={t('total_cards')}
           value={cardsCount || 0}
           icon={Layers}
-          description={t('cards_across_decks') || 'Cards across all decks'}
+          description={t('cards_across_decks')}
         />
       </div>
     </div>

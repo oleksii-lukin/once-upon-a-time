@@ -15,9 +15,9 @@ export default async function AdminAIPage({ params }: { params: Promise<{ lng: s
   return (
     <div className="p-8">
       <div className="flex flex-col gap-1 mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{t('ai_configuration') || 'AI Configuration'}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('ai_configuration')}</h1>
         <p className="text-muted-foreground">
-          {t('ai_configuration_subtitle') || 'Configure AI providers and settings for your application'}
+          {t('ai_configuration_subtitle')}
         </p>
       </div>
 

@@ -18,6 +18,7 @@
 - The application connects to the remote Supabase instance
 - Connection details are in `.env.local` (gitignored)
 - Use Supabase client libraries for all database operations
+- Supabase client libraries for client and server located at `/utils/supabase` and contain integration with Clerk authentication
 - After applying migrations, re-generate types from database and update all type instances used in the code for types that cannot be generated like JSONB fields
 
 ### Typing and Validation

@@ -25,17 +25,7 @@ export default async function AdminPlayersPage({ params }: { params: Promise<{ l
         </p>
       </div>
 
-      <PlayersTable
-        players={players || []}
-        translations={{
-          avatar: t('avatar'),
-          display_name: t('display_name'),
-          games_played: t('games_played'),
-          games_won: t('games_won'),
-          joined: t('joined'),
-          no_players_found: t('no_players_found'),
-        }}
-      />
+      <PlayersTable players={players || []} />
     </div>
   )
 }

@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Table,
   TableBody,
@@ -6,7 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
+import { useTranslation } from 'react-i18next'
+import Image from 'next/image'
 
 interface Player {
   user_id: string
@@ -19,30 +22,37 @@ interface Player {
 
 interface PlayersTableProps {
   players: Player[]
-  translations: any
 }
 
-export function PlayersTable({ players, translations }: PlayersTableProps) {
+export function PlayersTable({ players }: PlayersTableProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">{translations.avatar || 'Avatar'}</TableHead>
-            <TableHead>{translations.display_name || 'Display Name'}</TableHead>
-            <TableHead>{translations.games_played || 'Games Played'}</TableHead>
-            <TableHead>{translations.games_won || 'Games Won'}</TableHead>
-            <TableHead className="text-right">{translations.joined || 'Joined'}</TableHead>
+            <TableHead className="w-[100px]">{t('admin.playersTable.avatar')}</TableHead>
+            <TableHead>{t('admin.playersTable.displayName')}</TableHead>
+            <TableHead>{t('admin.playersTable.gamesPlayed')}</TableHead>
+            <TableHead>{t('admin.playersTable.gamesWon')}</TableHead>
+            <TableHead className="text-right">{t('admin.playersTable.joined')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {players.map(player => (
             <TableRow key={player.user_id}>
               <TableCell>
-                <div className="size-8 rounded-full overflow-hidden bg-muted">
+                <div className="size-8 rounded-full overflow-hidden bg-muted relative">
                   {player.avatar_url
                     ? (
-                        <img src={player.avatar_url} alt={player.display_name || ''} className="size-full object-cover" />
+                        <Image
+                          src={player.avatar_url}
+                          alt={player.display_name || ''}
+                          fill
+                          className="object-cover"
+                          sizes="32px"
+                        />
                       )
                     : (
                         <div className="size-full flex items-center justify-center text-xs font-bold">
@@ -55,14 +65,14 @@ export function PlayersTable({ players, translations }: PlayersTableProps) {
               <TableCell>{player.total_games_played}</TableCell>
               <TableCell>{player.total_games_won}</TableCell>
               <TableCell className="text-right">
-                {new Date(player.created_at).toLocaleDateString()}
+                {new Date(player.created_at).toLocaleDateString('en-US')}
               </TableCell>
             </TableRow>
           ))}
           {players.length === 0 && (
             <TableRow>
               <TableCell colSpan={5} className="h-24 text-center">
-                {translations.no_players_found || 'No players found.'}
+                {t('admin.playersTable.noPlayersFound')}
               </TableCell>
             </TableRow>
           )}

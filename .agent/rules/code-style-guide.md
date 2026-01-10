@@ -1,0 +1,65 @@
+---
+trigger: always_on
+---
+
+# Project Rules for Once Upon a Time
+
+## Database
+
+### Database Configuration
+- **CRITICAL**: This project uses a **REMOTE Supabase database**, NOT a local one
+- The database is connected via `supabase connect`
+- **NEVER** run `npx supabase db reset` or any local database commands
+- **NEVER** attempt to apply migrations locally
+- All database changes must be applied to the remote database
+
+### How to Apply Migrations
+1. Use Supabase Dashboard SQL Editor, OR
+2. Use `npx supabase db push` to push migrations to remote, OR
+3. Manually run SQL in the remote database
+
+### Database Access
+- The application connects to the remote Supabase instance
+- Connection details are in `.env.local` (gitignored)
+- Use Supabase client libraries for all database operations
+- Supabase client libraries for client and server located at `/utils/supabase` and contain integration with Clerk authentication
+- After applying migrations, re-generate types from database and update all type instances used in the code for types that cannot be generated like JSONB fields
+
+### Typing and Validation
+- Use Supabase-generated types from `@/supabase/types` for all DB interactions
+  - Use `Tables<'table'>` for read results
+  - Use `TablesInsert<'table'>` for inserts
+  - Avoid `any` for DB rows and payloads
+- For JSONB columns (e.g., `lobbies.settings`), define and use a Zod schema
+  - Schema: `LobbySettingsSchema` in `@/types/lobby`
+  - Defaults: `defaultLobbySettings`
+  - Always parse with `safeParse` and fall back to defaults on failure
+- For joined selects, type the composite, e.g. `Tables<'player_hands'> & { cards: Tables<'cards'> }`
+
+## UI
+
+### Components
+- Project uses tailwind and shadcn components when possible
+- For toasts we use Sonner according to shadcn recommedations
+
+### Icons
+- Use lucide-react icons
+- Add suffix for any icon in use, like UserIcon instead of just User
+
+## Framework
+- Project is built on Next.js and uses App Router
+- Project uses React Compiler, so avoid unnecessary optimizations like useMemo and useCallback, allow React Compiler to do it's job
+
+## Authentication
+- Use Clerk for authentication
+- Use Clerk's built-in hooks for authentication
+- Use Clerk's built-in components for authentication
+
+## Localization
+- Use Next.js i18next for localization
+- Use getTranslation function for server side code
+- Use useTranslation hook for client side code
+- Use simple pattern of `{t('translation_key')}` for translation, don't use fallbacks like `{t('translation_key') || 'Fallback Translation'}`
+
+## AI
+- Use Vercel AI SDK for AI interactions

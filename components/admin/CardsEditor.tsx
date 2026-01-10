@@ -8,7 +8,10 @@ import ImageUpload from './ImageUpload'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
+import { Wand2 as Wand2Icon, Loader2 as Loader2Icon } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
+import { generateCardNameAction } from '@/app/actions/ai'
+import { toast } from 'sonner'
 
 type Card = Database['public']['Tables']['cards']['Row'] & {
   type: 'story' | 'ending'
@@ -42,10 +45,11 @@ type FormData = {
 
 interface CardsEditorProps {
   deckId: string
+  deckName: string
   lng: string
 }
 
-export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
+export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps) {
   const { getToken } = useAuth()
   const { t } = getTranslation(lng, 'common')
 
@@ -70,6 +74,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
   })
   const [isSavingCard, setIsSavingCard] = useState(false)
   const [isCardSaved, setIsCardSaved] = useState(false)
+  const [isGeneratingName, setIsGeneratingName] = useState(false)
 
   // Define categories for filter checkboxes
   const categories = [
@@ -209,7 +214,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
 
     const token = await getToken({ template: 'supabase' })
     if (!token) {
-      alert('Authentication required. Please sign in again.')
+      toast.error(t('auth_required'))
       setIsSavingCard(false)
       return
     }
@@ -246,7 +251,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
 
       if (error) {
         console.error('Error updating card:', error)
-        alert(`Failed to update card: ${error.message}`)
+        toast.error(t('failed_to_update_card', { error: error.message }))
       }
       else {
         await fetchCards()
@@ -267,7 +272,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
 
       if (error) {
         console.error('Error creating card:', error)
-        alert(`Failed to create card: ${error.message}`)
+        toast.error(t('failed_to_create_card', { error: error.message }))
       }
       else {
         await fetchCards()
@@ -283,14 +288,14 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
 
     const token = await getToken({ template: 'supabase' })
     if (!token) {
-      alert('Authentication required. Please sign in again.')
+      toast.error(t('auth_required'))
       return
     }
     const supabase = createClient(token)
     const { error } = await supabase.from('cards').delete().eq('id', id)
     if (error) {
       console.error('Error deleting card:', error)
-      alert(`Failed to delete card: ${error.message}`)
+      toast.error(t('failed_to_delete_card', { error: error.message }))
     }
     else {
       fetchCards()
@@ -324,6 +329,43 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
     return formData.translations[lang]?.[field] || ''
   }
 
+  const handleGenerateName = async () => {
+    setIsGeneratingName(true)
+    try {
+      const result = await generateCardNameAction(
+        deckName,
+        formData.type,
+        formData.type === 'story' ? formData.category : null
+      )
+
+      if (result.success && result.data) {
+        // Update all locales at once
+        setFormData(prev => ({
+          ...prev,
+          name: result.data!.en,
+          translations: {
+            ...prev.translations,
+            ru: {
+              ...prev.translations.ru,
+              name: result.data!.ru,
+            },
+            ua: {
+              ...prev.translations.ua,
+              name: result.data!.ua,
+            },
+          },
+        }))
+      } else {
+        toast.error(result.error || t('failed_to_generate_name'))
+      }
+    } catch (error) {
+      console.error('Failed to generate name:', error)
+      toast.error(t('unexpected_error'))
+    } finally {
+      setIsGeneratingName(false)
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col md:flex-row gap-6 overflow-hidden min-h-0">
       {/* Left Column: Card List */}
@@ -344,7 +386,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
                 className={`px-2 py-1 rounded border transition-colors ${selectedCategories.has(cat.id)
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -400,14 +442,14 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
           <h3 className="text-foreground text-lg font-bold flex items-center gap-2">
             {selectedCard
               ? (
-                  <>
-                    <span className="text-muted-foreground font-normal text-base">
-                      {t('edit_card')}
-                      :
-                    </span>
-                    <span className="truncate max-w-[200px]">{selectedCard.name}</span>
-                  </>
-                )
+                <>
+                  <span className="text-muted-foreground font-normal text-base">
+                    {t('edit_card')}
+                    :
+                  </span>
+                  <span className="truncate max-w-[200px]">{selectedCard.name}</span>
+                </>
+              )
               : t('add_new_card')}
           </h3>
           <div className="flex gap-2 items-center">
@@ -450,7 +492,7 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
                 ? 'bg-primary text-white'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-              }`}
+                }`}
             >
               {lang.toUpperCase()}
             </button>
@@ -467,13 +509,28 @@ export default function CardsEditor({ deckId, lng }: CardsEditorProps) {
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <input
-                type="text"
-                value={getValue('name')}
-                onChange={e => updateField('name', e.target.value)}
-                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
-                placeholder={t('admin.deckEditor.placeholders.cardNameExample')}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={getValue('name')}
+                  onChange={e => updateField('name', e.target.value)}
+                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
+                  placeholder={t('admin.deckEditor.placeholders.cardNameExample')}
+                />
+                <button
+                  type="button"
+                  onClick={handleGenerateName}
+                  disabled={isGeneratingName}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary disabled:opacity-50"
+                  title={t('generate_with_ai')}
+                >
+                  {isGeneratingName ? (
+                    <Loader2Icon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2Icon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </label>
 
             <div className="grid grid-cols-2 gap-4">

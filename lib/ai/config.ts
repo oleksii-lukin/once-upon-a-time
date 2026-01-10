@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI as createCustomOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { getAISettings } from '@/lib/settings'
 
 export interface AIProvider {
   name: string
@@ -133,4 +134,72 @@ export function updateAIConfig(config: Partial<AIConfig>): AIConfig {
   // For now, just return the merged config
   const currentConfig = getAIConfig()
   return { ...currentConfig, ...config }
+}
+
+export async function getRuntimeAIConfig(): Promise<AIConfig> {
+  try {
+    const settings = await getAISettings()
+
+    if (!settings || Object.keys(settings).length === 0) {
+      return defaultAIConfig
+    }
+
+    const defaultProviderType = (settings.ai_default_provider as string) || 'lm-studio'
+
+    const providers: AIProvider[] = [
+      {
+        name: 'LM Studio',
+        type: 'lm-studio',
+        baseURL: (settings.lm_studio_url as string) || 'http://localhost:1234/v1',
+        model: (settings.lm_studio_model as string) || 'auto',
+        apiKey: (settings.lm_studio_api_key as string) || undefined,
+      },
+      {
+        name: 'OpenAI',
+        type: 'openai',
+        baseURL: (settings.openai_base_url as string) || 'https://api.openai.com/v1',
+        model: (settings.openai_model as string) || 'gpt-4o-mini',
+        apiKey: (settings.openai_api_key as string) || undefined,
+      },
+      {
+        name: 'Gemini',
+        type: 'gemini',
+        model: (settings.gemini_model as string) || 'gemini-1.5-flash',
+        apiKey: (settings.gemini_api_key as string) || undefined,
+      },
+      {
+        name: 'Claude',
+        type: 'anthropic',
+        model: (settings.anthropic_model as string) || 'claude-3-5-haiku-20241022',
+        apiKey: (settings.anthropic_api_key as string) || undefined,
+      },
+      {
+        name: 'Groq',
+        type: 'groq',
+        baseURL: 'https://api.groq.com/openai/v1',
+        model: (settings.groq_model as string) || 'llama-3.3-70b-versatile',
+        apiKey: (settings.groq_api_key as string) || undefined,
+      },
+      {
+        name: 'Together AI',
+        type: 'together',
+        baseURL: 'https://api.together.xyz/v1',
+        model: (settings.together_model as string) || 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+        apiKey: (settings.together_api_key as string) || undefined,
+      },
+    ]
+
+    const defaultProvider = providers.find(p => p.type === defaultProviderType) || providers[0]
+
+    return {
+      enabled: (settings.ai_enabled as boolean) ?? true,
+      defaultProvider,
+      providers,
+      streamResponses: (settings.ai_stream_responses as boolean) ?? true,
+    }
+  }
+  catch (error) {
+    console.error('Error loading AI config from settings:', error)
+    return defaultAIConfig
+  }
 }

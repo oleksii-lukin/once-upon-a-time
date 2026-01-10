@@ -1,5 +1,5 @@
 import { generateText, streamText } from 'ai'
-import { createAIModel, getAIConfig, AIProvider } from './config'
+import { createAIModel, getRuntimeAIConfig, AIProvider } from './config'
 
 export interface AIResponse {
   text: string
@@ -23,7 +23,7 @@ export async function generateAIResponse(
   prompt: string,
   provider?: AIProvider,
 ): Promise<AIResponse> {
-  const config = getAIConfig()
+  const config = await getRuntimeAIConfig()
 
   if (!config.enabled) {
     throw new Error('AI features are disabled')
@@ -56,7 +56,7 @@ export async function streamAIResponse(
   prompt: string,
   provider?: AIProvider,
 ): Promise<AIStreamResponse> {
-  const config = getAIConfig()
+  const config = await getRuntimeAIConfig()
 
   if (!config.enabled) {
     throw new Error('AI features are disabled')

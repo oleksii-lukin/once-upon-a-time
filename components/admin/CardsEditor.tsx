@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import ImageUpload from './ImageUpload'
@@ -52,7 +53,12 @@ interface CardsEditorProps {
 
 export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps) {
   const { getToken } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { t } = getTranslation(lng, 'common')
+
+  const selectedCardId = searchParams.get('card')
 
   const [cards, setCards] = useState<Card[]>([])
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
@@ -107,23 +113,6 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     if (data) setCards(data as unknown as Card[])
   }, [deckId, getToken])
 
-  useEffect(() => {
-    let isCancelled = false
-
-    const fetchData = async () => {
-      await fetchCards()
-      if (!isCancelled) {
-        // State updates are handled inside fetchCards
-      }
-    }
-
-    fetchData()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [fetchCards])
-
   const toggleCategory = (categoryId: string) => {
     const newCategories = new Set(selectedCategories)
 
@@ -167,10 +156,23 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     return matchesSearch && matchesCategory
   })
 
-  const handleCardSelect = (card: Card | null) => {
+  const handleCardSelect = useCallback((card: Card | null, updateUrl = true) => {
     setSelectedCard(card)
     setActiveLang('en')
     setDiscardedNames([])
+
+    // Update URL when card selection changes
+    if (updateUrl) {
+      const params = new URLSearchParams(searchParams)
+      if (card) {
+        params.set('card', card.id)
+      }
+      else {
+        params.delete('card')
+      }
+      router.replace(`${pathname}?${params.toString()}`)
+    }
+
     if (card) {
       setFormData({
         name: card.name,
@@ -207,7 +209,30 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         },
       })
     }
-  }
+  }, [searchParams, router, pathname])
+
+  useEffect(() => {
+    let isCancelled = false
+
+    const fetchData = async () => {
+      await fetchCards()
+      if (!isCancelled) {
+        // Set selected card from URL after cards are loaded
+        if (selectedCardId) {
+          const card = cards.find(c => c.id === selectedCardId)
+          if (card) {
+            handleCardSelect(card, false) // Don't update URL when initializing from URL
+          }
+        }
+      }
+    }
+
+    fetchData()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [fetchCards, selectedCardId, cards, handleCardSelect])
 
   const handleSave = async () => {
     if (!formData.name) {

@@ -16,6 +16,8 @@ export async function generateCardFieldAction(
 
     const prompt = `${systemPrompt}\n\nUSER REQUEST:\n${userPrompt}`
 
+    console.log('Prompt:', prompt)
+
     const response = await generateAIResponse(prompt)
 
     // Clean potential markdown formatting

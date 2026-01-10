@@ -633,39 +633,38 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
-            <label className="block">
-              <span className="text-muted-foreground text-sm font-medium block mb-1">
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-muted-foreground text-sm font-medium">
                 {t('card_name')}
                 {' '}
                 (
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={getValue('name')}
-                  onChange={e => updateField('name', e.target.value)}
-                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
-                  placeholder={t('admin.deckEditor.placeholders.cardNameExample')}
-                />
-                <button
-                  type="button"
-                  onClick={handleGenerateName}
-                  disabled={isGeneratingName}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary disabled:opacity-50"
-                  title={t('generate_with_ai')}
-                >
-                  {isGeneratingName
-                    ? (
-                        <Loader2Icon className="w-4 h-4 animate-spin" />
-                      )
-                    : (
-                        <Wand2Icon className="w-4 h-4" />
-                      )}
-                </button>
-              </div>
-            </label>
+              <button
+                type="button"
+                onClick={handleGenerateName}
+                disabled={isGeneratingName}
+                className="text-muted-foreground hover:text-primary disabled:opacity-50 flex items-center gap-1 text-xs"
+                title={t('generate_with_ai')}
+              >
+                {isGeneratingName
+                  ? (
+                      <Loader2Icon className="w-3 h-3 animate-spin" />
+                    )
+                  : (
+                      <Wand2Icon className="w-3 h-3" />
+                    )}
+                {t('generate_with_ai')}
+              </button>
+            </div>
+            <input
+              type="text"
+              value={getValue('name')}
+              onChange={e => updateField('name', e.target.value)}
+              className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
+              placeholder={t('admin.deckEditor.placeholders.cardNameExample')}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
@@ -726,70 +725,68 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
           </div>
 
           <div className="space-y-6">
-            <label className="block">
-              <span className="text-muted-foreground text-sm font-medium block mb-1">
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-muted-foreground text-sm font-medium">
                 {t('description')}
                 {' '}
                 (
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <div className="relative">
-                <textarea
-                  value={getValue('description')}
-                  onChange={e => updateField('description', e.target.value)}
-                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
-                  placeholder={t('admin.deckEditor.placeholders.cardDescription')}
-                />
-                <button
-                  type="button"
-                  onClick={handleGenerateDescription}
-                  disabled={isGeneratingDescription}
-                  className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
-                  title={t('generate_with_ai')}
-                >
-                  {isGeneratingDescription
-                    ? (
-                        <Loader2Icon className="w-4 h-4 animate-spin" />
-                      )
-                    : (
-                        <Wand2Icon className="w-4 h-4" />
-                      )}
-                </button>
-              </div>
-            </label>
-            <label className="block">
-              <span className="text-muted-foreground text-sm font-medium block mb-1">
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDescription}
+                className="text-muted-foreground hover:text-primary disabled:opacity-50 flex items-center gap-1 text-xs"
+                title={t('generate_with_ai')}
+              >
+                {isGeneratingDescription
+                  ? (
+                      <Loader2Icon className="w-3 h-3 animate-spin" />
+                    )
+                  : (
+                      <Wand2Icon className="w-3 h-3" />
+                    )}
+                {t('generate_with_ai')}
+              </button>
+            </div>
+            <textarea
+              value={getValue('description')}
+              onChange={e => updateField('description', e.target.value)}
+              className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
+              placeholder={t('admin.deckEditor.placeholders.cardDescription')}
+            />
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-muted-foreground text-sm font-medium">
                 {t('usage_examples')}
                 {' '}
                 (
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <div className="relative">
-                <textarea
-                  value={getValue('usage_examples')}
-                  onChange={e => updateField('usage_examples', e.target.value)}
-                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
-                  placeholder={t('admin.deckEditor.placeholders.usageExamples')}
-                />
-                <button
-                  type="button"
-                  onClick={handleGenerateUsageExamples}
-                  disabled={isGeneratingUsage}
-                  className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
-                  title={t('generate_with_ai')}
-                >
-                  {isGeneratingUsage
-                    ? (
-                        <Loader2Icon className="w-4 h-4 animate-spin" />
-                      )
-                    : (
-                        <Wand2Icon className="w-4 h-4" />
-                      )}
-                </button>
-              </div>
-            </label>
+              <button
+                type="button"
+                onClick={handleGenerateUsageExamples}
+                disabled={isGeneratingUsage}
+                className="text-muted-foreground hover:text-primary disabled:opacity-50 flex items-center gap-1 text-xs"
+                title={t('generate_with_ai')}
+              >
+                {isGeneratingUsage
+                  ? (
+                      <Loader2Icon className="w-3 h-3 animate-spin" />
+                    )
+                  : (
+                      <Wand2Icon className="w-3 h-3" />
+                    )}
+                {t('generate_with_ai')}
+              </button>
+            </div>
+            <textarea
+              value={getValue('usage_examples')}
+              onChange={e => updateField('usage_examples', e.target.value)}
+              className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
+              placeholder={t('admin.deckEditor.placeholders.usageExamples')}
+            />
           </div>
         </div>
       </div>

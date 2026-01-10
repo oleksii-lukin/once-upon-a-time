@@ -1,7 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { createOpenAI as createCustomOpenAI } from '@ai-sdk/openai'
+import { createGroq } from '@ai-sdk/groq'
+import { createTogetherAI } from '@ai-sdk/togetherai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { getAISettings } from '@/lib/settings'
 
@@ -91,32 +92,56 @@ export function createAIModel(provider: AIProvider) {
         apiKey: provider.apiKey || 'lm-studio',
       }).chatModel(provider.model)
 
-    case 'openai':
+    case 'openai': {
+      const apiKey = provider.apiKey || process.env.OPENAI_API_KEY
+      if (!apiKey) {
+        throw new Error('OpenAI API key is missing. Please provide it in the AI settings or as OPENAI_API_KEY environment variable.')
+      }
       return createOpenAI({
-        apiKey: provider.apiKey || process.env.OPENAI_API_KEY,
+        apiKey,
         baseURL: provider.baseURL,
       })(provider.model)
+    }
 
-    case 'gemini':
+    case 'gemini': {
+      const apiKey = provider.apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      if (!apiKey) {
+        throw new Error('Gemini API key is missing. Please provide it in the AI settings or as GOOGLE_GENERATIVE_AI_API_KEY environment variable.')
+      }
       return createGoogleGenerativeAI({
-        apiKey: provider.apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+        apiKey,
       })(provider.model)
+    }
 
-    case 'anthropic':
+    case 'anthropic': {
+      const apiKey = provider.apiKey || process.env.ANTHROPIC_API_KEY
+      if (!apiKey) {
+        throw new Error('Anthropic API key is missing. Please provide it in the AI settings or as ANTHROPIC_API_KEY environment variable.')
+      }
       return createAnthropic({
-        apiKey: provider.apiKey || process.env.ANTHROPIC_API_KEY,
+        apiKey,
       })(provider.model)
-    case 'groq':
-      return createOpenAI({
-        apiKey: provider.apiKey || process.env.GROQ_API_KEY,
-        baseURL: 'https://api.groq.com/openai/v1',
-      })(provider.model)
+    }
 
-    case 'together':
-      return createOpenAI({
-        apiKey: provider.apiKey || process.env.TOGETHER_API_KEY,
-        baseURL: 'https://api.together.xyz/v1',
+    case 'groq': {
+      const apiKey = provider.apiKey || process.env.GROQ_API_KEY
+      if (!apiKey) {
+        throw new Error('Groq API key is missing. Please provide it in the AI settings or as GROQ_API_KEY environment variable.')
+      }
+      return createGroq({
+        apiKey,
       })(provider.model)
+    }
+
+    case 'together': {
+      const apiKey = provider.apiKey || process.env.TOGETHER_API_KEY
+      if (!apiKey) {
+        throw new Error('Together AI API key is missing. Please provide it in the AI settings or as TOGETHER_API_KEY environment variable.')
+      }
+      return createTogetherAI({
+        apiKey,
+      })(provider.model)
+    }
 
     default:
       throw new Error(`Unsupported AI provider: ${provider.type}`)

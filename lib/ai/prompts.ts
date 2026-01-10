@@ -66,29 +66,31 @@ export const getCardGenerationUserPrompt = (
   type: 'story' | 'ending',
   category: string | null,
   fieldType: CardFieldType,
-  cardName?: string
+  cardName?: string,
+  excludedNames?: string[]
 ) => {
   const context = cardName ? ` for a card named "${cardName}"` : '';
   const cardType = type === 'ending' ? 'Ending Card' : `Story Card (Category: ${category || 'general'})`;
 
+  let prompt = '';
+
   if (fieldType === 'all') {
-    return `Generate all fields for a new "${cardType}". Ensure the name, description, and usage examples form a cohesive narrative whole.`;
-  }
-
-  if (fieldType === 'name') {
+    prompt = `Generate all fields for a new "${cardType}". Ensure the name, description, and usage examples form a cohesive narrative whole.`;
+  } else if (fieldType === 'name') {
     if (type === 'ending') {
-      return `Generate a name for an "${cardType}". It should be a concluding sentence fragment like "...and the journey changed them forever."`;
+      prompt = `Generate a name for an "${cardType}". It should be a concluding sentence fragment like "...and the journey changed them forever."`;
+    } else {
+      prompt = `Generate a name for a "${cardType}". It should be a short, evocative name like "The Reluctant Hero" or "The Haunted Forest".`;
     }
-    return `Generate a name for a "${cardType}". It should be a short, evocative name like "The Reluctant Hero" or "The Haunted Forest".`;
+  } else if (fieldType === 'description') {
+    prompt = `Generate a description for the "${cardType}"${context}. Focus on its narrative role and atmospheric feel.`;
+  } else if (fieldType === 'usage_examples') {
+    prompt = `Generate usage examples for the "${cardType}"${context}. Provide three distinct ways this card could advance or twist a story.`;
   }
 
-  if (fieldType === 'description') {
-    return `Generate a description for the "${cardType}"${context}. Focus on its narrative role and atmospheric feel.`;
+  if (excludedNames && excludedNames.length > 0) {
+    prompt += `\n\nDo not use these values: ${JSON.stringify(excludedNames)}`;
   }
 
-  if (fieldType === 'usage_examples') {
-    return `Generate usage examples for the "${cardType}"${context}. Provide three distinct ways this card could advance or twist a story.`;
-  }
-
-  return '';
+  return prompt;
 };

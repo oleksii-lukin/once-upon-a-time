@@ -8,11 +8,12 @@ export async function generateCardFieldAction(
   fieldType: CardFieldType,
   type: 'story' | 'ending',
   category: string | null,
-  cardName?: string
+  cardName?: string,
+  excludedNames?: string[]
 ) {
   try {
     const systemPrompt = getCardGenerationSystemPrompt(deckName, fieldType)
-    const userPrompt = getCardGenerationUserPrompt(type, category, fieldType, cardName)
+    const userPrompt = getCardGenerationUserPrompt(type, category, fieldType, cardName, excludedNames)
 
     const prompt = `${systemPrompt}\n\nUSER REQUEST:\n${userPrompt}`
 
@@ -133,7 +134,8 @@ export async function generateCardFieldAction(
 export async function generateCardNameAction(
   deckName: string,
   type: 'story' | 'ending',
-  category: string | null
+  category: string | null,
+  excludedNames?: string[]
 ) {
-  return generateCardFieldAction(deckName, 'name', type, category)
+  return generateCardFieldAction(deckName, 'name', type, category, undefined, excludedNames)
 }

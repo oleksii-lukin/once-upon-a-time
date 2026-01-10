@@ -79,6 +79,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [isGeneratingUsage, setIsGeneratingUsage] = useState(false)
   const [isGeneratingAll, setIsGeneratingAll] = useState(false)
+  const [discardedNames, setDiscardedNames] = useState<string[]>([])
 
   // Define categories for filter checkboxes
   const categories = [
@@ -169,6 +170,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const handleCardSelect = (card: Card | null) => {
     setSelectedCard(card)
     setActiveLang('en')
+    setDiscardedNames([])
     if (card) {
       setFormData({
         name: card.name,
@@ -344,6 +346,23 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     const setGenerating = setGeneratingMap[fieldType]
     if (!setGenerating) return
 
+    // If generating name or all, add current name to discarded list
+    let currentDiscarded = [...discardedNames]
+    if ((fieldType === 'name' || fieldType === 'all') && formData.name) {
+      if (!discardedNames.includes(formData.name)) {
+        currentDiscarded.push(formData.name)
+        setDiscardedNames(currentDiscarded)
+      }
+    }
+
+    // Add existing cards of the same type/category to the exclusion list
+    const existingNames = cards
+      .filter(c => c.id !== selectedCard?.id) // Don't exclude itself if editing
+      .filter(c => c.type === formData.type && c.category === formData.category)
+      .map(c => c.name)
+
+    const allExcluded = Array.from(new Set([...currentDiscarded, ...existingNames]))
+
     setGenerating(true)
     try {
       const result = await generateCardFieldAction(
@@ -351,7 +370,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         fieldType,
         formData.type,
         formData.type === 'story' ? formData.category : null,
-        formData.name || undefined
+        formData.name || undefined,
+        allExcluded
       )
 
       if (result.success && result.data) {

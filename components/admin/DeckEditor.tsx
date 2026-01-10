@@ -46,7 +46,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
             className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${activeTab === 'cards'
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-              }`}
+            }`}
           >
             {t('cards')}
           </button>
@@ -55,7 +55,7 @@ export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
             className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${activeTab === 'settings'
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-              }`}
+            }`}
           >
             {t('settings')}
           </button>

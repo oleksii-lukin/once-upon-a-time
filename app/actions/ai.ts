@@ -9,7 +9,7 @@ export async function generateCardFieldAction(
   type: 'story' | 'ending',
   category: string | null,
   cardName?: string,
-  excludedNames?: string[]
+  excludedNames?: string[],
 ) {
   try {
     const systemPrompt = getCardGenerationSystemPrompt(deckName, fieldType)
@@ -31,9 +31,11 @@ export async function generateCardFieldAction(
 
     if (jsonMatch) {
       content = jsonMatch[1].trim()
-    } else if (anyBlockMatch) {
+    }
+    else if (anyBlockMatch) {
       content = anyBlockMatch[1].trim()
-    } else {
+    }
+    else {
       // 2. No markdown blocks found, clean up think tags
       // Remove closed reasoning tokens (e.g. <think>...</think>)
       content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
@@ -57,14 +59,16 @@ export async function generateCardFieldAction(
     let data
     try {
       data = JSON.parse(content)
-    } catch (parseError) {
+    }
+    catch (parseError) {
       // If parsing fails, try one more aggressive cleanup: remove unescaped newlines in values
       try {
         const cleanedContent = content.replace(/":\s*"([\s\S]*?)"(?=\s*[,}])/, (match, p1) => {
           return `": ${JSON.stringify(p1.replace(/\\n/g, '\n'))}`
         })
         data = JSON.parse(cleanedContent)
-      } catch (secondError) {
+      }
+      catch (secondError) {
         console.error('AI JSON Parse Error:', parseError)
         console.error('Attempted to parse:', content)
         throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`)
@@ -79,7 +83,8 @@ export async function generateCardFieldAction(
           try {
             const nested = JSON.parse(val)
             return processField(nested)
-          } catch {
+          }
+          catch {
             return val
           }
         }
@@ -118,8 +123,8 @@ export async function generateCardFieldAction(
             name: processField(data.ua.name),
             description: processField(data.ua.description),
             usage_examples: processField(data.ua.usage_examples),
-          }
-        }
+          },
+        },
       }
     }
 
@@ -132,14 +137,15 @@ export async function generateCardFieldAction(
       data: {
         en: processField(data.en),
         ru: processField(data.ru),
-        ua: processField(data.ua)
-      }
+        ua: processField(data.ua),
+      },
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Error generating card ${fieldType}:`, error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : `Failed to generate ${fieldType}`
+      error: error instanceof Error ? error.message : `Failed to generate ${fieldType}`,
     }
   }
 }
@@ -149,7 +155,7 @@ export async function generateCardNameAction(
   deckName: string,
   type: 'story' | 'ending',
   category: string | null,
-  excludedNames?: string[]
+  excludedNames?: string[],
 ) {
   return generateCardFieldAction(deckName, 'name', type, category, undefined, excludedNames)
 }

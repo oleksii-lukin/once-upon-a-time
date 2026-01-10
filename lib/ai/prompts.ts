@@ -1,12 +1,12 @@
-export type CardFieldType = 'name' | 'description' | 'usage_examples' | 'all';
+export type CardFieldType = 'name' | 'description' | 'usage_examples' | 'all'
 
 export const getCardGenerationSystemPrompt = (deckName: string, fieldType: CardFieldType) => {
   const fieldDescriptions = {
     name: 'a short, evocative name for the card.',
     description: 'a rich, narrative description of the card\'s role or essence in the story. It should be 1-2 sentences long.',
     usage_examples: 'exactly three short, distinct story fragments or plot points where this card could be used. Each example should be a single sentence.',
-    all: 'all fields (name, description, and usage_examples) for the card.'
-  };
+    all: 'all fields (name, description, and usage_examples) for the card.',
+  }
 
   const jsonStructure = fieldType === 'all'
     ? `{
@@ -18,7 +18,7 @@ export const getCardGenerationSystemPrompt = (deckName: string, fieldType: CardF
   "en": "Value in English",
   "ru": "Значение на русском",
   "ua": "Значення українською"
-}`;
+}`
 
   return `
 You are an expert creative writer and game designer for a storytelling card game inspired by "Once Upon a Time".
@@ -59,38 +59,42 @@ IMPORTANT RULES:
 2. **Valid JSON**: ALWAYS include commas between properties. Ensure all internal double quotes are escaped (\\\").
 3. **No Preamble**: Do not include any other text, explanations, or code block markers other than the JSON itself.
 4. **Natural Flow**: Ensure the translations are natural and maintain the evocative tone.
-`;
-};
+`
+}
 
 export const getCardGenerationUserPrompt = (
   type: 'story' | 'ending',
   category: string | null,
   fieldType: CardFieldType,
   cardName?: string,
-  excludedNames?: string[]
+  excludedNames?: string[],
 ) => {
-  const context = cardName ? ` for a card named "${cardName}"` : '';
-  const cardType = type === 'ending' ? 'Ending Card' : `Story Card (Category: ${category || 'general'})`;
+  const context = cardName ? ` for a card named "${cardName}"` : ''
+  const cardType = type === 'ending' ? 'Ending Card' : `Story Card (Category: ${category || 'general'})`
 
-  let prompt = '';
+  let prompt = ''
 
   if (fieldType === 'all') {
-    prompt = `Generate all fields for a new "${cardType}". Ensure the name, description, and usage examples form a cohesive narrative whole.`;
-  } else if (fieldType === 'name') {
+    prompt = `Generate all fields for a new "${cardType}". Ensure the name, description, and usage examples form a cohesive narrative whole.`
+  }
+  else if (fieldType === 'name') {
     if (type === 'ending') {
-      prompt = `Generate a name for an "${cardType}". It should be a concluding sentence fragment like "...and the journey changed them forever."`;
-    } else {
-      prompt = `Generate a name for a "${cardType}". It should be a short, evocative name like "The Reluctant Hero" or "The Haunted Forest".`;
+      prompt = `Generate a name for an "${cardType}". It should be a concluding sentence fragment like "...and the journey changed them forever."`
     }
-  } else if (fieldType === 'description') {
-    prompt = `Generate a description for the "${cardType}"${context}. Focus on its narrative role and atmospheric feel.`;
-  } else if (fieldType === 'usage_examples') {
-    prompt = `Generate usage examples for the "${cardType}"${context}. Provide three distinct ways this card could advance or twist a story.`;
+    else {
+      prompt = `Generate a name for a "${cardType}". It should be a short, evocative name like "The Reluctant Hero" or "The Haunted Forest".`
+    }
+  }
+  else if (fieldType === 'description') {
+    prompt = `Generate a description for the "${cardType}"${context}. Focus on its narrative role and atmospheric feel.`
+  }
+  else if (fieldType === 'usage_examples') {
+    prompt = `Generate usage examples for the "${cardType}"${context}. Provide three distinct ways this card could advance or twist a story.`
   }
 
   if (excludedNames && excludedNames.length > 0) {
-    prompt += `\n\nDo not use these values: ${JSON.stringify(excludedNames)}`;
+    prompt += `\n\nDo not use these values: ${JSON.stringify(excludedNames)}`
   }
 
-  return prompt;
-};
+  return prompt
+}

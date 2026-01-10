@@ -190,7 +190,8 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
       if (result.success) {
         toast.success(t('ai_config.connection_test_successful'))
-      } else {
+      }
+      else {
         toast.error(result.error || t('ai_config.connection_test_failed'))
       }
     }
@@ -235,7 +236,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="lm-studio-url">{t('lm_studio_url')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://lmstudio.ai/docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -314,7 +317,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="openai-api-key">{t('api_key')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://platform.openai.com/docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -364,7 +369,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="gemini-api-key">{t('api_key')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://ai.google.dev/docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -404,7 +411,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="anthropic-api-key">{t('api_key')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://docs.anthropic.com/en/docs/welcome" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -445,7 +454,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="groq-api-key">{t('api_key')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://console.groq.com/docs/quickstart" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>
@@ -512,7 +523,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     <Label htmlFor="together-api-key">{t('api_key')}</Label>
                     <Button variant="link" size="sm" asChild className="h-auto p-0">
                       <a href="https://docs.together.ai/docs/quickstart" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs">
-                        {t('documentation')} <ExternalLinkIcon className="h-3 w-3" />
+                        {t('documentation')}
+                        {' '}
+                        <ExternalLinkIcon className="h-3 w-3" />
                       </a>
                     </Button>
                   </div>

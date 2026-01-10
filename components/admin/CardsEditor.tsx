@@ -340,14 +340,14 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       name: setIsGeneratingName,
       description: setIsGeneratingDescription,
       usage_examples: setIsGeneratingUsage,
-      all: setIsGeneratingAll
+      all: setIsGeneratingAll,
     }
 
     const setGenerating = setGeneratingMap[fieldType]
     if (!setGenerating) return
 
     // If generating name or all, add current name to discarded list
-    let currentDiscarded = [...discardedNames]
+    const currentDiscarded = [...discardedNames]
     if ((fieldType === 'name' || fieldType === 'all') && formData.name) {
       if (!discardedNames.includes(formData.name)) {
         currentDiscarded.push(formData.name)
@@ -371,7 +371,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         formData.type,
         formData.type === 'story' ? formData.category : null,
         formData.name || undefined,
-        allExcluded
+        allExcluded,
       )
 
       if (result.success && result.data) {
@@ -398,7 +398,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
               },
             },
           }))
-        } else {
+        }
+        else {
           const data = result.data as Record<string, string>
           setFormData(prev => ({
             ...prev,
@@ -416,13 +417,16 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
             },
           }))
         }
-      } else {
+      }
+      else {
         toast.error(result.error || t('failed_to_generate_field'))
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to generate ${fieldType}:`, error)
       toast.error(t('unexpected_error'))
-    } finally {
+    }
+    finally {
       setGenerating(false)
     }
   }
@@ -453,7 +457,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 className={`px-2 py-1 rounded border transition-colors ${selectedCategories.has(cat.id)
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                  }`}
+                }`}
               >
                 {cat.label}
               </button>
@@ -509,14 +513,14 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
           <h3 className="text-foreground text-lg font-bold flex items-center gap-2">
             {selectedCard
               ? (
-                <>
-                  <span className="text-muted-foreground font-normal text-base">
-                    {t('edit_card')}
-                    :
-                  </span>
-                  <span className="truncate max-w-[200px]">{selectedCard.name}</span>
-                </>
-              )
+                  <>
+                    <span className="text-muted-foreground font-normal text-base">
+                      {t('edit_card')}
+                      :
+                    </span>
+                    <span className="truncate max-w-[200px]">{selectedCard.name}</span>
+                  </>
+                )
               : t('add_new_card')}
           </h3>
           <div className="flex gap-2 items-center">
@@ -560,7 +564,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${activeLang === lang
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent'
-                  }`}
+                }`}
               >
                 {lang.toUpperCase()}
               </button>
@@ -574,11 +578,13 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
             className="gap-2 mb-1"
             title={t('generate_all')}
           >
-            {isGeneratingAll ? (
-              <Loader2Icon className="w-4 h-4 animate-spin" />
-            ) : (
-              <SparklesIcon className="w-4 h-4 text-amber-500" />
-            )}
+            {isGeneratingAll
+              ? (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                )
+              : (
+                  <SparklesIcon className="w-4 h-4 text-amber-500" />
+                )}
             {t('generate_all')}
           </Button>
         </div>
@@ -608,11 +614,13 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary disabled:opacity-50"
                   title={t('generate_with_ai')}
                 >
-                  {isGeneratingName ? (
-                    <Loader2Icon className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Wand2Icon className="w-4 h-4" />
-                  )}
+                  {isGeneratingName
+                    ? (
+                        <Loader2Icon className="w-4 h-4 animate-spin" />
+                      )
+                    : (
+                        <Wand2Icon className="w-4 h-4" />
+                      )}
                 </button>
               </div>
             </label>
@@ -698,11 +706,13 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
                   title={t('generate_with_ai')}
                 >
-                  {isGeneratingDescription ? (
-                    <Loader2Icon className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Wand2Icon className="w-4 h-4" />
-                  )}
+                  {isGeneratingDescription
+                    ? (
+                        <Loader2Icon className="w-4 h-4 animate-spin" />
+                      )
+                    : (
+                        <Wand2Icon className="w-4 h-4" />
+                      )}
                 </button>
               </div>
             </label>
@@ -728,11 +738,13 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
                   title={t('generate_with_ai')}
                 >
-                  {isGeneratingUsage ? (
-                    <Loader2Icon className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Wand2Icon className="w-4 h-4" />
-                  )}
+                  {isGeneratingUsage
+                    ? (
+                        <Loader2Icon className="w-4 h-4 animate-spin" />
+                      )
+                    : (
+                        <Wand2Icon className="w-4 h-4" />
+                      )}
                 </button>
               </div>
             </label>

@@ -21,12 +21,26 @@ export async function generateCardFieldAction(
 
     const response = await generateAIResponse(prompt)
 
-    // Clean potential markdown formatting
+    // Clean potential markdown formatting and reasoning tokens
     let content = response.text.trim()
-    if (content.startsWith('```json')) {
-      content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '')
-    } else if (content.startsWith('```')) {
-      content = content.replace(/^```\n?/, '').replace(/\n?```$/, '')
+
+    // 1. If there's a markdown block, extract it first as it's the most likely intention
+    // These blocks often follow or are mixed with reasoning tokens
+    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/)
+    const anyBlockMatch = content.match(/```\n?([\s\S]*?)\n?```/)
+
+    if (jsonMatch) {
+      content = jsonMatch[1].trim()
+    } else if (anyBlockMatch) {
+      content = anyBlockMatch[1].trim()
+    } else {
+      // 2. No markdown blocks found, clean up think tags
+      // Remove closed reasoning tokens (e.g. <think>...</think>)
+      content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+      // Handle unclosed tags if the response was cut off or malformed
+      if (content.includes('<think>')) {
+        content = content.replace(/<think>/g, '').trim()
+      }
     }
 
     // Defensive repair for Python-style triple quotes (common hallucination)

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,7 @@ import {
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from 'usehooks-ts'
 
 interface NavItemProps {
   href: string
@@ -50,21 +51,29 @@ function NavItem({ href, label, icon: Icon, isCollapsed }: NavItemProps) {
 
 export default function AdminSidebar({ lng }: { lng: string }) {
   const { t } = useTranslation()
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isClient, setIsClient] = React.useState(false)
+  const [isCollapsed, setIsCollapsed] = useLocalStorage('admin-sidebar-collapsed', false)
+
+  React.useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // During SSR and initial client render, use default state to avoid hydration mismatch
+  const displayCollapsed = isClient ? isCollapsed : false
 
   return (
     <aside
       className={cn(
         'flex flex-col border-r border-border bg-background transition-all duration-300 ease-in-out relative',
-        isCollapsed ? 'w-16' : 'w-64',
+        displayCollapsed ? 'w-16' : 'w-64',
       )}
     >
       <div className={cn(
         'flex h-16 items-center px-4 border-b border-border/50',
-        isCollapsed ? 'justify-center' : 'justify-between',
+        displayCollapsed ? 'justify-center' : 'justify-between',
       )}
       >
-        {!isCollapsed && (
+        {!displayCollapsed && (
           <h1 className="text-foreground text-lg font-bold truncate pr-2">
             {t('title')}
           </h1>
@@ -73,23 +82,23 @@ export default function AdminSidebar({ lng }: { lng: string }) {
           variant="ghost"
           size="icon"
           className="h-8 w-8 shrink-0"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => setIsCollapsed(!displayCollapsed)}
         >
-          {isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {displayCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-        <NavItem href={`/${lng}/admin`} label={t('dashboard')} icon={LayoutDashboardIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/decks`} label={t('decks')} icon={PaletteIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/players`} label={t('players')} icon={UsersIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/lobbies`} label={t('lobbies')} icon={DoorOpenIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/ai`} label={t('ai')} icon={BrainIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/settings`} label={t('settings')} icon={SettingsIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin`} label={t('dashboard')} icon={LayoutDashboardIcon} lng={lng} isCollapsed={displayCollapsed} />
+        <NavItem href={`/${lng}/admin/decks`} label={t('decks')} icon={PaletteIcon} lng={lng} isCollapsed={displayCollapsed} />
+        <NavItem href={`/${lng}/admin/players`} label={t('players')} icon={UsersIcon} lng={lng} isCollapsed={displayCollapsed} />
+        <NavItem href={`/${lng}/admin/lobbies`} label={t('lobbies')} icon={DoorOpenIcon} lng={lng} isCollapsed={displayCollapsed} />
+        <NavItem href={`/${lng}/admin/ai`} label={t('ai')} icon={BrainIcon} lng={lng} isCollapsed={displayCollapsed} />
+        <NavItem href={`/${lng}/admin/settings`} label={t('settings')} icon={SettingsIcon} lng={lng} isCollapsed={displayCollapsed} />
       </nav>
 
       <div className="p-4 border-t border-border/50 text-xs text-muted-foreground text-center">
-        {!isCollapsed ? 'v0.1.0' : 'v0.1'}
+        {!displayCollapsed ? 'v0.1.0' : 'v0.1'}
       </div>
     </aside>
   )

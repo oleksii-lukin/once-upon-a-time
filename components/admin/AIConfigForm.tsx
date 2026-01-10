@@ -106,9 +106,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{t('ai_provider_selection') || 'AI Provider Selection'}</CardTitle>
+          <CardTitle>{t('ai_provider_selection')}</CardTitle>
           <CardDescription>
-            {t('ai_provider_selection_desc') || 'Choose your preferred AI provider and configure connection settings'}
+            {t('ai_provider_selection_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -122,13 +122,13 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
             <TabsContent value="lm-studio" className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="secondary">{t('recommended') || 'Recommended'}</Badge>
-                <Badge variant="outline">{t('free') || 'Free'}</Badge>
+                <Badge variant="secondary">{t('recommended')}</Badge>
+                <Badge variant="outline">{t('free')}</Badge>
               </div>
 
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="lm-studio-url">{t('lm_studio_url') || 'LM Studio URL'}</Label>
+                  <Label htmlFor="lm-studio-url">{t('lm_studio_url')}</Label>
                   <Input
                     id="lm-studio-url"
                     value={lmStudioUrl}
@@ -138,30 +138,30 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="lm-studio-model">{t('model') || 'Model'}</Label>
+                  <Label htmlFor="lm-studio-model">{t('model')}</Label>
                   <Select value={lmStudioModel} onValueChange={setLmStudioModel}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('select_model') || 'Select model'} />
+                      <SelectValue placeholder={t('select_model')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="auto">{t('auto_detect') || 'Auto-detect'}</SelectItem>
+                      <SelectItem value="auto">{t('auto_detect')}</SelectItem>
                       <SelectItem value="llama-3.2-3b">{t('ai_config.llama_32_3b')}</SelectItem>
                       <SelectItem value="llama-3.2-8b">{t('ai_config.llama_32_8b')}</SelectItem>
                       <SelectItem value="llama-3.1-70b">{t('ai_config.llama_31_70b')}</SelectItem>
                       <SelectItem value="qwen-2.5-7b">{t('ai_config.qwen_25_7b')}</SelectItem>
-                      <SelectItem value="custom">{t('custom_model') || 'Custom Model'}</SelectItem>
+                      <SelectItem value="custom">{t('custom_model')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="lm-studio-api-key">{t('api_key') || 'API Key'}</Label>
+                  <Label htmlFor="lm-studio-api-key">{t('api_key')}</Label>
                   <Input
                     id="lm-studio-api-key"
                     type="password"
                     value={lmStudioApiKey}
                     onChange={e => setLmStudioApiKey(e.target.value)}
-                    placeholder={t('optional_api_key') || 'Optional (if required)'}
+                    placeholder={t('optional_api_key')}
                   />
                 </div>
               </div>
@@ -169,13 +169,13 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
             <TabsContent value="openai" className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline">{t('paid') || 'Paid'}</Badge>
-                <Badge variant="secondary">{t('popular') || 'Popular'}</Badge>
+                <Badge variant="outline">{t('paid')}</Badge>
+                <Badge variant="secondary">{t('popular')}</Badge>
               </div>
 
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="openai-api-key">{t('api_key') || 'API Key'}</Label>
+                  <Label htmlFor="openai-api-key">{t('api_key')}</Label>
                   <Input
                     id="openai-api-key"
                     type="password"
@@ -186,10 +186,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="openai-model">{t('model') || 'Model'}</Label>
+                  <Label htmlFor="openai-model">{t('model')}</Label>
                   <Select value={openaiModel} onValueChange={setOpenaiModel}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('select_model') || 'Select model'} />
+                      <SelectValue placeholder={t('select_model')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gpt-4o-mini">{t('ai_config.gpt_4o_mini')}</SelectItem>
@@ -200,7 +200,7 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="openai-base-url">{t('base_url') || 'Base URL'}</Label>
+                  <Label htmlFor="openai-base-url">{t('base_url')}</Label>
                   <Input
                     id="openai-base-url"
                     value={openaiBaseUrl}
@@ -213,12 +213,12 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
             <TabsContent value="gemini" className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline">{t('free_tier_available') || 'Free Tier Available'}</Badge>
+                <Badge variant="outline">{t('free_tier_available')}</Badge>
               </div>
 
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="gemini-api-key">{t('api_key') || 'API Key'}</Label>
+                  <Label htmlFor="gemini-api-key">{t('api_key')}</Label>
                   <Input
                     id="gemini-api-key"
                     type="password"
@@ -229,10 +229,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="gemini-model">{t('model') || 'Model'}</Label>
+                  <Label htmlFor="gemini-model">{t('model')}</Label>
                   <Select value={geminiModel} onValueChange={setGeminiModel}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('select_model') || 'Select model'} />
+                      <SelectValue placeholder={t('select_model')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gemini-1.5-flash">{t('ai_config.gemini_15_flash')}</SelectItem>
@@ -246,12 +246,12 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
             <TabsContent value="anthropic" className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline">{t('paid') || 'Paid'}</Badge>
+                <Badge variant="outline">{t('paid')}</Badge>
               </div>
 
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="anthropic-api-key">{t('api_key') || 'API Key'}</Label>
+                  <Label htmlFor="anthropic-api-key">{t('api_key')}</Label>
                   <Input
                     id="anthropic-api-key"
                     type="password"
@@ -262,10 +262,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="anthropic-model">{t('model') || 'Model'}</Label>
+                  <Label htmlFor="anthropic-model">{t('model')}</Label>
                   <Select value={anthropicModel} onValueChange={setAnthropicModel}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('select_model') || 'Select model'} />
+                      <SelectValue placeholder={t('select_model')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="claude-3-5-haiku-20241022">{t('ai_config.claude_35_haiku')}</SelectItem>
@@ -282,17 +282,17 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('ai_settings') || 'AI Settings'}</CardTitle>
+          <CardTitle>{t('ai_settings')}</CardTitle>
           <CardDescription>
-            {t('ai_settings_desc') || 'Configure AI behavior and limits'}
+            {t('ai_settings_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('enable_ai_features') || 'Enable AI Features'}</Label>
+              <Label>{t('enable_ai_features')}</Label>
               <p className="text-sm text-muted-foreground">
-                {t('enable_ai_features_desc') || 'Allow AI-powered features in the application'}
+                {t('enable_ai_features_desc')}
               </p>
             </div>
             <Switch
@@ -302,7 +302,7 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="max-tokens">{t('max_tokens') || 'Max Tokens'}</Label>
+            <Label htmlFor="max-tokens">{t('max_tokens')}</Label>
             <Input
               id="max-tokens"
               type="number"
@@ -312,7 +312,7 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="temperature">{t('temperature') || 'Temperature'}</Label>
+            <Label htmlFor="temperature">{t('temperature')}</Label>
             <Input
               id="temperature"
               type="number"
@@ -326,9 +326,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t('stream_responses') || 'Stream Responses'}</Label>
+              <Label>{t('stream_responses')}</Label>
               <p className="text-sm text-muted-foreground">
-                {t('stream_responses_desc') || 'Enable real-time streaming of AI responses'}
+                {t('stream_responses_desc')}
               </p>
             </div>
             <Switch

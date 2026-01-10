@@ -212,27 +212,18 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   }, [searchParams, router, pathname])
 
   useEffect(() => {
-    let isCancelled = false
+    fetchCards()
+  }, [fetchCards])
 
-    const fetchData = async () => {
-      await fetchCards()
-      if (!isCancelled) {
-        // Set selected card from URL after cards are loaded
-        if (selectedCardId) {
-          const card = cards.find(c => c.id === selectedCardId)
-          if (card) {
-            handleCardSelect(card, false) // Don't update URL when initializing from URL
-          }
-        }
+  useEffect(() => {
+    // Set selected card from URL after cards are loaded
+    if (selectedCardId && cards.length > 0) {
+      const card = cards.find(c => c.id === selectedCardId)
+      if (card) {
+        handleCardSelect(card, false) // Don't update URL when initializing from URL
       }
     }
-
-    fetchData()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [fetchCards, selectedCardId, cards, handleCardSelect])
+  }, [selectedCardId, cards, handleCardSelect])
 
   const handleSave = async () => {
     if (!formData.name) {

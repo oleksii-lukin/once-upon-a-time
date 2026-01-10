@@ -87,7 +87,18 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const [isGeneratingAll, setIsGeneratingAll] = useState(false)
   const [discardedNames, setDiscardedNames] = useState<string[]>([])
 
-  // Define categories for filter checkboxes
+  // Define categories for filter checkboxes with color coding
+  const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
+    all: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
+    ending: { bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-600' },
+    protagonist: { bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-600' },
+    antagonist: { bg: 'bg-amber-600', text: 'text-white', border: 'border-amber-700' },
+    setting: { bg: 'bg-emerald-500', text: 'text-white', border: 'border-emerald-600' },
+    object: { bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-600' },
+    catalyst: { bg: 'bg-fuchsia-500', text: 'text-white', border: 'border-fuchsia-600' },
+    trait: { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600' },
+  }
+
   const categories = [
     { id: 'all', label: t('admin.deckEditor.filter_all') },
     { id: 'ending', label: t('game.ending_card_label') },
@@ -466,18 +477,23 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
             className="w-full px-3 py-2 rounded-md bg-muted/50 border border-border text-sm focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <div className="flex flex-wrap gap-2 text-xs">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => toggleCategory(cat.id)}
-                className={`px-2 py-1 rounded border transition-colors ${selectedCategories.has(cat.id)
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border hover:border-primary/50'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const colors = categoryColors[cat.id]
+              const isSelected = selectedCategories.has(cat.id)
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => toggleCategory(cat.id)}
+                  className={`px-2 py-1 rounded border transition-colors ${
+                    isSelected
+                      ? `${colors.bg} ${colors.text} ${colors.border} border-2`
+                      : `bg-card text-muted-foreground border-border hover:border-primary/50`
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -498,7 +514,17 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   <TableCell className="px-4 py-3 text-sm text-foreground font-medium">
                     <div className="flex justify-between items-center">
                       <span>{card.name}</span>
-                      <span className="text-[10px] uppercase opacity-50 border border-border px-1 rounded ml-2">
+                      <span
+                        className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${
+                          card.type === 'ending'
+                            ? `${categoryColors.ending.bg} ${categoryColors.ending.text} border ${categoryColors.ending.border}`
+                            : categoryColors[card.category || 'protagonist']?.bg
+                              && categoryColors[card.category || 'protagonist']?.text
+                              && categoryColors[card.category || 'protagonist']?.border
+                              ? `${categoryColors[card.category || 'protagonist'].bg} ${categoryColors[card.category || 'protagonist'].text} border ${categoryColors[card.category || 'protagonist'].border}`
+                              : 'bg-gray-100 text-gray-700 border border-gray-300'
+                        }`}
+                      >
                         {card.type === 'ending'
                           ? 'END'
                           : (card.category || 'STY').substring(0, 3)}

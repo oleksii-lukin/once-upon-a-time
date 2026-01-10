@@ -56,3 +56,6 @@
 - Use getTranslation function for server side code
 - Use useTranslation hook for client side code
 - Use simple pattern of `{t('translation_key')}` for translation, don't use fallbacks like `{t('translation_key') || 'Fallback Translation'}`
+
+## AI
+- Use Vercel AI SDK for AI interactions

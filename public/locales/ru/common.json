@@ -337,11 +337,20 @@
         "claude_35_haiku": "Claude 3.5 Haiku",
         "claude_35_sonnet": "Claude 3.5 Sonnet",
         "claude_3_opus": "Claude 3 Opus",
+        "groq": "Groq",
+        "together": "Together AI",
+        "llama_33_70b": "Llama 3.3 70B",
+        "mixtral_8x7b": "Mixtral 8x7B",
+        "qwen_25_72b": "Qwen 2.5 72B",
+        "very_fast": "Очень быстро",
+        "free_credits_available": "Доступны кредиты",
+        "open_source": "Open Source",
         "ai_settings_saved": "Настройки ИИ сохранены",
         "ai_settings_error": "Не удалось сохранить настройки ИИ",
         "connection_test_successful": "Проверка соединения прошла успешно",
         "connection_test_failed": "Проверка соединения не удалась",
-        "testing": "Проверка..."
+        "testing": "Проверка...",
+        "refresh_models": "Обновить список моделей"
     },
     "tw_examples": {
         "card": {

@@ -2,10 +2,11 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI as createCustomOpenAI } from '@ai-sdk/openai'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 
 export interface AIProvider {
   name: string
-  type: 'lm-studio' | 'openai' | 'gemini' | 'anthropic'
+  type: 'lm-studio' | 'openai' | 'gemini' | 'anthropic' | 'groq' | 'together'
   apiKey?: string
   baseURL?: string
   model: string
@@ -60,6 +61,22 @@ export const defaultAIConfig: AIConfig = {
       maxTokens: 1000,
       temperature: 0.7,
     },
+    {
+      name: 'Groq',
+      type: 'groq',
+      baseURL: 'https://api.groq.com/openai/v1',
+      model: 'llama-3.3-70b-versatile',
+      maxTokens: 1000,
+      temperature: 0.7,
+    },
+    {
+      name: 'Together AI',
+      type: 'together',
+      baseURL: 'https://api.together.xyz/v1',
+      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+      maxTokens: 1000,
+      temperature: 0.7,
+    },
   ],
   streamResponses: true,
 }
@@ -67,10 +84,11 @@ export const defaultAIConfig: AIConfig = {
 export function createAIModel(provider: AIProvider) {
   switch (provider.type) {
     case 'lm-studio':
-      return createCustomOpenAI({
-        apiKey: provider.apiKey || 'lm-studio',
+      return createOpenAICompatible({
+        name: 'lm-studio',
         baseURL: provider.baseURL || 'http://localhost:1234/v1',
-      })(provider.model)
+        apiKey: provider.apiKey || 'lm-studio',
+      }).chatModel(provider.model)
 
     case 'openai':
       return createOpenAI({
@@ -86,6 +104,17 @@ export function createAIModel(provider: AIProvider) {
     case 'anthropic':
       return createAnthropic({
         apiKey: provider.apiKey || process.env.ANTHROPIC_API_KEY,
+      })(provider.model)
+    case 'groq':
+      return createOpenAI({
+        apiKey: provider.apiKey || process.env.GROQ_API_KEY,
+        baseURL: 'https://api.groq.com/openai/v1',
+      })(provider.model)
+
+    case 'together':
+      return createOpenAI({
+        apiKey: provider.apiKey || process.env.TOGETHER_API_KEY,
+        baseURL: 'https://api.together.xyz/v1',
       })(provider.model)
 
     default:

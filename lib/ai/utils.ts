@@ -134,6 +134,22 @@ export function getAvailableModels(providerType: string): string[] {
         'claude-3-opus-20240229',
       ]
 
+    case 'groq':
+      return [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-70b-versatile',
+        'llama-3.2-3b-preview',
+        'mixtral-8x7b-32768',
+      ]
+
+    case 'together':
+      return [
+        'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+        'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
+        'mistralai/Mixtral-8x7B-Instruct-v0.1',
+        'Qwen/Qwen2.5-72B-Instruct-Turbo',
+      ]
+
     default:
       return []
   }

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Crop, Wand2, Undo, Save, Loader2, X, RefreshCw, Scissors } from 'lucide-react'
+import { Crop, Wand2, Undo, Save, Loader2, X, RefreshCw, Scissors, Eraser } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface ImageEditorProps {
@@ -19,12 +19,16 @@ interface ImageEditorProps {
 export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: ImageEditorProps) {
   const { t } = useTranslation()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mode, setMode] = useState<'view' | 'crop' | 'magic'>('view')
+  const [mode, setMode] = useState<'view' | 'crop' | 'magic' | 'eraser'>('view')
   const [tolerance, setTolerance] = useState([30])
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageHistory, setImageHistory] = useState<ImageData[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isContiguous, setIsContiguous] = useState(true)
+
+  // Eraser state
+  const [eraserSize, setEraserSize] = useState([20])
+  const [isDrawing, setIsDrawing] = useState(false)
 
   // Crop state
   const [cropStart, setCropStart] = useState<{ x: number, y: number } | null>(null)
@@ -122,6 +126,10 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       setCropStart({ x, y })
       setCropRect({ x, y, w: 0, h: 0 })
     }
+    else if (mode === 'eraser') {
+      setIsDrawing(true)
+      erase(e)
+    }
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -138,10 +146,17 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
         h: Math.abs(currentY - cropStart.y),
       })
     }
+    else if (mode === 'eraser' && isDrawing) {
+      erase(e)
+    }
   }
 
   const handleMouseUp = () => {
     setCropStart(null)
+    if (isDrawing) {
+      setIsDrawing(false)
+      saveState()
+    }
   }
 
   const applyCrop = () => {
@@ -208,6 +223,26 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
     ctx.putImageData(croppedData, 0, 0)
 
     saveState()
+  }
+
+  // --- Eraser Logic ---
+
+  const erase = (e: React.MouseEvent) => {
+    if (!canvasRef.current) return
+    const ctx = canvasRef.current.getContext('2d')
+    if (!ctx) return
+
+    const rect = canvasRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width)
+    const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height)
+    const radius = eraserSize[0]
+
+    ctx.save()
+    ctx.globalCompositeOperation = 'destination-out'
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
   }
 
   // --- Magic Wand / Chroma Key Logic ---
@@ -326,7 +361,15 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
           <div className="relative shadow-lg border border-border/50 bg-[#333] checkered-bg">
             <canvas
               ref={canvasRef}
-              className="max-w-full max-h-[60vh] object-contain cursor-crosshair"
+              className={`max-w-full max-h-[60vh] object-contain ${
+                mode === 'eraser'
+                  ? 'cursor-crosshair'
+                  : mode === 'crop'
+                    ? 'cursor-crosshair'
+                    : mode === 'magic'
+                      ? 'cursor-crosshair'
+                      : 'cursor-default'
+              }`}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -389,6 +432,17 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
                 <Scissors className="w-4 h-4 mr-2" />
                 {t('admin.imageEditor.tool_trim')}
               </Button>
+
+              <div className="w-px h-6 bg-border mx-2" />
+
+              <Button
+                variant={mode === 'eraser' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setMode('eraser')}
+              >
+                <Eraser className="w-4 h-4 mr-2" />
+                {t('admin.imageEditor.tool_eraser')}
+              </Button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -428,6 +482,27 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
                   {t('admin.imageEditor.contiguous')}
                 </Label>
               </div>
+            </div>
+          )}
+
+          {mode === 'eraser' && (
+            <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg">
+              <span className="text-xs font-medium whitespace-nowrap">
+                {t('admin.imageEditor.eraser_size')}
+                :
+                {' '}
+                {eraserSize}
+                px
+              </span>
+              <Slider
+                value={eraserSize}
+                onValueChange={setEraserSize}
+                max={100}
+                min={1}
+                step={1}
+                className="w-[200px]"
+              />
+              <span className="text-xs text-muted-foreground">{t('admin.imageEditor.eraser_hint')}</span>
             </div>
           )}
 

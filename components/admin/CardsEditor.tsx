@@ -8,9 +8,10 @@ import ImageUpload from './ImageUpload'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
-import { Wand2 as Wand2Icon, Loader2 as Loader2Icon } from 'lucide-react'
+import { Wand2 as Wand2Icon, Loader2 as Loader2Icon, Sparkles as SparklesIcon } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
-import { generateCardNameAction } from '@/app/actions/ai'
+import { generateCardFieldAction } from '@/app/actions/ai'
+import type { CardFieldType } from '@/lib/ai/prompts'
 import { toast } from 'sonner'
 
 type Card = Database['public']['Tables']['cards']['Row'] & {
@@ -75,6 +76,9 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const [isSavingCard, setIsSavingCard] = useState(false)
   const [isCardSaved, setIsCardSaved] = useState(false)
   const [isGeneratingName, setIsGeneratingName] = useState(false)
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
+  const [isGeneratingUsage, setIsGeneratingUsage] = useState(false)
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false)
 
   // Define categories for filter checkboxes
   const categories = [
@@ -329,42 +333,85 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     return formData.translations[lang]?.[field] || ''
   }
 
-  const handleGenerateName = async () => {
-    setIsGeneratingName(true)
+  const handleGenerateField = async (fieldType: CardFieldType) => {
+    const setGeneratingMap: Record<CardFieldType, (v: boolean) => void> = {
+      name: setIsGeneratingName,
+      description: setIsGeneratingDescription,
+      usage_examples: setIsGeneratingUsage,
+      all: setIsGeneratingAll
+    }
+
+    const setGenerating = setGeneratingMap[fieldType]
+    if (!setGenerating) return
+
+    setGenerating(true)
     try {
-      const result = await generateCardNameAction(
+      const result = await generateCardFieldAction(
         deckName,
+        fieldType,
         formData.type,
-        formData.type === 'story' ? formData.category : null
+        formData.type === 'story' ? formData.category : null,
+        formData.name || undefined
       )
 
       if (result.success && result.data) {
-        // Update all locales at once
-        setFormData(prev => ({
-          ...prev,
-          name: result.data!.en,
-          translations: {
-            ...prev.translations,
-            ru: {
-              ...prev.translations.ru,
-              name: result.data!.ru,
+        if (fieldType === 'all') {
+          const data = result.data as Record<string, any>
+          setFormData(prev => ({
+            ...prev,
+            name: data.en.name,
+            description: data.en.description,
+            usage_examples: data.en.usage_examples,
+            translations: {
+              ...prev.translations,
+              ru: {
+                ...prev.translations.ru,
+                name: data.ru.name,
+                description: data.ru.description,
+                usage_examples: data.ru.usage_examples,
+              },
+              ua: {
+                ...prev.translations.ua,
+                name: data.ua.name,
+                description: data.ua.description,
+                usage_examples: data.ua.usage_examples,
+              },
             },
-            ua: {
-              ...prev.translations.ua,
-              name: result.data!.ua,
+          }))
+        } else {
+          const data = result.data as Record<string, string>
+          setFormData(prev => ({
+            ...prev,
+            [fieldType]: data.en,
+            translations: {
+              ...prev.translations,
+              ru: {
+                ...prev.translations.ru,
+                [fieldType]: data.ru,
+              },
+              ua: {
+                ...prev.translations.ua,
+                [fieldType]: data.ua,
+              },
             },
-          },
-        }))
+          }))
+        }
       } else {
-        toast.error(result.error || t('failed_to_generate_name'))
+        toast.error(result.error || t('failed_to_generate_field'))
       }
     } catch (error) {
-      console.error('Failed to generate name:', error)
+      console.error(`Failed to generate ${fieldType}:`, error)
       toast.error(t('unexpected_error'))
     } finally {
-      setIsGeneratingName(false)
+      setGenerating(false)
     }
   }
+
+  // Legacy wrappers or specific handlers
+  const handleGenerateName = () => handleGenerateField('name')
+  const handleGenerateDescription = () => handleGenerateField('description')
+  const handleGenerateUsageExamples = () => handleGenerateField('usage_examples')
+  const handleGenerateAll = () => handleGenerateField('all')
 
   return (
     <div className="flex-1 flex flex-col md:flex-row gap-6 overflow-hidden min-h-0">
@@ -484,19 +531,36 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-border pb-2">
-          {(['en', 'ru', 'ua'] as LangCode[]).map(lang => (
-            <button
-              key={lang}
-              onClick={() => setActiveLang(lang)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeLang === lang
-                ? 'bg-primary text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                }`}
-            >
-              {lang.toUpperCase()}
-            </button>
-          ))}
+        <div className="flex justify-between items-center mb-6 border-b border-border pb-2">
+          <div className="flex gap-2">
+            {(['en', 'ru', 'ua'] as LangCode[]).map(lang => (
+              <button
+                key={lang}
+                onClick={() => setActiveLang(lang)}
+                className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${activeLang === lang
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent'
+                  }`}
+              >
+                {lang.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateAll}
+            disabled={isGeneratingAll}
+            className="gap-2 mb-1"
+            title={t('generate_all')}
+          >
+            {isGeneratingAll ? (
+              <Loader2Icon className="w-4 h-4 animate-spin" />
+            ) : (
+              <SparklesIcon className="w-4 h-4 text-amber-500" />
+            )}
+            {t('generate_all')}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -600,12 +664,27 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <textarea
-                value={getValue('description')}
-                onChange={e => updateField('description', e.target.value)}
-                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
-                placeholder={t('admin.deckEditor.placeholders.cardDescription')}
-              />
+              <div className="relative">
+                <textarea
+                  value={getValue('description')}
+                  onChange={e => updateField('description', e.target.value)}
+                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
+                  placeholder={t('admin.deckEditor.placeholders.cardDescription')}
+                />
+                <button
+                  type="button"
+                  onClick={handleGenerateDescription}
+                  disabled={isGeneratingDescription}
+                  className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
+                  title={t('generate_with_ai')}
+                >
+                  {isGeneratingDescription ? (
+                    <Loader2Icon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2Icon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </label>
             <label className="block">
               <span className="text-muted-foreground text-sm font-medium block mb-1">
@@ -615,12 +694,27 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 {activeLang.toUpperCase()}
                 )
               </span>
-              <textarea
-                value={getValue('usage_examples')}
-                onChange={e => updateField('usage_examples', e.target.value)}
-                className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
-                placeholder={t('admin.deckEditor.placeholders.usageExamples')}
-              />
+              <div className="relative">
+                <textarea
+                  value={getValue('usage_examples')}
+                  onChange={e => updateField('usage_examples', e.target.value)}
+                  className="w-full rounded-md bg-background border border-border p-2 pr-10 text-foreground focus:ring-2 focus:ring-primary focus:outline-none min-h-[120px]"
+                  placeholder={t('admin.deckEditor.placeholders.usageExamples')}
+                />
+                <button
+                  type="button"
+                  onClick={handleGenerateUsageExamples}
+                  disabled={isGeneratingUsage}
+                  className="absolute right-2 top-4 text-muted-foreground hover:text-primary disabled:opacity-50"
+                  title={t('generate_with_ai')}
+                >
+                  {isGeneratingUsage ? (
+                    <Loader2Icon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2Icon className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </label>
           </div>
         </div>

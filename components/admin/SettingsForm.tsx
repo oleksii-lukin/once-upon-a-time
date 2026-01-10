@@ -42,15 +42,15 @@ export function SettingsForm({ generalSettings, gameplaySettings }: SettingsForm
       })
 
       if (generalResult.success && gameplayResult.success) {
-        toast.success('Settings saved successfully')
+        toast.success(t('settings_saved'))
       }
       else {
-        toast.error(generalResult.error || gameplayResult.error || 'Failed to save settings')
+        toast.error(generalResult.error || gameplayResult.error || t('save_settings_error'))
       }
     }
     catch (error) {
       console.error('Failed to save settings:', error)
-      toast.error('Failed to save settings')
+      toast.error(t('save_settings_error'))
     }
     finally {
       setIsSubmitting(false)
@@ -124,7 +124,7 @@ export function SettingsForm({ generalSettings, gameplaySettings }: SettingsForm
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : t('save_changes')}
+          {isSubmitting ? t('saving') : t('save_changes')}
         </Button>
       </div>
     </form>

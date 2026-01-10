@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard as LayoutDashboardIcon,
   Palette as PaletteIcon,
@@ -12,9 +12,10 @@ import {
   Settings as SettingsIcon,
   Brain as BrainIcon,
   ChevronLeft,
-  ChevronRight,
   Menu,
 } from 'lucide-react'
+
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 interface NavItemProps {
@@ -25,9 +26,8 @@ interface NavItemProps {
   isCollapsed: boolean
 }
 
-function NavItem({ href, label, icon: Icon, lng, isCollapsed }: NavItemProps) {
+function NavItem({ href, label, icon: Icon, isCollapsed }: NavItemProps) {
   const pathname = usePathname()
-  const isActive = pathname === href || pathname === `/${lng}${href}` || (href === `/${lng}/admin` && pathname === `/${lng}/admin`)
   const isExactActive = pathname === href
 
   return (
@@ -48,7 +48,8 @@ function NavItem({ href, label, icon: Icon, lng, isCollapsed }: NavItemProps) {
   )
 }
 
-export default function AdminSidebar({ lng, title, translations }: { lng: string, title: string, translations: any }) {
+export default function AdminSidebar({ lng }: { lng: string }) {
+  const { t } = useTranslation()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
@@ -65,7 +66,7 @@ export default function AdminSidebar({ lng, title, translations }: { lng: string
       >
         {!isCollapsed && (
           <h1 className="text-foreground text-lg font-bold truncate pr-2">
-            {title}
+            {t('title')}
           </h1>
         )}
         <Button
@@ -79,12 +80,12 @@ export default function AdminSidebar({ lng, title, translations }: { lng: string
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-        <NavItem href={`/${lng}/admin`} label={translations.dashboard} icon={LayoutDashboardIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/decks`} label={translations.decks} icon={PaletteIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/players`} label={translations.players} icon={UsersIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/lobbies`} label={translations.lobbies} icon={DoorOpenIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/ai`} label={translations.ai} icon={BrainIcon} lng={lng} isCollapsed={isCollapsed} />
-        <NavItem href={`/${lng}/admin/settings`} label={translations.settings} icon={SettingsIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin`} label={t('dashboard')} icon={LayoutDashboardIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/decks`} label={t('decks')} icon={PaletteIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/players`} label={t('players')} icon={UsersIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/lobbies`} label={t('lobbies')} icon={DoorOpenIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/ai`} label={t('ai')} icon={BrainIcon} lng={lng} isCollapsed={isCollapsed} />
+        <NavItem href={`/${lng}/admin/settings`} label={t('settings')} icon={SettingsIcon} lng={lng} isCollapsed={isCollapsed} />
       </nav>
 
       <div className="p-4 border-t border-border/50 text-xs text-muted-foreground text-center">

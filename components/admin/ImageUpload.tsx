@@ -26,7 +26,7 @@ export default function ImageUpload({ value, onChange, onRemove, label, classNam
   const { t } = useTranslation()
 
   const { startUpload, isUploading } = useUploadThing('imageUploader', {
-    onClientUploadComplete: (res: any) => {
+    onClientUploadComplete: (res) => {
       if (res && res[0]) {
         onChange(res[0].url)
       }

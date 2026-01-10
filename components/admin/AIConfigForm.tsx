@@ -71,15 +71,15 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
       })
 
       if (result.success) {
-        toast.success('AI settings saved successfully')
+        toast.success(t('ai_config.ai_settings_saved'))
       }
       else {
-        toast.error(result.error || 'Failed to save AI settings')
+        toast.error(result.error || t('ai_config.ai_settings_error'))
       }
     }
     catch (error) {
       console.error('Failed to save AI settings:', error)
-      toast.error('Failed to save AI settings')
+      toast.error(t('ai_config.ai_settings_error'))
     }
     finally {
       setIsSubmitting(false)
@@ -91,11 +91,11 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
     try {
       // TODO: Implement actual connection testing
       await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Connection test successful')
+      toast.success(t('ai_config.connection_test_successful'))
     }
     catch (error) {
       console.error('Connection test failed:', error)
-      toast.error('Connection test failed')
+      toast.error(t('ai_config.connection_test_failed'))
     }
     finally {
       setIsTesting(false)
@@ -114,10 +114,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
         <CardContent>
           <Tabs value={defaultProvider} onValueChange={setDefaultProvider} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="lm-studio">LM Studio</TabsTrigger>
-              <TabsTrigger value="openai">OpenAI</TabsTrigger>
-              <TabsTrigger value="gemini">Gemini</TabsTrigger>
-              <TabsTrigger value="anthropic">Claude</TabsTrigger>
+              <TabsTrigger value="lm-studio">{t('ai_config.lm_studio')}</TabsTrigger>
+              <TabsTrigger value="openai">{t('ai_config.openai')}</TabsTrigger>
+              <TabsTrigger value="gemini">{t('ai_config.gemini')}</TabsTrigger>
+              <TabsTrigger value="anthropic">{t('ai_config.claude')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="lm-studio" className="space-y-4">
@@ -145,10 +145,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="auto">{t('auto_detect') || 'Auto-detect'}</SelectItem>
-                      <SelectItem value="llama-3.2-3b">Llama 3.2 3B</SelectItem>
-                      <SelectItem value="llama-3.2-8b">Llama 3.2 8B</SelectItem>
-                      <SelectItem value="llama-3.1-70b">Llama 3.1 70B</SelectItem>
-                      <SelectItem value="qwen-2.5-7b">Qwen 2.5 7B</SelectItem>
+                      <SelectItem value="llama-3.2-3b">{t('ai_config.llama_32_3b')}</SelectItem>
+                      <SelectItem value="llama-3.2-8b">{t('ai_config.llama_32_8b')}</SelectItem>
+                      <SelectItem value="llama-3.1-70b">{t('ai_config.llama_31_70b')}</SelectItem>
+                      <SelectItem value="qwen-2.5-7b">{t('ai_config.qwen_25_7b')}</SelectItem>
                       <SelectItem value="custom">{t('custom_model') || 'Custom Model'}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -192,9 +192,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                       <SelectValue placeholder={t('select_model') || 'Select model'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                      <SelectItem value="gpt-4o-mini">{t('ai_config.gpt_4o_mini')}</SelectItem>
+                      <SelectItem value="gpt-4o">{t('ai_config.gpt_4o')}</SelectItem>
+                      <SelectItem value="gpt-3.5-turbo">{t('ai_config.gpt_35_turbo')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -235,9 +235,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                       <SelectValue placeholder={t('select_model') || 'Select model'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                      <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                      <SelectItem value="gemini-1.0-pro">Gemini 1.0 Pro</SelectItem>
+                      <SelectItem value="gemini-1.5-flash">{t('ai_config.gemini_15_flash')}</SelectItem>
+                      <SelectItem value="gemini-1.5-pro">{t('ai_config.gemini_15_pro')}</SelectItem>
+                      <SelectItem value="gemini-1.0-pro">{t('ai_config.gemini_10_pro')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -268,9 +268,9 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
                       <SelectValue placeholder={t('select_model') || 'Select model'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</SelectItem>
-                      <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
-                      <SelectItem value="claude-3-opus-20240229">Claude 3 Opus</SelectItem>
+                      <SelectItem value="claude-3-5-haiku-20241022">{t('ai_config.claude_35_haiku')}</SelectItem>
+                      <SelectItem value="claude-3-5-sonnet-20241022">{t('ai_config.claude_35_sonnet')}</SelectItem>
+                      <SelectItem value="claude-3-opus-20240229">{t('ai_config.claude_3_opus')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -341,10 +341,10 @@ export function AIConfigForm({ aiSettings }: AIConfigFormProps) {
 
       <div className="flex justify-end gap-4">
         <Button type="button" variant="outline" onClick={handleTestConnection} disabled={isTesting}>
-          {isTesting ? 'Testing...' : (t('test_connection') || 'Test Connection')}
+          {isTesting ? t('ai_config.testing') : (t('test_connection'))}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : (t('save_changes') || 'Save Changes')}
+          {isSubmitting ? t('saving') : (t('save_changes'))}
         </Button>
       </div>
     </form>

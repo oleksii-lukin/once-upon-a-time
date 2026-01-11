@@ -37,6 +37,10 @@ export default function UserProfileCard({ compact = false }: UserProfileCardProp
         .eq('user_id', user.id)
         .single()
 
+      if (error) {
+        console.error('Error fetching user profile:', error)
+      }
+
       if (data) {
         setProfile(data)
       }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Check as CheckIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import { getTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
 import AvatarUpload from './AvatarUpload'
@@ -13,15 +12,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 
-type UserProfile = Database['public']['Tables']['user_profiles']['Row']
-
 interface ProfileEditorProps {
   onSave?: () => void
 }
 
 export default function ProfileEditor({ onSave }: ProfileEditorProps) {
   const { user, isLoaded } = useUser()
-  const [profile, setProfile] = useState<Partial<UserProfile>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -49,7 +45,6 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
         .single()
 
       if (data) {
-        setProfile(data)
         setDisplayName(data.display_name || '')
         setBio(data.bio || '')
         setAvatarUrl(data.avatar_url || '')

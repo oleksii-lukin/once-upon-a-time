@@ -8,6 +8,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { getGuestId } from '@/lib/auth/guest'
 import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
+import { LobbySettingsSchema } from '@/types/lobby'
 
 export type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
   players: { count: number }[]
@@ -34,15 +35,16 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
       .order('created_at', { ascending: false })
 
     if (data) {
-      const filtered = (data as any[]).filter((lobby) => {
+      const filtered = data.filter((lobby: Lobby) => {
         // If not playing, always show
         if (lobby.status !== 'playing') return true
 
         // If playing, check allowSpectators
-        const settings = lobby.settings || {}
+        const settingsResult = LobbySettingsSchema.safeParse(lobby.settings)
+        const settings = settingsResult.success ? settingsResult.data : LobbySettingsSchema.parse({})
         return settings.allowSpectators !== false
       })
-      setLobbies(filtered as unknown as Lobby[])
+      setLobbies(filtered)
     }
   }
 

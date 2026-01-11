@@ -280,7 +280,8 @@
             "magic_hint": "Кликните цвет для удаления",
             "save_image": "Сохранить",
             "contiguous": "Смежные пиксели",
-            "cancel": "Отмена"
+            "cancel": "Отмена",
+            "pixels": "пкс"
         },
         "playersTable": {
             "avatar": "Аватар",

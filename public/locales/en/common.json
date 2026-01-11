@@ -279,7 +279,8 @@
             "magic_hint": "Click color to remove",
             "save_image": "Save Changes",
             "contiguous": "Contiguous",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "pixels": "px"
         },
         "playersTable": {
             "avatar": "Avatar",

@@ -278,7 +278,8 @@
             "magic_hint": "Клікніть колір для видалення",
             "save_image": "Зберегти",
             "contiguous": "Суміжні",
-            "cancel": "Скасувати"
+            "cancel": "Скасувати",
+            "pixels": "пкс"
         },
         "playersTable": {
             "avatar": "Аватар",

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { useState, useRef, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Crop, Wand2, Undo, Save, Loader2, X, RefreshCw, Scissors, Eraser } from 'lucide-react'
+import { Crop, Wand2, Undo, Save, Loader2, Scissors, Eraser } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface ImageEditorProps {
@@ -33,6 +33,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
   // Crop state
   const [cropStart, setCropStart] = useState<{ x: number, y: number } | null>(null)
   const [cropRect, setCropRect] = useState<{ x: number, y: number, w: number, h: number } | null>(null)
+  const [canvasDimensions, setCanvasDimensions] = useState<{ width: number, height: number }>({ width: 1, height: 1 })
 
   // Initialize canvas
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       img.onload = () => {
         canvas.width = img.naturalWidth
         canvas.height = img.naturalHeight
+        setCanvasDimensions({ width: img.naturalWidth, height: img.naturalHeight })
         ctx.drawImage(img, 0, 0)
 
         // Initialize history
@@ -382,10 +384,10 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
               <div
                 className="absolute border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none"
                 style={{
-                  left: (cropRect.x / (canvasRef.current?.width || 1)) * 100 + '%',
-                  top: (cropRect.y / (canvasRef.current?.height || 1)) * 100 + '%',
-                  width: (cropRect.w / (canvasRef.current?.width || 1)) * 100 + '%',
-                  height: (cropRect.h / (canvasRef.current?.height || 1)) * 100 + '%',
+                  left: (cropRect.x / canvasDimensions.width) * 100 + '%',
+                  top: (cropRect.y / canvasDimensions.height) * 100 + '%',
+                  width: (cropRect.w / canvasDimensions.width) * 100 + '%',
+                  height: (cropRect.h / canvasDimensions.height) * 100 + '%',
                 }}
               />
             )}
@@ -492,7 +494,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
                 :
                 {' '}
                 {eraserSize}
-                px
+                {t('admin.imageEditor.pixels')}
               </span>
               <Slider
                 value={eraserSize}

@@ -3,7 +3,6 @@
 import { UploadButton } from '@uploadthing/react'
 import { OurFileRouter } from '@/app/api/uploadthing/core'
 import { X, User } from 'lucide-react'
-import { useState } from 'react'
 
 interface AvatarUploadProps {
   value?: string
@@ -12,8 +11,6 @@ interface AvatarUploadProps {
 }
 
 export default function AvatarUpload({ value, onChange, onRemove }: AvatarUploadProps) {
-  const [isUploading, setIsUploading] = useState(false)
-
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative group">
@@ -48,15 +45,10 @@ export default function AvatarUpload({ value, onChange, onRemove }: AvatarUpload
         onClientUploadComplete={(res) => {
           if (res && res[0]) {
             onChange(res[0].url)
-            setIsUploading(false)
           }
         }}
         onUploadError={(error: Error) => {
           alert(`Upload failed: ${error.message}`)
-          setIsUploading(false)
-        }}
-        onUploadBegin={() => {
-          setIsUploading(true)
         }}
         appearance={{
           button: 'bg-primary/20 hover:bg-primary/30 text-primary font-medium px-4 py-2 rounded-lg transition-colors ut-ready:bg-primary/20 ut-uploading:bg-primary/10 ut-uploading:cursor-not-allowed text-sm',

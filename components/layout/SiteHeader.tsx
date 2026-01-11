@@ -1,12 +1,19 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { getTranslation } from '@/app/i18n/client'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 import CustomUserButton from '@/components/clerk/CustomUserButton'
+
+const ThemeToggle = dynamic(() => import('@/components/theme/ThemeToggle'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-9 w-9 rounded-md border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/10" />
+  ),
+})
 
 export default function SiteHeader({ lng }: { lng: string }) {
   const { t } = getTranslation(lng, 'common')

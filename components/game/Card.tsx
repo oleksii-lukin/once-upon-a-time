@@ -54,35 +54,48 @@ export default function Card({ card, isHoverable = false, onClick, className = '
     <div
       onClick={onClick}
       className={`
-                relative aspect-[2.5/3.5] overflow-hidden rounded-xl shadow-2xl 
+                relative aspect-[2.5/3.5] overflow-hidden rounded-xl shadow-2xl
                 transition-all duration-300 ease-out
                 ${isHoverable ? 'cursor-pointer hover:-translate-y-8 hover:scale-105 hover:z-10 hover:shadow-yellow-500/20' : ''}
                 ${className}
             `}
     >
-      {/* Base Border Background */}
+      {/* Base Border Background - Moved to background (z-0) or behind content */}
       <div
-        className="absolute inset-0 bg-cover bg-center z-20 pointer-events-none"
+        className="absolute inset-0 bg-cover bg-center z-0 pointer-events-none"
         style={{ backgroundImage: `url("${cardBackImageUrl || '/images/cards/Border.jpg'}")` }}
       />
 
       {/* Main Card Image Area - Centered in the frame */}
       <div className="absolute inset-0 flex items-center justify-center z-10 pt-[15%]">
-        <div className="relative w-[72%] h-[55%] rounded-sm shadow-inner">
-          {typeof card.image_url === 'string' && card.image_url
+        <div className="relative w-[72%] h-[55%] rounded-sm shadow-inner overflow-hidden">
+          {card.image_url
             ? (
-                <Image
-                  src={card.image_url}
-                  alt={localizedContent.name || 'Card image'}
-                  fill
-                  className="object-cover brightness-90 contrast-110 sepia-[.2]"
-                />
+              <Image
+                src={card.image_url}
+                alt={localizedContent.name || 'Card image'}
+                fill
+                className="object-cover brightness-90 contrast-110 sepia-[.2]"
+              />
+            )
+            : categoryImages?.[typeKey]
+              ? (
+                <div className="w-full h-full relative p-4 flex items-center justify-center bg-slate-900/10">
+                  <div className="relative w-full h-full opacity-40 brightness-75 contrast-125 sepia-[.4] grayscale-[.2]">
+                    <Image
+                      src={categoryImages[typeKey]}
+                      alt={localizedType}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
               )
-            : (
+              : (
                 <div
                   className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
                   style={{
-                    backgroundImage: `url("/placeholder-card.jpg")`,
+                    backgroundImage: `url("/images/cards/Border.jpg")`,
                   }}
                 />
               )}
@@ -105,18 +118,19 @@ export default function Card({ card, isHoverable = false, onClick, className = '
       <div className="absolute top-[3.5%] left-[3.5%] z-30 w-[12%] aspect-square flex items-center justify-center">
         {categoryImages?.[typeKey]
           ? (
-              <Image
-                src={categoryImages[typeKey]}
-                alt={localizedType}
-                fill
-                className="object-contain"
-                title={localizedType}
-              />
-            )
+            <Image
+              src={categoryImages[typeKey]}
+              alt={localizedType}
+              fill
+              sizes="(max-width: 768px) 10vw, 5vw"
+              className="object-contain"
+              title={localizedType}
+            />
+          )
           : (
             /* Fallback to placeholder circle if no category image is available */
-              <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
-            )}
+            <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
+          )}
       </div>
 
     </div>

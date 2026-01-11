@@ -18,7 +18,7 @@ type Deck = Database['public']['Tables']['decks']['Row'] & {
   bg_image_url?: string | null
   card_back_image_url?: string | null
   category_images?: Record<string, string> | null
-  card_layout?: any | null
+  card_layout?: CardLayout | null
 }
 
 interface DeckSettingsProps {
@@ -164,11 +164,11 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
           >
             {isTogglingActive
               ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {isActive ? t('deactivating') : t('activating')}
-                </>
-              )
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {isActive ? t('deactivating') : t('activating')}
+                  </>
+                )
               : isActive
                 ? t('deactivate_deck')
                 : t('activate_deck')}

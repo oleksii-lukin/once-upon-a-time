@@ -92,36 +92,36 @@ export default function Card({ card, isHoverable = false, onClick, className = '
         <div className="relative w-full h-full rounded-sm shadow-inner overflow-hidden">
           {card.image_url
             ? (
-              <Image
-                src={card.image_url}
-                alt={localizedContent.name || 'Card image'}
-                fill
-                sizes="(max-width: 768px) 30vw, 15vw"
-                className={`brightness-90 contrast-110 sepia-[.2] ${cardLayout.image.preserveRatio ? 'object-contain' : 'object-cover'}`}
-              />
-            )
+                <Image
+                  src={card.image_url}
+                  alt={localizedContent.name || 'Card image'}
+                  fill
+                  sizes="(max-width: 768px) 30vw, 15vw"
+                  className={`brightness-90 contrast-110 sepia-[.2] ${cardLayout.image.preserveRatio ? 'object-contain' : 'object-cover'}`}
+                />
+              )
             : categoryImages?.[typeKey]
               ? (
-                <div className="w-full h-full relative p-4 flex items-center justify-center bg-slate-900/10">
-                  <div className="relative w-full h-full opacity-40 brightness-75 contrast-125 sepia-[.4] grayscale-[.2]">
-                    <Image
-                      src={categoryImages[typeKey]}
-                      alt={localizedType}
-                      fill
-                      sizes="(max-width: 768px) 30vw, 15vw"
-                      className="object-contain"
-                    />
+                  <div className="w-full h-full relative p-4 flex items-center justify-center bg-slate-900/10">
+                    <div className="relative w-full h-full opacity-40 brightness-75 contrast-125 sepia-[.4] grayscale-[.2]">
+                      <Image
+                        src={categoryImages[typeKey]}
+                        alt={localizedType}
+                        fill
+                        sizes="(max-width: 768px) 30vw, 15vw"
+                        className="object-contain"
+                      />
+                    </div>
                   </div>
-                </div>
-              )
+                )
               : (
-                <div
-                  className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
-                  style={{
-                    backgroundImage: `url("/images/cards/Border.jpg")`,
-                  }}
-                />
-              )}
+                  <div
+                    className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
+                    style={{
+                      backgroundImage: `url("/images/cards/Border.jpg")`,
+                    }}
+                  />
+                )}
         </div>
       </div>
 
@@ -153,19 +153,19 @@ export default function Card({ card, isHoverable = false, onClick, className = '
         <div className="relative w-full h-full">
           {categoryImages?.[typeKey]
             ? (
-              <Image
-                src={categoryImages[typeKey]}
-                alt={localizedType}
-                fill
-                sizes="(max-width: 768px) 10vw, 5vw"
-                className="object-contain"
-                title={localizedType}
-              />
-            )
+                <Image
+                  src={categoryImages[typeKey]}
+                  alt={localizedType}
+                  fill
+                  sizes="(max-width: 768px) 10vw, 5vw"
+                  className="object-contain"
+                  title={localizedType}
+                />
+              )
             : (
               /* Fallback to placeholder circle if no category image is available */
-              <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
-            )}
+                <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
+              )}
         </div>
       </div>
 

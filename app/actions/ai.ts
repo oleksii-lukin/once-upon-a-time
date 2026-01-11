@@ -71,12 +71,13 @@ export async function generateCardFieldAction(
       catch (secondError) {
         console.error('AI JSON Parse Error:', parseError)
         console.error('Attempted to parse:', content)
+        console.error('Second Error:', secondError)
         throw new Error(`Failed to parse AI response: ${parseError instanceof Error ? parseError.message : 'Invalid JSON'}`)
       }
     }
 
     // Handle nested object hallucinations (e.g., {"en": {"usage_examples": [...]}})
-    const processField = (val: any): string => {
+    const processField = (val: string | unknown[] | Record<string, unknown> | number | boolean | null): string => {
       if (typeof val === 'string') {
         // Check if the string itself is a JSON object
         if (val.trim().startsWith('{') || val.trim().startsWith('[')) {
@@ -96,7 +97,7 @@ export async function generateCardFieldAction(
       if (typeof val === 'object' && val !== null) {
         // Try to find a logical text value in the object
         const values = Object.values(val)
-        if (values.length > 0) return processField(values[0])
+        if (values.length > 0) return processField(values[0] as string | unknown[] | Record<string, unknown> | number | boolean | null)
       }
       return String(val)
     }

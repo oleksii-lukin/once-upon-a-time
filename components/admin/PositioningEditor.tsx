@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import { Move, Maximize, MousePointer2, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon } from 'lucide-react'
+import { Maximize, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon, type LucideIcon } from 'lucide-react'
 import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/card'
 import { useTranslation } from 'react-i18next'
 import Card from '@/components/game/Card'
@@ -129,7 +129,7 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
     }))
   }
 
-  const elements: { key: ElementKey, label: string, icon: any }[] = [
+  const elements: { key: ElementKey, label: string, icon: LucideIcon }[] = [
     { key: 'name', label: t('admin.deckEditor.layout.name'), icon: TypeIcon },
     { key: 'image', label: t('admin.deckEditor.layout.image'), icon: ImageIcon },
     { key: 'icon', label: t('admin.deckEditor.layout.icon'), icon: UserIcon },
@@ -157,7 +157,11 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
               <SelectContent>
                 {filteredCards.map(card => (
                   <SelectItem key={card.id} value={card.id}>
-                    {card.name} ({card.category || card.type})
+                    {card.name}
+                    {' '}
+                    (
+                    {card.category || card.type}
+                    )
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -197,9 +201,9 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                   className={`
                                         absolute border-2 transition-colors duration-200 cursor-move flex flex-col items-center justify-center p-1
                                         ${activeElement === key
-                      ? 'border-primary bg-primary/10 z-20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.5)] scale-[1.01]'
-                      : 'border-dashed border-slate-400/30 bg-transparent z-10 hover:border-slate-400/60 hover:bg-slate-400/5'
-                    }
+                  ? 'border-primary bg-primary/10 z-20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.5)] scale-[1.01]'
+                  : 'border-dashed border-slate-400/30 bg-transparent z-10 hover:border-slate-400/60 hover:bg-slate-400/5'
+                }
                                     `}
                   style={{
                     top: `${currentLayout[key].top}%`,
@@ -258,7 +262,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     <div className="space-y-1.5">
                       <div className="flex justify-between">
                         <Label className="text-[10px] uppercase text-muted-foreground">X</Label>
-                        <span className="text-[10px] font-mono">{Math.round(currentLayout[key].left)}%</span>
+                        <span className="text-[10px] font-mono">
+                          {Math.round(currentLayout[key].left)}
+                          %
+                        </span>
                       </div>
                       <Slider
                         value={[currentLayout[key].left]}
@@ -270,7 +277,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     <div className="space-y-1.5">
                       <div className="flex justify-between">
                         <Label className="text-[10px] uppercase text-muted-foreground">Y</Label>
-                        <span className="text-[10px] font-mono">{Math.round(currentLayout[key].top)}%</span>
+                        <span className="text-[10px] font-mono">
+                          {Math.round(currentLayout[key].top)}
+                          %
+                        </span>
                       </div>
                       <Slider
                         value={[currentLayout[key].top]}
@@ -282,7 +292,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     <div className="space-y-1.5">
                       <div className="flex justify-between">
                         <Label className="text-[10px] uppercase text-muted-foreground">W</Label>
-                        <span className="text-[10px] font-mono">{Math.round(currentLayout[key].width)}%</span>
+                        <span className="text-[10px] font-mono">
+                          {Math.round(currentLayout[key].width)}
+                          %
+                        </span>
                       </div>
                       <Slider
                         value={[currentLayout[key].width]}
@@ -294,7 +307,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     <div className="space-y-1.5">
                       <div className="flex justify-between">
                         <Label className="text-[10px] uppercase text-muted-foreground">H</Label>
-                        <span className="text-[10px] font-mono">{Math.round(currentLayout[key].height)}%</span>
+                        <span className="text-[10px] font-mono">
+                          {Math.round(currentLayout[key].height)}
+                          %
+                        </span>
                       </div>
                       <Slider
                         value={[currentLayout[key].height]}
@@ -310,7 +326,7 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                       id={`ratio-${key}`}
                       checked={currentLayout[key].preserveRatio}
                       onCheckedChange={(checked) => {
-                        updateElement(key, 'preserveRatio' as any, checked === true)
+                        updateElement(key, 'preserveRatio', checked === true)
                       }}
                     />
                     <Label

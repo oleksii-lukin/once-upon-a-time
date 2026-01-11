@@ -64,7 +64,7 @@ export async function fetchAvailableModels(url: string, apiKey?: string) {
     if (data && Array.isArray(data.data)) {
       return {
         success: true,
-        models: data.data.map((m: any) => m.id),
+        models: data.data.map((m: { id: string }) => m.id),
       }
     }
 

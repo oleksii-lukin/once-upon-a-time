@@ -1,6 +1,7 @@
 'use client'
 
 import Card from './Card'
+import { CardLayout } from '@/types/card'
 import { Database } from '@/supabase/types'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,7 +17,7 @@ interface PlayerHandProps {
   deck?: {
     card_back_image_url?: string | null
     category_images?: Record<string, string> | null
-    card_layout?: any | null
+    card_layout?: CardLayout | null
   }
 }
 

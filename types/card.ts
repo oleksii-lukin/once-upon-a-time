@@ -24,7 +24,7 @@ export const defaultCardLayout: CardLayout = {
   icon: { top: 3.5, left: 3.5, width: 12, height: 12, preserveRatio: false },
 }
 
-export function parseCardLayout(data: any): CardLayout {
+export function parseCardLayout(data: unknown): CardLayout {
   const result = CardLayoutSchema.safeParse(data)
   return result.success ? result.data : defaultCardLayout
 }

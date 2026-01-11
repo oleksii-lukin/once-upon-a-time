@@ -304,7 +304,6 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         // peer.replaceTrack(oldTrack, newTrack, localStream)
 
         try {
-          // @ts-ignore - simple-peer types can be finicky with replaceTrack
           peer.replaceTrack(oldTrack, newTrack, localStream)
         }
         catch (e) {

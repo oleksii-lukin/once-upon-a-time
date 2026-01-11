@@ -66,6 +66,7 @@ export default async function RulesPage({ params }: { params: Promise<{ lng: str
     content = await fs.readFile(mdPath, 'utf-8')
   }
   catch (e) {
+    console.error(e)
     content = '# Rules Not Found\n\nThe rules file could not be loaded.'
   }
   const html = mdToHtml(content)

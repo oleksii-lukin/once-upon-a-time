@@ -272,7 +272,8 @@
                 "icon": "Category Icon",
                 "reset": "Reset to Defaults",
                 "apply": "Apply Layout",
-                "preserve_ratio": "Preserve Aspect Ratio"
+                "preserve_ratio": "Preserve Aspect Ratio",
+                "cancel": "Cancel"
             }
         },
         "imageEditor": {

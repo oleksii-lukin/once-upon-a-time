@@ -329,7 +329,7 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
         <DialogFooter className="p-4 border-t bg-muted/30">
           <Button variant="outline" onClick={onClose} className="mr-auto">
             <X className="w-4 h-4 mr-2" />
-            {t('common.cancel')}
+            {t('admin.deckEditor.layout.cancel')}
           </Button>
           <Button onClick={() => onApply(currentLayout)}>
             <Save className="w-4 h-4 mr-2" />

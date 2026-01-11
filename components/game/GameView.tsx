@@ -296,9 +296,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout,
+              }
               : undefined
           }
         />
@@ -310,9 +311,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout,
+              }
               : undefined
           }
         />

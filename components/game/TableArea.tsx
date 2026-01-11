@@ -13,6 +13,7 @@ interface TableAreaProps {
   deck?: {
     card_back_image_url?: string | null
     category_images?: Record<string, string> | null
+    card_layout?: any | null
   }
 }
 
@@ -26,19 +27,19 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
           <div className="shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
             {storytellerPlayer
               ? (
-                  <>
-                    <div className="border-2 border-primary rounded-full">
-                      <PlayerAvatar player={storytellerPlayer} size="lg" />
-                    </div>
-                    <p className="font-bold text-white text-sm">{getPlayerDisplayName(storytellerPlayer)}</p>
-                  </>
-                )
+                <>
+                  <div className="border-2 border-primary rounded-full">
+                    <PlayerAvatar player={storytellerPlayer} size="lg" />
+                  </div>
+                  <p className="font-bold text-white text-sm">{getPlayerDisplayName(storytellerPlayer)}</p>
+                </>
+              )
               : (
-                  <>
-                    <div className="bg-gray-600 rounded-full h-14 w-14"></div>
-                    <p className="font-bold text-white text-sm">{t('game.unknown_player')}</p>
-                  </>
-                )}
+                <>
+                  <div className="bg-gray-600 rounded-full h-14 w-14"></div>
+                  <p className="font-bold text-white text-sm">{t('game.unknown_player')}</p>
+                </>
+              )}
             <p className="text-xs text-white/70">{t('game.storyteller_label')}</p>
           </div>
 
@@ -49,7 +50,12 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
 
               return (
                 <div key={card.id} className="w-80 flex flex-col gap-1 group relative">
-                  <Card card={card} cardBackImageUrl={deck?.card_back_image_url} categoryImages={deck?.category_images as Record<string, string> | null} />
+                  <Card
+                    card={card}
+                    cardBackImageUrl={deck?.card_back_image_url}
+                    categoryImages={deck?.category_images as Record<string, string> | null}
+                    layout={deck?.card_layout}
+                  />
                   {/* Tooltip-like indicator for who played the card */}
                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-20">
                     {t('game.played_by', { name: playerName })}

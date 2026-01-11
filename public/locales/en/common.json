@@ -262,7 +262,18 @@
             "search_cards_placeholder": "Search cards by name...",
             "filter_all": "All",
             "delete_confirmation": "Are you sure you want to delete this card?",
-            "delete_card": "Delete Card"
+            "delete_card": "Delete Card",
+            "layout": {
+                "title": "Card Element Positioning",
+                "edit_button": "Edit Layout",
+                "settings": "Element Settings",
+                "name": "Card Name",
+                "image": "Main Image",
+                "icon": "Category Icon",
+                "reset": "Reset to Defaults",
+                "apply": "Apply Layout",
+                "preserve_ratio": "Preserve Aspect Ratio"
+            }
         },
         "imageEditor": {
             "title": "Edit Image",

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
@@ -10,10 +10,15 @@ import { getTranslation } from '@/app/i18n/client'
 import { Loader2 } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
 
+import { CardLayout, parseCardLayout } from '@/types/card'
+import PositioningEditor from './PositioningEditor'
+import { LayoutIcon } from 'lucide-react'
+
 type Deck = Database['public']['Tables']['decks']['Row'] & {
   bg_image_url?: string | null
   card_back_image_url?: string | null
   category_images?: Record<string, string> | null
+  card_layout?: any | null
 }
 
 interface DeckSettingsProps {
@@ -31,11 +36,29 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
     bg_image_url: deck.bg_image_url || '',
     card_back_image_url: deck.card_back_image_url || '',
     category_images: (deck.category_images as Record<string, string>) || {},
+    card_layout: parseCardLayout(deck.card_layout),
   })
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [isSettingsSaved, setIsSettingsSaved] = useState(false)
   const [isTogglingActive, setIsTogglingActive] = useState(false)
   const [isActive, setIsActive] = useState(deck.is_active)
+  const [isPositioningOpen, setIsPositioningOpen] = useState(false)
+  const [cards, setCards] = useState<Database['public']['Tables']['cards']['Row'][]>([])
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      const token = await getToken({ template: 'supabase' })
+      if (!token) return
+      const supabase = createClient(token)
+      const { data } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('deck_id', deck.id)
+        .order('name')
+      if (data) setCards(data)
+    }
+    fetchCards()
+  }, [deck.id, getToken])
 
   // Define categories for filter checkboxes
   const categories = [
@@ -94,6 +117,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
         bg_image_url: deckSettings.bg_image_url || null,
         card_back_image_url: deckSettings.card_back_image_url || null,
         category_images: deckSettings.category_images,
+        card_layout: deckSettings.card_layout,
       })
       .eq('id', deck.id)
 
@@ -110,6 +134,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
         bg_image_url: deckSettings.bg_image_url,
         card_back_image_url: deckSettings.card_back_image_url,
         category_images: deckSettings.category_images,
+        card_layout: deckSettings.card_layout,
       })
     }
   }
@@ -139,11 +164,11 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
           >
             {isTogglingActive
               ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isActive ? t('deactivating') : t('activating')}
-                  </>
-                )
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {isActive ? t('deactivating') : t('activating')}
+                </>
+              )
               : isActive
                 ? t('deactivate_deck')
                 : t('activate_deck')}
@@ -162,16 +187,25 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
       </div>
 
       <div className="space-y-8 max-w-5xl">
-        {/* Deck Name */}
-        <label className="block max-w-xl">
-          <span className="text-muted-foreground text-sm font-medium block mb-1">{t('deck_name')}</span>
-          <input
-            type="text"
-            value={deckSettings.name}
-            onChange={e => setDeckSettings({ ...deckSettings, name: e.target.value })}
-            className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
-          />
-        </label>
+        <div className="flex items-end justify-between gap-4">
+          <label className="block max-w-xl flex-1">
+            <span className="text-muted-foreground text-sm font-medium block mb-1">{t('deck_name')}</span>
+            <input
+              type="text"
+              value={deckSettings.name}
+              onChange={e => setDeckSettings({ ...deckSettings, name: e.target.value })}
+              className="w-full h-10 rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </label>
+          <Button
+            variant="outline"
+            onClick={() => setIsPositioningOpen(true)}
+            className="flex items-center gap-2 h-10 px-4"
+          >
+            <LayoutIcon className="w-4 h-4" />
+            {t('admin.deckEditor.layout.edit_button')}
+          </Button>
+        </div>
 
         {/* Main Images */}
         <div className="flex flex-col md:flex-row justify-between gap-8">
@@ -198,8 +232,10 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
         </div>
 
         {/* Category Images */}
-        <div>
-          <h4 className="font-medium text-base mb-4 pt-4 border-t border-border">{t('category_images')}</h4>
+        <div className="pt-8 border-t border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium text-base">{t('category_images')}</h4>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {categories.map(cat => (
               <div key={cat.id} className="p-3 rounded border border-border bg-muted/20">
@@ -217,6 +253,19 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
           </div>
         </div>
       </div>
+
+      <PositioningEditor
+        isOpen={isPositioningOpen}
+        onClose={() => setIsPositioningOpen(false)}
+        layout={deckSettings.card_layout}
+        onApply={(layout) => {
+          setDeckSettings(prev => ({ ...prev, card_layout: layout }))
+          setIsPositioningOpen(false)
+        }}
+        borderImageUrl={deckSettings.card_back_image_url}
+        cards={cards}
+        categoryImages={deckSettings.category_images}
+      />
     </div>
   )
 }

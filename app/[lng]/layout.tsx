@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, JetBrains_Mono, Epilogue } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
@@ -8,6 +8,13 @@ import SiteHeader from '@/components/layout/SiteHeader'
 import '../globals.css'
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-sans' })
+
+const epilogue = Epilogue({
+  subsets: ['latin'],
+  variable: '--font-epilogue',
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic'],
+})
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -41,11 +48,10 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang={lng} dir={dir(lng)} className={jetbrainsMono.variable} suppressHydrationWarning>
+      <html lang={lng} dir={dir(lng)} className={`${jetbrainsMono.variable} ${epilogue.variable}`} suppressHydrationWarning>
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}

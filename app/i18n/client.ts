@@ -45,7 +45,7 @@ export function getTranslation(lng: string, ns: string, options?: Parameters<typ
     useEffect(() => {
       if (cookies.get(cookieName) === lng) return
       cookies.set(cookieName, lng, { path: '/' })
-    }, [lng, cookies])
+    }, [lng])
   }
   return ret
 }

@@ -34,6 +34,7 @@ type TranslationEntry = {
   usage_examples: string
 }
 type Translations = Record<Exclude<LangCode, 'en'>, TranslationEntry>
+type GeneratedCardData = Record<LangCode, TranslationEntry>
 type FormField = 'name' | 'description' | 'usage_examples'
 type FormData = {
   name: string
@@ -403,7 +404,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
 
       if (result.success && result.data) {
         if (fieldType === 'all') {
-          const data = result.data as Record<string, any>
+          const data = result.data as GeneratedCardData
           setFormData(prev => ({
             ...prev,
             name: data.en.name,

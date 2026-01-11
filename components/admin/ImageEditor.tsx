@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Crop, Wand2, Undo, Save, Loader2, Scissors, Eraser } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 interface ImageEditorProps {
   isOpen: boolean
@@ -75,7 +76,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       img.onerror = (e) => {
         console.error('Failed to load image for editing', e)
         console.error('Failed to load image for editing', e)
-        alert(t('admin.imageEditor.error_loading'))
+        toast.error(t('admin.imageEditor.error_loading'))
       }
     }
 
@@ -86,7 +87,7 @@ export default function ImageEditor({ isOpen, onClose, imageUrl, onSave }: Image
       setImageHistory([])
       setHistoryIndex(-1)
     }
-  }, [isOpen, imageUrl])
+  }, [isOpen, imageUrl, t])
 
   const saveState = () => {
     if (!canvasRef.current) return

@@ -1,10 +1,19 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
+import { type CardData, gameMachine } from './gameMachine'
+import { useMachine } from '@xstate/react'
+import { createBrowserInspector } from '@statelyai/inspect'
+
+const inspector
+  = process.env.NODE_ENV === 'development'
+    && typeof window !== 'undefined'
+    && localStorage.getItem('xstate-inspector') === 'enabled'
+    ? createBrowserInspector()
+    : null
 
 type Player = Database['public']['Tables']['players']['Row']
 type GameSession = Database['public']['Tables']['game_sessions']['Row']
-type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, played_by?: string }
 
 export const useGameEngine = (
   gameSession: GameSession | null,
@@ -12,107 +21,26 @@ export const useGameEngine = (
   players: Player[],
   fetchGameState: () => Promise<void>,
 ) => {
+  const [state, send] = useMachine(gameMachine, {
+    inspect: inspector?.inspect || undefined,
+  })
   const supabase = createClient()
-  const [isDrawing, setIsDrawing] = useState(false)
 
-  // Helper: Draw cards for a player
-  const drawCards = useCallback(async (playerId: string, count: number = 1) => {
-    if (!gameSession) return
-
-    setIsDrawing(true)
-    try {
-      // 1. Get top cards from draw pile
-      const { data: drawCards, error: drawError } = await supabase
-        .from('draw_pile')
-        .select('*')
-        .eq('game_session_id', gameSession.id)
-        .order('position', { ascending: true })
-        .limit(count)
-
-      if (drawError || !drawCards || drawCards.length === 0) {
-        console.error('Error fetching from draw pile:', drawError)
-        return
-      }
-
-      // 2. Add to player hand
-      const cardsToAdd = drawCards.map((dc, index) => ({
-        game_session_id: gameSession.id,
-        player_id: playerId,
-        card_id: dc.card_id,
-        position: 999 + index, // Position will be fixed by subsequent reorders or just appended
-      }))
-
-      const { error: handError } = await supabase
-        .from('player_hands')
-        .insert(cardsToAdd)
-
-      if (handError) {
-        console.error('Error adding to hand:', handError)
-        return
-      }
-
-      // 3. Remove from draw pile
-      const { error: removeError } = await supabase
-        .from('draw_pile')
-        .delete()
-        .in('id', drawCards.map(dc => dc.id))
-
-      if (removeError) {
-        console.error('Error removing from draw pile:', removeError)
-      }
-    }
-    finally {
-      setIsDrawing(false)
-      fetchGameState()
-    }
-  }, [supabase, gameSession, fetchGameState])
-
-  const playCard = async (card: CardData, currentHand: CardData[], playedCardsCount: number) => {
-    if (!gameSession || !currentPlayer) return
-
-    // Prevent playing ending card as a regular card
-    if (card.type === 'ending') {
-      console.error('Ending card cannot be played as a regular card')
-      return
-    }
-
-    // 1. Remove from hand
-    const { error: removeError } = await supabase
-      .from('player_hands')
-      .delete()
-      .eq('game_session_id', gameSession.id)
-      .eq('player_id', currentPlayer.id)
-      .eq('card_id', card.id)
-
-    if (removeError) {
-      console.error('Error removing card from hand:', removeError)
-      fetchGameState()
-      return
-    }
-
-    // 2. Add to played cards
-    const { error: playError } = await supabase
-      .from('played_cards')
-      .insert({
-        game_session_id: gameSession.id,
-        player_id: currentPlayer.id,
-        card_id: card.id,
-        position: playedCardsCount,
+  // Initialize machine if session is loaded
+  useEffect(() => {
+    if (gameSession && currentPlayer && state.value === 'idle') {
+      send({
+        type: 'START_GAME',
+        sessionId: gameSession.id,
+        lobbyId: gameSession.lobby_id,
+        mode: (gameSession.game_mode as any) || 'full',
+        currentPlayerId: currentPlayer.id,
       })
-
-    if (playError) {
-      console.error('Error playing card:', playError)
-      fetchGameState()
     }
-  }
+  }, [gameSession, currentPlayer, send, state.value])
 
-  const passTurn = async () => {
-    if (!gameSession || !currentPlayer) return
-
-    // 1. Draw a card (Penalty for passing)
-    await drawCards(currentPlayer.id, 1)
-
-    // 2. Find next player (excluding spectators)
+  const nextPlayer = useMemo(() => {
+    if (!currentPlayer || players.length === 0) return null
     const sortedPlayers = players
       .filter(p => p.role !== 'spectator')
       .sort((a, b) => {
@@ -122,104 +50,65 @@ export const useGameEngine = (
         return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
       })
     const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id)
-    if (currentIndex === -1) return
+    if (currentIndex === -1) return null
 
     const nextIndex = (currentIndex + 1) % sortedPlayers.length
-    const nextPlayer = sortedPlayers[nextIndex]
+    return sortedPlayers[nextIndex]
+  }, [currentPlayer, players])
 
-    // 3. Update Turn
-    const { error } = await supabase
-      .from('game_sessions')
-      .update({
-        current_turn_player_id: nextPlayer.id,
-        storyteller_id: nextPlayer.id,
-      })
-      .eq('id', gameSession.id)
+  const playCard = useCallback(async (card: CardData, playedCardsCount: number) => {
+    if (card.type === 'ending') return
+    send({ type: 'PLAY_CARD', card, playedCardsCount })
+  }, [send])
 
-    if (error) console.error('Error passing turn:', error)
-  }
+  const passTurn = useCallback(async () => {
+    if (!nextPlayer) return
+    send({ type: 'PASS', nextPlayerId: nextPlayer.id })
+  }, [send, nextPlayer])
 
-  const interrupt = async () => {
-    if (!gameSession || !currentPlayer) return
+  const interrupt = useCallback(async () => {
+    send({ type: 'INTERRUPT' })
+  }, [send])
 
-    const currentStorytellerId = gameSession.storyteller_id
+  const objectToCard = useCallback(async (playedCardId: string, storytellerId: string) => {
+    if (!nextPlayer) return
+    send({ type: 'OBJECT', playedCardId, storytellerId, nextPlayerId: nextPlayer.id })
+  }, [send, nextPlayer])
 
-    // Cannot interrupt yourself
-    if (currentStorytellerId === currentPlayer.id) return
+  const challengeStutter = useCallback(async (storytellerId: string) => {
+    if (!nextPlayer) return
+    send({ type: 'CHALLENGE_STUTTER', storytellerId, nextPlayerId: nextPlayer.id })
+  }, [send, nextPlayer])
 
-    // 1. Previous storyteller draws a card
-    if (currentStorytellerId) {
-      await drawCards(currentStorytellerId, 1)
-    }
+  const confirmCard = useCallback(async (playedCardId: string) => {
+    send({ type: 'CONFIRM_CARD', playedCardId })
+  }, [send])
 
-    // 2. Update Turn to Interrupter (Current Player)
-    const { error } = await supabase
-      .from('game_sessions')
-      .update({
-        current_turn_player_id: currentPlayer.id,
-        storyteller_id: currentPlayer.id,
-      })
-      .eq('id', gameSession.id)
+  const winGame = useCallback(async (cardId: string, playedCardsCount: number) => {
+    send({ type: 'WIN_GAME', cardId, playedCardsCount })
+  }, [send])
 
-    if (error) console.error('Error interrupting:', error)
-  }
-
-  const winGame = async (endingCardId: string, playedCardsCount: number) => {
-    if (!gameSession || !currentPlayer) return
-
-    // 1. Move ending card to played_cards
-    const { error: removeError } = await supabase
-      .from('player_hands')
-      .delete()
-      .eq('game_session_id', gameSession.id)
-      .eq('player_id', currentPlayer.id)
-      .eq('card_id', endingCardId)
-
-    if (removeError) {
-      console.error('Error removing ending card from hand:', removeError)
-      return
-    }
-
-    const { error: playError } = await supabase
-      .from('played_cards')
-      .insert({
-        game_session_id: gameSession.id,
-        player_id: currentPlayer.id,
-        card_id: endingCardId,
-        position: playedCardsCount,
-      })
-
-    if (playError) {
-      console.error('Error playing ending card:', playError)
-      return
-    }
-
-    // 2. Update Game Session with Winner
-    const { error } = await supabase
-      .from('game_sessions')
-      .update({
-        winner_id: currentPlayer.id,
-        status: 'COMPLETED',
-      })
-      .eq('id', gameSession.id)
-
-    if (error) {
-      console.error('Error finishing game:', error)
-    }
-    else {
-      // Also update lobby to finished to clean up listings
-      await supabase
-        .from('lobbies')
-        .update({ status: 'finished' })
-        .eq('id', gameSession.lobby_id)
-    }
-  }
+  const finalizeWin = useCallback(async (winnerId: string) => {
+    if (!gameSession) return
+    send({ type: 'FINALIZE_WIN', winnerId, lobbyId: gameSession.lobby_id })
+  }, [send, gameSession])
 
   return {
+    state,
+    send,
     playCard,
     passTurn,
     interrupt,
+    objectToCard,
+    challengeStutter,
+    confirmCard,
     winGame,
-    isDrawing,
+    finalizeWin,
+    gameMode: state.context.gameMode,
+    optimisticCard: state.context.optimisticCard,
+    inFlightHandId: state.context.inFlightHandId,
+    isDrawing: state.matches({ active: { persistence: 'passingTurn' } } as any)
+      || state.matches({ active: { persistence: 'challengingStutter' } } as any)
+      || state.matches({ active: { persistence: 'penaltyForStoryteller' } } as any),
   }
 }

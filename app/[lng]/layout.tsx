@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, JetBrains_Mono, Epilogue } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-
 import SiteHeader from '@/components/layout/SiteHeader'
 import '../globals.css'
 

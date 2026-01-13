@@ -13,6 +13,11 @@ interface TurnControlsProps {
   onInterrupt: () => void | Promise<void>
   onWin: () => void | Promise<void>
   isEndingSelected?: boolean
+  canObject?: boolean
+  onObject?: () => void | Promise<void>
+  canChallengeStutter?: boolean
+  onChallengeStutter?: () => void | Promise<void>
+  gameMode?: string
 }
 
 export default function TurnControls({
@@ -26,6 +31,11 @@ export default function TurnControls({
   onInterrupt,
   onWin,
   isEndingSelected,
+  canObject,
+  onObject,
+  canChallengeStutter,
+  onChallengeStutter,
+  gameMode,
 }: TurnControlsProps) {
   const { t } = useTranslation()
   return (
@@ -61,19 +71,41 @@ export default function TurnControls({
             onClick={onPass}
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
           >
-            {t('game.pass_turn_btn')}
+            {gameMode === 'solo' ? t('game.draw_card_btn') : t('game.pass_turn_btn')}
           </button>
         </div>
       )}
 
-      {/* Interrupter Controls */}
-      {!isMyTurn && canInterrupt && (
-        <button
-          onClick={onInterrupt}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
-        >
-          {t('game.interrupt_btn')}
-        </button>
+      {/* Interrupter/Objector Controls */}
+      {!isMyTurn && (
+        <div className="flex flex-col gap-2">
+          {canObject && (
+            <button
+              onClick={onObject}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 animate-bounce"
+            >
+              {t('game.object_btn')}
+            </button>
+          )}
+
+          {canChallengeStutter && (
+            <button
+              onClick={onChallengeStutter}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2"
+            >
+              {t('game.challenge_stutter_btn')}
+            </button>
+          )}
+
+          {canInterrupt && (
+            <button
+              onClick={onInterrupt}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
+            >
+              {t('game.interrupt_btn')}
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

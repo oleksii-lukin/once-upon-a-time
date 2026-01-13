@@ -4,7 +4,7 @@ import { Database } from '@/supabase/types'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import { useTranslation } from 'react-i18next'
 
-type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, played_by?: string }
+import { type CardData } from './gameMachine'
 type Player = Database['public']['Tables']['players']['Row']
 
 interface TableAreaProps {
@@ -50,13 +50,24 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
               const playerName = playedByPlayer ? getPlayerDisplayName(playedByPlayer) : t('game.unknown_player')
 
               return (
-                <div key={card.id} className="w-80 flex flex-col gap-1 group relative">
+                <div
+                  key={card.played_card_id || card.id}
+                  className={`w-80 flex flex-col gap-1 group relative transition-all ${card.status === 'PENDING' ? 'scale-110 ring-2 ring-primary animate-pulse z-10' : ''}`}
+                >
                   <Card
                     card={card}
                     cardBackImageUrl={deck?.card_back_image_url}
                     categoryImages={deck?.category_images as Record<string, string> | null}
                     layout={deck?.card_layout}
                   />
+                  {/* Pending Indicator */}
+                  {card.status === 'PENDING' && (
+                    <div className="absolute top-0 left-0 w-full h-full bg-primary/10 pointer-events-none rounded-lg flex items-center justify-center">
+                      <div className="bg-primary text-white text-[10px] font-bold px-1 rounded uppercase tracking-tighter">
+                        Pending...
+                      </div>
+                    </div>
+                  )}
                   {/* Tooltip-like indicator for who played the card */}
                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none z-20">
                     {t('game.played_by', { name: playerName })}

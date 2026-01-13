@@ -1,7 +1,5 @@
 'use client'
 
-import { Database } from '@/supabase/types'
-
 function normalizeTypeKey(raw?: string) {
   const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
   const map: Record<string, string> = {
@@ -28,7 +26,7 @@ function normalizeTypeKey(raw?: string) {
   return map[s] || 'card'
 }
 
-type CardData = Database['public']['Tables']['cards']['Row']
+import { type CardData } from './gameMachine'
 
 interface CardProps {
   card: Partial<CardData> & { type?: string } // Allow partial for now as we might mock data
@@ -51,7 +49,7 @@ interface CardProps {
   className?: string
   cardBackImageUrl?: string | null
   categoryImages?: Record<string, string> | null
-  layout?: any | null
+  layout?: CardLayout | null
 }
 
 export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout }: CardProps) {

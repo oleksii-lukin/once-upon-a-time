@@ -17,26 +17,26 @@ The goal of the game is to tell a story using the elements on your **Story Cards
 
 ### The Storyteller's Turn
 The current player (Storyteller) begins or continues a story.
-- **Playing Cards**: When the Storyteller mentions an element in their story that corresponds to a card in their hand, they may place that card face up on the table.
+- **Playing Cards**: When the Storyteller mentions an element in their story that corresponds to a card in their hand, they may place that card on the table. **Card play is not instantaneous.** There is a brief window where other players can object if the card doesn't fit the story or if the Storyteller "stuttered" while playing it.
 - **Drawing Cards**: If the Storyteller cannot continue the story, they must say "Pass". They draw one Story Card and their turn ends. Use is passed to the next player to the left.
-- **Continuity**: The story must make sense. If the group decides the Storyteller is rambling just to play cards, or the card doesn't fit, they may be penalized (draw a card, lose turn).
+- **Continuity & Stuttering**: The story must make sense. If the Storyteller hesitates for too long, repeats themselves (stutters), or rambles just to play cards, they may be challenged.
 
-### Interrupting
-Other players can interrupt the Storyteller to take control of the story.
-1.  **Interrupt Cards**: Some cards (if we implement special interrupt cards) or specific game mechanics allow playing a card when the Storyteller mentions something related but doesn't have the card for it. *[Clarification Needed: Standard rules allow interrupting if you have a card matching what the storyteller just said. We need to decide if we implement this "Keyword Match" interruption.]*
-2.  **Challenge**: If the Storyteller hesitates for too long or gets stuck, another player can challenge.
+### Objections and Challenges
+Other players can object to the current storyteller's actions:
+1.  **Object to Card**: When a card is played, any player can click "Object/Disapprove". If the group agrees (or if the challenge is valid), the card is returned to the Storyteller's hand, they draw a penalty card from the deck, and their turn ends.
+2.  **Challenge Stutter**: If the Storyteller is stuck or stuttering without playing a card, they can be challenged. A successful challenge ends their turn and makes them draw a penalty card.
+3.  **Interruption**: A player can interrupt the Storyteller at any time by playing a card that matches a keyword the Storyteller just mentioned. This is a valid way to take control of the story.
 
 ### Passing the Turn
-If the Storyteller passes or is interrupted:
-- The player who interrupted becomes the new Storyteller.
-- If the Storyteller passed voluntarily, the next player in order becomes the Storyteller.
-- The new Storyteller picks up the story from where it left off.
+If the Storyteller passes, is interrupted correctly, or is successfully challenged:
+- The player who interrupted/challenged becomes the new Storyteller (in some variations) or it passes to the next player.
+- The previous Storyteller draws a penalty card (unless they passed voluntarily).
 
 ## 5. Winning the Game
 - A player must first play all of their **Story Cards**.
 - Once their hand is empty of Story Cards, they must steer the story to a logical conclusion that matches their **Ending Card**.
-- If successful, they play the Ending Card and win.
-- If the ending doesn't make sense (challenged by others), they draw a new Ending Card and Story Cards, and play passes.
+- **The game only finishes once the Ending Card is played AND the turn is finalized without objections.**
+- If the ending doesn't make sense or is challenged by others, the Ending Card returns to the hand, they draw a new Ending Card and a Story Card, and play passes.
 
 ## 6. Digital Adaptation Specifics
 - **Turn Timer**: Optional timer to prevent stalling?

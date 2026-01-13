@@ -6,8 +6,7 @@ import { Database } from '@/supabase/types'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-// Mock card type for now until we have the full schema
-type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, position?: number }
+import { type CardData } from './gameMachine'
 
 interface PlayerHandProps {
   cards: CardData[]

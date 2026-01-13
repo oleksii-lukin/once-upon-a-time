@@ -228,6 +228,8 @@ export type Database = {
           deck_id: string
           game_mode: string | null
           id: string
+          is_turn_pending_confirmation: boolean | null
+          last_card_played_at: string | null
           lobby_id: string
           status: string
           storyteller_id: string | null
@@ -240,6 +242,8 @@ export type Database = {
           deck_id: string
           game_mode?: string | null
           id?: string
+          is_turn_pending_confirmation?: boolean | null
+          last_card_played_at?: string | null
           lobby_id: string
           status?: string
           storyteller_id?: string | null
@@ -252,6 +256,8 @@ export type Database = {
           deck_id?: string
           game_mode?: string | null
           id?: string
+          is_turn_pending_confirmation?: boolean | null
+          last_card_played_at?: string | null
           lobby_id?: string
           status?: string
           storyteller_id?: string | null
@@ -354,6 +360,7 @@ export type Database = {
           played_at: string
           player_id: string
           position: number
+          status: Database['public']['Enums']['played_card_status'] | null
         }
         Insert: {
           card_id: string
@@ -362,6 +369,7 @@ export type Database = {
           played_at?: string
           player_id: string
           position?: number
+          status?: Database['public']['Enums']['played_card_status'] | null
         }
         Update: {
           card_id?: string
@@ -370,6 +378,7 @@ export type Database = {
           played_at?: string
           player_id?: string
           position?: number
+          status?: Database['public']['Enums']['played_card_status'] | null
         }
         Relationships: [
           {
@@ -541,7 +550,7 @@ export type Database = {
       mark_inactive_lobbies_finished: { Args: never, Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      played_card_status: 'PENDING' | 'CONFIRMED' | 'REVERTED'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -671,6 +680,8 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      played_card_status: ['PENDING', 'CONFIRMED', 'REVERTED'],
+    },
   },
 } as const

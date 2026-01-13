@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { Database } from '@/supabase/types'
 import { createClient } from '@/utils/supabase/client'
 import PlayerHand from './PlayerHand'
@@ -12,10 +12,10 @@ import { useGameEngine } from './useGameEngine'
 import type { Tables } from '@/supabase/types'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import { useRouter, useParams } from 'next/navigation'
+import { type CardData } from './gameMachine'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
-type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string, played_by?: string }
 type GameSession = Database['public']['Tables']['game_sessions']['Row']
 type Deck = Database['public']['Tables']['decks']['Row']
 
@@ -36,30 +36,17 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const router = useRouter()
   const params = useParams()
   const lng = params.lng as string
+  const fetchGameStateRef = useRef<() => Promise<void>>(null)
 
-  // Determine current player ID (user or guest)
-  const currentPlayerId = currentUserId || currentGuestId || null
+  // Determine if current player
   const currentPlayer = useMemo(() => players.find(p =>
     (currentUserId && p.user_id === currentUserId)
     || (currentGuestId && p.guest_id === currentGuestId),
   ), [players, currentUserId, currentGuestId])
 
+  const currentPlayerId = currentUserId || currentGuestId || null
   const isSpectator = currentPlayer?.role === 'spectator'
   const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    if (currentUserId) {
-      const fetchAdminStatus = async () => {
-        const { data } = await supabase
-          .from('user_profiles')
-          .select('is_admin')
-          .eq('user_id', currentUserId)
-          .single()
-        if (data) setIsAdmin(data.is_admin)
-      }
-      fetchAdminStatus()
-    }
-  }, [currentUserId, supabase])
 
   useEffect(() => {
     if (lobby.deck_id) {
@@ -94,20 +81,21 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
                     cards (*)
                 `)
         .eq('game_session_id', session.id)
-        .order('played_at')
+        .order('position', { ascending: true })
+        .order('played_at', { ascending: true })
 
       if (playedData) {
-        type PlayedRow = Tables<'played_cards'> & { cards: Tables<'cards'> }
-        const playedCardsWithType = (playedData as PlayedRow[]).map(item => ({
+        const fetchedCards = (playedData as any[]).map(item => ({
           ...item.cards,
-          // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
           type: item.cards.category || item.cards.type || 'Card',
           played_by: item.player_id,
+          status: item.status,
+          played_card_id: item.id,
         }))
-        setPlayedCards(playedCardsWithType)
+        setPlayedCards(fetchedCards)
       }
 
-      // Fetch player's hand if we found the current player
+      // Fetch player's hand
       if (currentPlayer) {
         const { data: handData } = await supabase
           .from('player_hands')
@@ -120,17 +108,16 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           .order('position')
 
         if (handData) {
-          type HandRow = Tables<'player_hands'> & { cards: Tables<'cards'> }
-          const cardsWithType = (handData as HandRow[]).map(item => ({
+          const cardsWithType = (handData as any[]).map(item => ({
             ...item.cards,
-            // Use category if available (e.g. 'Catalyst'), otherwise type (e.g. 'ending'), otherwise 'Card'
             type: item.cards.category || item.cards.type || 'Card',
+            hand_id: item.id,
           }))
           setHand(cardsWithType)
         }
       }
 
-      // Fetch all hand counts for the sidebar
+      // Fetch all hand counts
       const { data: allHandsData } = await supabase
         .from('player_hands')
         .select(`
@@ -151,51 +138,80 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     }
   }, [supabase, lobby.id, currentPlayer])
 
+  useEffect(() => {
+    fetchGameStateRef.current = fetchGameState
+  }, [fetchGameState])
+
+  useEffect(() => {
+    if (currentUserId) {
+      const fetchAdminStatus = async () => {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('is_admin')
+          .eq('user_id', currentUserId)
+          .single()
+        if (data) setIsAdmin(data.is_admin)
+      }
+      fetchAdminStatus()
+    }
+  }, [currentUserId, supabase])
+
   // Initialize Game Engine Hook
-  const { playCard, passTurn, interrupt, winGame, isDrawing } = useGameEngine(
+  const {
+    state,
+    playCard,
+    passTurn,
+    interrupt,
+    objectToCard,
+    challengeStutter,
+    confirmCard,
+    winGame,
+    finalizeWin,
+    isDrawing,
+    optimisticCard,
+    inFlightHandId,
+    gameMode,
+  } = useGameEngine(
     gameSession,
     currentPlayer,
     players,
     fetchGameState,
   )
 
-  // Initial fetch and subscriptions
+  // Subscriptions
   useEffect(() => {
-    // Fetch initial state asynchronously to avoid blocking effect setup
-    const initializeGame = async () => {
-      await fetchGameState()
-    }
-    initializeGame()
+    fetchGameState()
 
-    const channel = supabase
-      .channel(`game:${lobby.id}`)
+    const channel = supabase.channel(`game:${lobby.id}`)
+    channel
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'game_sessions', filter: `lobby_id=eq.${lobby.id}` },
-        (payload) => {
+        (payload: any) => {
           if (payload.new) setGameSession(payload.new as GameSession)
         },
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'played_cards' },
-        () => {
-          fetchGameState()
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'player_hands' },
-        () => {
-          fetchGameState()
-        },
-      )
-      .subscribe()
+
+    if (gameSession?.id) {
+      channel
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'played_cards', filter: `game_session_id=eq.${gameSession.id}` },
+          () => { fetchGameStateRef.current?.() },
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'player_hands', filter: `game_session_id=eq.${gameSession.id}` },
+          () => { fetchGameStateRef.current?.() },
+        )
+    }
+
+    channel.subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [supabase, lobby.id, fetchGameState])
+  }, [supabase, lobby.id, gameSession?.id])
 
   // Derived State
   const currentTurnPlayerId = gameSession?.current_turn_player_id
@@ -203,12 +219,24 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const storytellerPlayer = players.find(p => p.id === gameSession?.storyteller_id)
   const isStoryteller = storytellerPlayer?.id === currentPlayer?.id
 
-  // Separate Ending Card from Hand for Logic (assuming Ending cards have type 'ending')
-  // For now, treat all as playable via Play Card, but Win button logic is specific.
-  const storyCards = hand.filter(c => c.type !== 'ending')
-  const endingCard = hand.find(c => c.type === 'ending')
-  const handSize = storyCards.length // Only story cards count for "Empty Hand" logic usually
+  const displayedPlayedCards = useMemo(() => {
+    const all = [...playedCards]
+    if (optimisticCard) {
+      const opt = optimisticCard as CardData
+      if (!all.some(c => c.id === opt.id && c.played_by === opt.played_by)) {
+        all.push(opt)
+      }
+    }
+    return all
+  }, [playedCards, optimisticCard])
 
+  const displayedHand = useMemo(() => {
+    return hand.filter(c => c.hand_id !== inFlightHandId)
+  }, [hand, inFlightHandId])
+
+  const storyCards = displayedHand.filter(c => c.type !== 'ending')
+  const endingCard = displayedHand.find(c => c.type === 'ending')
+  const handSize = storyCards.length
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
 
   const onSelectCard = (card: CardData) => {
@@ -216,64 +244,50 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }
 
   const isEndingSelected = useMemo(() => {
-    return hand.find(c => c.id === selectedCardId)?.type === 'ending'
-  }, [hand, selectedCardId])
+    return displayedHand.find(c => c.id === selectedCardId)?.type === 'ending'
+  }, [displayedHand, selectedCardId])
 
-  const handlePlaySelected = async () => {
-    if (!selectedCardId || gameSession?.status === 'COMPLETED') return
+  const onPlayCard = (card: CardData) => {
+    if (card.type === 'ending' || gameSession?.status === 'COMPLETED') return
+    playCard(card, playedCards.length)
+  }
+
+  const onWin = () => {
+    const currentEndingCard = endingCard || hand.find(c => c.type === 'ending')
+    if (currentEndingCard && gameSession?.status !== 'COMPLETED') {
+      winGame(currentEndingCard.id, playedCards.length)
+    }
+  }
+
+  const handlePlaySelected = () => {
+    if (!selectedCardId) return
     const card = hand.find(c => c.id === selectedCardId)
     if (card) {
-      await onPlayCard(card)
+      onPlayCard(card)
       setSelectedCardId(null)
-    }
-  }
-
-  const onPlayCard = async (card: CardData) => {
-    if (card.type === 'ending' || gameSession?.status === 'COMPLETED') return
-
-    // Optimistic Update
-    setHand(prev => prev.filter(c => c.id !== card.id))
-    setPlayedCards(prev => [...prev, { ...card, played_by: currentPlayer?.id }])
-
-    await playCard(card, hand, playedCards.length)
-  }
-
-  const onWin = async () => {
-    if (gameSession?.status === 'COMPLETED') return
-    // Find ending card via type='ending' (which we fixed in fetching)
-    const currentEndingCard = endingCard || hand.find(c => c.type === 'ending')
-    if (currentEndingCard) {
-      // Optimistic Update
-      setHand(prev => prev.filter(c => c.id !== currentEndingCard.id))
-      setPlayedCards(prev => [...prev, { ...currentEndingCard, played_by: currentPlayer?.id }])
-
-      await winGame(currentEndingCard.id, playedCards.length)
-    }
-    else {
-      console.error('No ending card found in hand!')
     }
   }
 
   const cardsPlayedCount = useMemo(() => {
     const counts: Record<string, number> = {}
     playedCards.forEach((card) => {
-      if (card.played_by) {
+      if (card.played_by && card.status !== 'REVERTED') {
         counts[card.played_by] = (counts[card.played_by] || 0) + 1
       }
     })
     return counts
   }, [playedCards])
 
+  const pendingCard = useMemo(() => displayedPlayedCards.find(c => c.status === 'PENDING'), [displayedPlayedCards])
+
+  // Storyteller confirmation and ending validation is now handled by the state machine
+
   const winner = useMemo(() => {
-    if (gameSession?.winner_id) {
-      return players.find(p => p.id === gameSession.winner_id)
-    }
+    if (gameSession?.winner_id) return players.find(p => p.id === gameSession.winner_id)
     return undefined
   }, [gameSession?.winner_id, players])
 
-  const handleReturnToLobbies = () => {
-    router.push(`/${lng}/lobbies`)
-  }
+  const handleReturnToLobbies = () => router.push(`/${lng}/lobbies`)
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background-dark text-white font-display">
@@ -290,7 +304,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
       <main className="flex-1 flex flex-col justify-between overflow-hidden relative z-10">
         <TableArea
-          playedCards={playedCards}
+          playedCards={displayedPlayedCards}
           storytellerPlayer={storytellerPlayer}
           players={players}
           deck={
@@ -298,13 +312,13 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
               ? {
                   card_back_image_url: deck.card_back_image_url,
                   category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout,
+                  card_layout: deck.card_layout as any,
                 }
               : undefined
           }
         />
         <PlayerHand
-          cards={hand}
+          cards={displayedHand}
           onSelectCard={onSelectCard}
           selectedCardId={selectedCardId}
           isMyTurn={isMyTurn}
@@ -313,18 +327,17 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
               ? {
                   card_back_image_url: deck.card_back_image_url,
                   category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout,
+                  card_layout: deck.card_layout as any,
                 }
               : undefined
           }
         />
 
-        {/* Turn Controls inside main area to avoid sidebar overlap */}
         {!isSpectator && gameSession?.status !== 'COMPLETED' && (
           <TurnControls
             isMyTurn={!!isMyTurn}
             isStoryteller={!!isStoryteller}
-            canInterrupt={!isMyTurn && !!currentPlayer} // Can interrupt if logged in and not my turn
+            canInterrupt={!isMyTurn && !!currentPlayer && !pendingCard}
             handSize={handSize}
             selectedCardId={selectedCardId}
             onPlaySelected={handlePlaySelected}
@@ -332,6 +345,11 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             onInterrupt={interrupt}
             onWin={onWin}
             isEndingSelected={isEndingSelected}
+            canObject={!isMyTurn && !!pendingCard}
+            onObject={() => pendingCard && objectToCard(pendingCard.played_card_id!, pendingCard.played_by!)}
+            canChallengeStutter={!isMyTurn && !pendingCard && !!storytellerPlayer}
+            onChallengeStutter={() => storytellerPlayer && challengeStutter(storytellerPlayer.id)}
+            gameMode={gameMode}
           />
         )}
       </main>
@@ -354,14 +372,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       />
 
       {gameSession?.status === 'COMPLETED' && (
-        <GameCompletionOverlay
-          winner={winner}
-          players={players}
-          cardsPlayedCount={cardsPlayedCount}
-          onReturnToLobbies={handleReturnToLobbies}
-        />
+        <GameCompletionOverlay winner={winner} players={players} cardsPlayedCount={cardsPlayedCount} onReturnToLobbies={handleReturnToLobbies} />
       )}
     </div>
-
   )
 }

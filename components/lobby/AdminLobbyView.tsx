@@ -185,7 +185,7 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'lobbies', filter: `id=eq.${lobby.id}` },
-        (payload) => {
+        (payload: any) => {
           if (payload.new) {
             const updatedLobby = payload.new as Lobby
             setCurrentLobby(updatedLobby)
@@ -215,28 +215,30 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
   useEffect(() => {
     const newChannel = supabase.channel(`lobby:${lobby.id}`)
       .on('presence', { event: 'sync' }, () => {
-        const newState = newChannel.presenceState<LobbyPresence>()
+        const newState = newChannel.presenceState() as any
         const onlineIds = new Set<string>()
         for (const key in newState) {
-          newState[key].forEach((presence) => {
+          newState[key].forEach((presence: any) => {
             if (presence.player_id) onlineIds.add(presence.player_id)
           })
         }
         setOnlineUsers(onlineIds)
       })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
+      .on('presence', { event: 'join' }, (presence: { key: string, newPresences: any[] }) => {
+        const { newPresences } = presence
         setOnlineUsers((prev) => {
           const next = new Set(prev)
-          newPresences.forEach((p) => {
+          newPresences.forEach((p: any) => {
             if (p.player_id) next.add(p.player_id)
           })
           return next
         })
       })
-      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      .on('presence', { event: 'leave' }, (presence: { key: string, leftPresences: any[] }) => {
+        const { leftPresences } = presence
         setOnlineUsers((prev) => {
           const next = new Set(prev)
-          leftPresences.forEach((p) => {
+          leftPresences.forEach((p: any) => {
             if (p.player_id) next.delete(p.player_id)
           })
           return next
@@ -400,6 +402,12 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                           >
                             {t('tutorial_game_mode')}
                           </button>
+                          <button
+                            onClick={() => updateSettings({ gameMode: 'solo', allowInterrupts: false })}
+                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'solo' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            {t('solo_game_mode')}
+                          </button>
                         </div>
                       </div>
                       {settings.gameMode === 'fast' && (
@@ -407,6 +415,9 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                       )}
                       {settings.gameMode === 'tutorial' && (
                         <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
+                      )}
+                      {settings.gameMode === 'solo' && (
+                        <p className="text-muted-foreground text-xs italic">{t('solo_mode_description')}</p>
                       )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">

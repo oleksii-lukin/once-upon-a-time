@@ -10,16 +10,10 @@ import { getTranslation } from '@/app/i18n/client'
 import { Loader2 } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
 
-import { CardLayout, parseCardLayout } from '@/types/card'
+import { parseCardLayout } from '@/types/card'
+import { Deck } from '@/types/deck'
 import PositioningEditor from './PositioningEditor'
 import { LayoutIcon } from 'lucide-react'
-
-type Deck = Database['public']['Tables']['decks']['Row'] & {
-  bg_image_url?: string | null
-  card_back_image_url?: string | null
-  category_images?: Record<string, string> | null
-  card_layout?: CardLayout | null
-}
 
 interface DeckSettingsProps {
   deck: Deck

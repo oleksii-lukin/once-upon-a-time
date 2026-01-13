@@ -2,16 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Database } from '@/supabase/types'
 import { getTranslation } from '@/app/i18n/client'
+import { Deck } from '@/types/deck'
 import DeckSettings from './DeckSettings'
 import CardsEditor from './CardsEditor'
-
-type Deck = Database['public']['Tables']['decks']['Row'] & {
-  bg_image_url?: string | null
-  card_back_image_url?: string | null
-  category_images?: Record<string, string> | null
-}
 
 export default function DeckEditor({ deck, lng }: { deck: Deck, lng: string }) {
   const router = useRouter()

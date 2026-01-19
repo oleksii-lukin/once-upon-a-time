@@ -27,23 +27,13 @@ function normalizeTypeKey(raw?: string) {
 }
 
 import { type CardData } from './gameMachine'
-
-interface CardProps {
-  card: Partial<CardData> & { type?: string } // Allow partial for now as we might mock data
-  isHoverable?: boolean
-  onClick?: () => void
-  className?: string
-  cardBackImageUrl?: string | null
-  categoryImages?: Record<string, string> | null
-}
-
 import { useTranslation } from 'react-i18next'
 import { getLocalizedCardContent } from '@/utils/gameUtils'
 import Image from 'next/image'
 import { CardLayout, parseCardLayout } from '@/types/card'
 
 interface CardProps {
-  card: Partial<CardData> & { type?: string } // Allow partial for now as we might mock data
+  card: Partial<CardData> // Allow partial for now as we might mock data
   isHoverable?: boolean
   onClick?: () => void
   className?: string

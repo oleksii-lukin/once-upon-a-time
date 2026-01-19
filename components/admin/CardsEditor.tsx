@@ -161,8 +161,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       matchesCategory = true
     }
     else {
-      const cardTypeOrCategory = card.type === 'ending' ? 'ending' : (card.category || 'protagonist')
-      matchesCategory = selectedCategories.has(cardTypeOrCategory)
+      const cardCategory = card.category || 'protagonist'
+      matchesCategory = selectedCategories.has(cardCategory)
     }
 
     return matchesSearch && matchesCategory
@@ -270,7 +270,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       usage_examples: formData.usage_examples,
       image_url: formData.image_url || null, // Send null if empty
       type: formData.type,
-      category: formData.type === 'story' ? formData.category : null,
+      category: formData.type === 'story' ? formData.category : 'ending',
       translations: translationsToSave,
     }
 
@@ -386,7 +386,11 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     // Add existing cards of the same type/category to the exclusion list
     const existingNames = cards
       .filter(c => c.id !== selectedCard?.id) // Don't exclude itself if editing
-      .filter(c => c.type === formData.type && c.category === formData.category)
+      .filter((c) => {
+        const cardCategory = c.category || 'ending'
+        const formCategory = formData.type === 'story' ? formData.category : 'ending'
+        return c.type === formData.type && cardCategory === formCategory
+      })
       .map(c => c.name)
 
     const allExcluded = Array.from(new Set([...currentDiscarded, ...existingNames]))
@@ -397,7 +401,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         deckName,
         fieldType,
         formData.type,
-        formData.type === 'story' ? formData.category : null,
+        formData.type === 'story' ? formData.category : 'ending',
         formData.name || undefined,
         allExcluded,
       )

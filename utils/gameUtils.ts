@@ -1,14 +1,14 @@
 import { Database } from '@/supabase/types'
 
-type CardData = Database['public']['Tables']['cards']['Row'] & { type?: string }
-type PartialCardData = Partial<CardData> & { type?: string }
+type CardData = Database['public']['Tables']['cards']['Row']
+type PartialCardData = Partial<CardData>
 
 export function getLocalizedCardContent(card: PartialCardData, language: string) {
   if (!card.translations) {
     return {
       name: card.name,
       description: card.description,
-      type: card.type || card.category || 'Card',
+      type: card.category || 'Card',
     }
   }
 
@@ -19,13 +19,13 @@ export function getLocalizedCardContent(card: PartialCardData, language: string)
     return {
       name: localized.name || card.name,
       description: localized.description || card.description,
-      type: card.type || card.category || 'Card',
+      type: card.category || 'Card',
     }
   }
 
   return {
     name: card.name,
     description: card.description,
-    type: card.type || card.category || 'Card',
+    type: card.category || 'Card',
   }
 }

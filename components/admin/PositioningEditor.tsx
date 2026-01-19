@@ -181,7 +181,13 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
               {previewCard && (
                 <div className="absolute inset-0 pointer-events-none">
                   <Card
-                    card={previewCard}
+                    card={{
+                      ...previewCard,
+                      category: previewCard.category || undefined,
+                      description: previewCard.description || undefined,
+                      image_url: previewCard.image_url || undefined,
+                      usage_examples: previewCard.usage_examples || undefined,
+                    }}
                     cardBackImageUrl={borderImageUrl}
                     categoryImages={categoryImages}
                     layout={currentLayout}

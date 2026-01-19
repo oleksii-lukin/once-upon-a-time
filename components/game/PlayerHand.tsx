@@ -26,8 +26,8 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
   // We use useMemo to prevent re-sorting on every render if cards dependencies don't change
   const sortedCards = React.useMemo(() => {
     return [...cards].sort((a, b) => {
-      const isAEnding = (a.type?.toLowerCase() === 'ending') || (a.category?.toLowerCase() === 'ending') || (a.category?.toLowerCase() === 'endings')
-      const isBEnding = (b.type?.toLowerCase() === 'ending') || (b.category?.toLowerCase() === 'ending') || (b.category?.toLowerCase() === 'endings')
+      const isAEnding = a.category?.toLowerCase() === 'ending'
+      const isBEnding = b.category?.toLowerCase() === 'ending'
 
       if (isAEnding === isBEnding) {
         // Determine secondary sort (e.g., by ID or position to keep stable)
@@ -41,11 +41,11 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
     <div className="relative w-full bg-black/20 dark:bg-black/30 backdrop-blur-md border-t border-white/10 pt-4 pb-6">
       <div className="player-hand flex justify-center items-end h-72 gap-4 px-4 overflow-x-auto pb-4">
         {sortedCards.map((card, index) => {
-          const isEnding = (card.type?.toLowerCase() === 'ending') || (card.category?.toLowerCase() === 'ending') || (card.category?.toLowerCase() === 'endings')
+          const isEnding = card.category?.toLowerCase() === 'ending'
           // Check if previous card was NOT an ending, and this one IS an ending
           // But actually, we just want a separator BEFORE the first ending card
           // Since they are sorted, we can just check if this is the first ending card in the list
-          const isFirstEnding = isEnding && (index === 0 || !((sortedCards[index - 1].type?.toLowerCase() === 'ending') || (sortedCards[index - 1].category?.toLowerCase() === 'ending')))
+          const isFirstEnding = isEnding && (index === 0 || (sortedCards[index - 1].category?.toLowerCase() !== 'ending'))
           const isSelected = selectedCardId === card.id
 
           return (

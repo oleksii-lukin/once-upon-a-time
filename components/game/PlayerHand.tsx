@@ -65,11 +65,6 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                   layout={deck?.card_layout}
                   className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-yellow-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_20px_rgba(255,255,255,0.4)]' : ''}`}
                 />
-                {isEnding && (
-                  <div className="text-center text-xs text-yellow-400 mt-3 font-bold tracking-[0.2em] uppercase drop-shadow-md">
-                    {t('game.ending_card_label')}
-                  </div>
-                )}
               </div>
             </React.Fragment>
           )

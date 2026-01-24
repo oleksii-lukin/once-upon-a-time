@@ -346,7 +346,11 @@
         "catalyst": "Катализатор",
         "character": "Персонаж",
         "setting": "Место",
-        "aspect": "Аспект"
+        "aspect": "Аспект",
+        "protagonist": "Протагонист",
+        "antagonist": "Антагонист",
+        "object": "Предмет",
+        "trait": "Черта"
     },
     "ai_config": {
         "lm_studio": "LM Studio",

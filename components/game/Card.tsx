@@ -42,6 +42,19 @@ interface CardProps {
   layout?: CardLayout | null
 }
 
+const typeColorMap: Record<string, string> = {
+  ending: 'bg-rose-500/90 border-rose-400/50',
+  protagonist: 'bg-sky-500/90 border-sky-400/50',
+  antagonist: 'bg-amber-600/90 border-amber-500/50',
+  setting: 'bg-emerald-500/90 border-emerald-400/50',
+  object: 'bg-violet-500/90 border-violet-400/50',
+  catalyst: 'bg-fuchsia-500/90 border-fuchsia-400/50',
+  trait: 'bg-indigo-500/90 border-indigo-400/50',
+  character: 'bg-blue-500/90 border-blue-400/50',
+  aspect: 'bg-teal-500/90 border-teal-400/50',
+  card: 'bg-slate-600/90 border-slate-500/50',
+}
+
 export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
@@ -50,6 +63,7 @@ export default function Card({ card, isHoverable = false, onClick, className = '
   const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') })
 
   const cardLayout = parseCardLayout(layout)
+  const categoryStyles = typeColorMap[typeKey] || typeColorMap.card
 
   return (
     <div
@@ -80,36 +94,36 @@ export default function Card({ card, isHoverable = false, onClick, className = '
         <div className="relative w-full h-full rounded-sm shadow-inner overflow-hidden">
           {card.image_url
             ? (
-                <Image
-                  src={card.image_url}
-                  alt={localizedContent.name || 'Card image'}
-                  fill
-                  sizes="(max-width: 768px) 30vw, 15vw"
-                  className={`brightness-90 contrast-110 sepia-[.2] ${cardLayout.image.preserveRatio ? 'object-contain' : 'object-cover'}`}
-                />
-              )
+              <Image
+                src={card.image_url}
+                alt={localizedContent.name || 'Card image'}
+                fill
+                sizes="(max-width: 768px) 30vw, 15vw"
+                className={`brightness-90 contrast-110 sepia-[.2] ${cardLayout.image.preserveRatio ? 'object-contain' : 'object-cover'}`}
+              />
+            )
             : categoryImages?.[typeKey]
               ? (
-                  <div className="w-full h-full relative p-4 flex items-center justify-center bg-slate-900/10">
-                    <div className="relative w-full h-full opacity-40 brightness-75 contrast-125 sepia-[.4] grayscale-[.2]">
-                      <Image
-                        src={categoryImages[typeKey]}
-                        alt={localizedType}
-                        fill
-                        sizes="(max-width: 768px) 30vw, 15vw"
-                        className="object-contain"
-                      />
-                    </div>
+                <div className="w-full h-full relative p-4 flex items-center justify-center bg-slate-900/10">
+                  <div className="relative w-full h-full opacity-40 brightness-75 contrast-125 sepia-[.4] grayscale-[.2]">
+                    <Image
+                      src={categoryImages[typeKey]}
+                      alt={localizedType}
+                      fill
+                      sizes="(max-width: 768px) 30vw, 15vw"
+                      className="object-contain"
+                    />
                   </div>
-                )
+                </div>
+              )
               : (
-                  <div
-                    className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
-                    style={{
-                      backgroundImage: `url("/images/cards/Border.jpg")`,
-                    }}
-                  />
-                )}
+                <div
+                  className="w-full h-full bg-cover bg-center rounded-sm shadow-inner brightness-90 contrast-110 sepia-[.2]"
+                  style={{
+                    backgroundImage: `url("/images/cards/Border.jpg")`,
+                  }}
+                />
+              )}
         </div>
       </div>
 
@@ -141,20 +155,25 @@ export default function Card({ card, isHoverable = false, onClick, className = '
         <div className="relative w-full h-full">
           {categoryImages?.[typeKey]
             ? (
-                <Image
-                  src={categoryImages[typeKey]}
-                  alt={localizedType}
-                  fill
-                  sizes="(max-width: 768px) 10vw, 5vw"
-                  className="object-contain"
-                  title={localizedType}
-                />
-              )
+              <Image
+                src={categoryImages[typeKey]}
+                alt={localizedType}
+                fill
+                sizes="(max-width: 768px) 10vw, 5vw"
+                className="object-contain"
+                title={localizedType}
+              />
+            )
             : (
               /* Fallback to placeholder circle if no category image is available */
-                <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
-              )}
+              <div className="w-full h-full rounded-full bg-slate-900/40 border border-white/20 shadow-sm backdrop-blur-sm" title={localizedType} />
+            )}
         </div>
+      </div>
+
+      {/* Category Overlay */}
+      <div className={`absolute bottom-0 left-0 right-0 ${categoryStyles} text-white py-1.5 text-[8px] sm:text-[10px] font-bold text-center uppercase tracking-[0.2em] z-40 backdrop-blur-md border-t shadow-[0_-4px_10px_rgba(0,0,0,0.2)]`}>
+        {localizedType}
       </div>
 
     </div>

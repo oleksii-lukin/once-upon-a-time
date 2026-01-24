@@ -344,7 +344,11 @@
         "catalyst": "Каталізатор",
         "character": "Персонаж",
         "setting": "Місце",
-        "aspect": "Аспект"
+        "aspect": "Аспект",
+        "protagonist": "Головний герой",
+        "antagonist": "Антагоніст",
+        "object": "Предмет",
+        "trait": "Риса"
     },
     "ai": "ШІ",
     "ai_configuration": "Налаштування ШІ",

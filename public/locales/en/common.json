@@ -345,7 +345,11 @@
         "catalyst": "Catalyst",
         "character": "Character",
         "setting": "Setting",
-        "aspect": "Aspect"
+        "aspect": "Aspect",
+        "protagonist": "Protagonist",
+        "antagonist": "Antagonist",
+        "object": "Object",
+        "trait": "Trait"
     },
     "ai": "AI",
     "ai_configuration": "AI Configuration",

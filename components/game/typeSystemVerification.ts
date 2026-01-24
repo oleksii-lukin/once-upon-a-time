@@ -57,18 +57,18 @@ interface GameContext {
 
 type GameEvent
   = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[] }
-  | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-  | { type: 'PASS', nextPlayerId?: string }
-  | { type: 'INTERRUPT' }
-  | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
-  | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
-  | { type: 'CONFIRM_CARD', playedCardId: string }
-  | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
-  | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
-  | { type: 'RULES_DONE' }
-  | { type: 'SYNC_COMPLETE' }
-  | { type: 'SYNC_ERROR', error: string }
-  | { type: 'RESET_RULES' }
+    | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+    | { type: 'PASS', nextPlayerId?: string }
+    | { type: 'INTERRUPT' }
+    | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
+    | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
+    | { type: 'CONFIRM_CARD', playedCardId: string }
+    | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
+    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
+    | { type: 'RULES_DONE' }
+    | { type: 'SYNC_COMPLETE' }
+    | { type: 'SYNC_ERROR', error: string }
+    | { type: 'RESET_RULES' }
 
 /**
  * VERIFICATION 1: Actor Input Compatibility with GameContext
@@ -385,7 +385,7 @@ function verifyActorOutputEvents(): void {
       playedCardId: 'card-123',
       storytellerId: 'storyteller-456',
       nextPlayerId: 'next-789',
-    } as ObjectActorInput
+    } as ObjectActorInput,
   } as DoneActorEvent<ObjectActorInput>
 
   // Access property with type safety
@@ -400,7 +400,7 @@ function verifyActorOutputEvents(): void {
       playerId: 'player-789',
       cardId: 'card-123',
       position: 5,
-    } as PlayCardActorInput
+    } as PlayCardActorInput,
   } as DoneActorEvent<PlayCardActorInput>
 
   // Access property with type safety

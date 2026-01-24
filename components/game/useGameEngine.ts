@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
-import { type CardData, gameMachine } from './gameMachine'
+import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { useMachine } from '@xstate/react'
 import { createBrowserInspector } from '@statelyai/inspect'
+import { gameMachine } from './gameMachine'
 
 const inspector
   = process.env.NODE_ENV === 'development'
@@ -31,13 +32,14 @@ export const useGameEngine = (
     if (gameSession && currentPlayer && state.value === 'idle') {
       send({
         type: 'START_GAME',
-        sessionId: gameSession.id,
+        gameSessionId: gameSession.id,
         lobbyId: gameSession.lobby_id,
         mode: (gameSession.game_mode as any) || 'full',
         currentPlayerId: currentPlayer.id,
+        players: players,
       })
     }
-  }, [gameSession, currentPlayer, send, state.value])
+  }, [gameSession, currentPlayer, players, send, state.value])
 
   const nextPlayer = useMemo(() => {
     if (!currentPlayer || players.length === 0) return null
@@ -56,15 +58,14 @@ export const useGameEngine = (
     return sortedPlayers[nextIndex]
   }, [currentPlayer, players])
 
-  const playCard = useCallback(async (card: CardData, playedCardsCount: number) => {
+  const playCard = useCallback(async (card: HandCardData, playedCardsCount: number) => {
     if (card.type === 'ending') return
     send({ type: 'PLAY_CARD', card, playedCardsCount })
   }, [send])
 
   const passTurn = useCallback(async () => {
-    if (!nextPlayer) return
-    send({ type: 'PASS', nextPlayerId: nextPlayer.id })
-  }, [send, nextPlayer])
+    send({ type: 'PASS' })
+  }, [send])
 
   const interrupt = useCallback(async () => {
     send({ type: 'INTERRUPT' })

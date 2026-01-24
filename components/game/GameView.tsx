@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import { Database } from '@/supabase/types'
 import { createClient } from '@/utils/supabase/client'
 import PlayerHand from './PlayerHand'
@@ -9,10 +10,13 @@ import GameSidebar from './GameSidebar'
 import TurnControls from './TurnControls'
 import GameCompletionOverlay from './GameCompletionOverlay'
 import { useGameEngine } from './useGameEngine'
-import type { Tables } from '@/supabase/types'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import { useRouter, useParams } from 'next/navigation'
-import { type CardData } from './gameMachine'
+import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
+import { CardLayout } from '@/types/card'
+
+// Default background image URL for game when no deck background is provided
+const DEFAULT_BACKGROUND_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -28,8 +32,8 @@ interface GameViewProps {
 
 export default function GameView({ lobby, players, currentUserId, currentGuestId }: GameViewProps) {
   const [gameSession, setGameSession] = useState<GameSession | null>(null)
-  const [hand, setHand] = useState<CardData[]>([])
-  const [playedCards, setPlayedCards] = useState<CardData[]>([])
+  const [hand, setHand] = useState<HandCardData[]>([])
+  const [playedCards, setPlayedCards] = useState<PlayedCardData[]>([])
   const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
   const [deck, setDeck] = useState<Deck | null>(null)
   const supabase = createClient()
@@ -54,7 +58,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         const { data } = await supabase
           .from('decks')
           .select('*')
-          .eq('id', lobby.deck_id)
+          .eq('id', lobby.deck_id!)
           .single()
         if (data) setDeck(data)
       }
@@ -76,18 +80,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       // Fetch played cards
       const { data: playedData } = await supabase
         .from('played_cards')
-        .select(`
-                    *,
-                    cards (*)
-                `)
+        .select(`*, cards (*)`)
         .eq('game_session_id', session.id)
         .order('position', { ascending: true })
         .order('played_at', { ascending: true })
 
       if (playedData) {
-        const fetchedCards = (playedData as any[]).map(item => ({
+        const fetchedCards: PlayedCardData[] = playedData.map(item => ({
           ...item.cards,
-          type: item.cards.category || item.cards.type || 'Card',
+          type: item.cards.category ?? 'card',
           played_by: item.player_id,
           status: item.status,
           played_card_id: item.id,
@@ -99,19 +100,17 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       if (currentPlayer) {
         const { data: handData } = await supabase
           .from('player_hands')
-          .select(`
-                        *,
-                        cards (*)
-                    `)
+          .select(`*, cards (*)`)
           .eq('game_session_id', session.id)
           .eq('player_id', currentPlayer.id)
           .order('position')
 
         if (handData) {
-          const cardsWithType = (handData as any[]).map(item => ({
+          const cardsWithType: HandCardData[] = handData.map(item => ({
             ...item.cards,
-            type: item.cards.category || item.cards.type || 'Card',
+            type: item.cards.category ?? 'card',
             hand_id: item.id,
+            position: item.position,
           }))
           setHand(cardsWithType)
         }
@@ -120,15 +119,12 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       // Fetch all hand counts
       const { data: allHandsData } = await supabase
         .from('player_hands')
-        .select(`
-          player_id,
-          cards (type)
-        `)
+        .select(`player_id, cards (type)`)
         .eq('game_session_id', session.id)
 
       if (allHandsData) {
         const counts: Record<string, number> = {}
-        allHandsData.forEach((item: any) => {
+        allHandsData.forEach((item) => {
           if (item.cards?.type !== 'ending') {
             counts[item.player_id] = (counts[item.player_id] || 0) + 1
           }
@@ -187,8 +183,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'game_sessions', filter: `lobby_id=eq.${lobby.id}` },
-        (payload: any) => {
-          if (payload.new) setGameSession(payload.new as GameSession)
+        (payload: RealtimePostgresUpdatePayload<GameSession>) => {
+          if (payload.new) setGameSession(payload.new)
         },
       )
 
@@ -222,7 +218,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const displayedPlayedCards = useMemo(() => {
     const all = [...playedCards]
     if (optimisticCard) {
-      const opt = optimisticCard as CardData
+      const opt = optimisticCard as PlayedCardData
       if (!all.some(c => c.id === opt.id && c.played_by === opt.played_by)) {
         all.push(opt)
       }
@@ -247,7 +243,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     return displayedHand.find(c => c.id === selectedCardId)?.type === 'ending'
   }, [displayedHand, selectedCardId])
 
-  const onPlayCard = (card: CardData) => {
+  const onPlayCard = (card: HandCardData) => {
     if (card.type === 'ending' || gameSession?.status === 'COMPLETED') return
     playCard(card, playedCards.length)
   }
@@ -281,11 +277,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const pendingCard = useMemo(() => displayedPlayedCards.find(c => c.status === 'PENDING'), [displayedPlayedCards])
 
   // Storyteller confirmation and ending validation is now handled by the state machine
-
-  const winner = useMemo(() => {
-    if (gameSession?.winner_id) return players.find(p => p.id === gameSession.winner_id)
-    return undefined
-  }, [gameSession?.winner_id, players])
+  const winner = gameSession?.winner_id ? players.find(p => p.id === gameSession.winner_id) : undefined
 
   const handleReturnToLobbies = () => router.push(`/${lng}/lobbies`)
 
@@ -297,7 +289,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         style={{
           backgroundImage: deck?.bg_image_url
             ? `url('${deck.bg_image_url}')`
-            : 'url(\'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys\')',
+            : `url('${DEFAULT_BACKGROUND_IMAGE}')`,
         }}
       >
       </div>
@@ -310,10 +302,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as any,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />
@@ -325,10 +317,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as any,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />

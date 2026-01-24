@@ -1,14 +1,16 @@
-import Card from './Card'
-import { CardLayout } from '@/types/card'
-import { Database } from '@/supabase/types'
-import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import { useTranslation } from 'react-i18next'
 
-import { type CardData } from './gameMachine'
+import { type PlayedCardData } from '@/utils/gameUtils'
+import { CardLayout } from '@/types/card'
+import { Database } from '@/supabase/types'
+import { PlayerAvatar, getPlayerDisplayName } from '@/components/lobby/PlayerDisplay'
+
+import Card from './Card'
+
 type Player = Database['public']['Tables']['players']['Row']
 
 interface TableAreaProps {
-  playedCards: CardData[] // Cards played in the current story line
+  playedCards: PlayedCardData[] // Cards played in the current story line
   storytellerPlayer: Player | undefined
   players: Player[]
   deck?: {

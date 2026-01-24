@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import AdminLobbyView from './AdminLobbyView'
@@ -47,9 +48,9 @@ export default function LobbyManager({
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'lobbies', filter: `id=eq.${lobby.id}` },
-        (payload) => {
+        (payload: RealtimePostgresUpdatePayload<Lobby>) => {
           if (payload.new) {
-            setLobby(payload.new as Lobby)
+            setLobby(payload.new)
           }
         },
       )

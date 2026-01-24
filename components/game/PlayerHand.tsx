@@ -1,16 +1,16 @@
 'use client'
 
-import Card from './Card'
-import { CardLayout } from '@/types/card'
-import { Database } from '@/supabase/types'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { type CardData } from './gameMachine'
+import { CardLayout } from '@/types/card'
+import { type HandCardData } from '@/utils/gameUtils'
+
+import Card from './Card'
 
 interface PlayerHandProps {
-  cards: CardData[]
-  onSelectCard: (card: CardData) => void
+  cards: HandCardData[]
+  onSelectCard: (card: HandCardData) => void
   selectedCardId: string | null
   isMyTurn: boolean
   deck?: {

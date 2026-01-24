@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export type GameMode = 'tutorial' | 'simple' | 'full' | 'solo' | 'main' | 'fast'
+
 export const LobbySettingsSchema = z.object({
   allowHotJoin: z.boolean().default(true),
   publicGame: z.boolean().default(true),
@@ -8,7 +10,7 @@ export const LobbySettingsSchema = z.object({
   timerPerTurn: z.boolean().default(false),
   happyEnding: z.boolean().default(false),
   enableVideoChat: z.boolean().default(false),
-  gameMode: z.enum(['main', 'fast', 'tutorial', 'solo']).default('main'),
+  gameMode: z.enum(['main', 'fast', 'tutorial', 'solo', 'simple', 'full']).default('main'),
   selectedDecks: z.array(z.string()).default([]),
 })
 

@@ -1,17 +1,17 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Search, Maximize, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon, type LucideIcon } from 'lucide-react'
+
 import { Database } from '@/supabase/types'
+import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import { Maximize, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon, type LucideIcon } from 'lucide-react'
-import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/card'
-import { useTranslation } from 'react-i18next'
 import Card from '@/components/game/Card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -160,7 +160,7 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     {card.name}
                     {' '}
                     (
-                    {card.category || card.type}
+                    {card.category}
                     )
                   </SelectItem>
                 ))}
@@ -183,10 +183,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                   <Card
                     card={{
                       ...previewCard,
-                      category: previewCard.category || undefined,
-                      description: previewCard.description || undefined,
-                      image_url: previewCard.image_url || undefined,
-                      usage_examples: previewCard.usage_examples || undefined,
+                      category: previewCard.category,
+                      description: previewCard.description,
+                      image_url: previewCard.image_url,
+                      usage_examples: previewCard.usage_examples,
                     }}
                     cardBackImageUrl={borderImageUrl}
                     categoryImages={categoryImages}
@@ -204,13 +204,10 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
                     setActiveElement(key)
                   }}
                   onMouseDown={e => handleInteractionStart(key, 'move', e)}
-                  className={`
-                                        absolute border-2 transition-colors duration-200 cursor-move flex flex-col items-center justify-center p-1
-                                        ${activeElement === key
+                  className={`absolute border-2 transition-colors duration-200 cursor-move flex flex-col items-center justify-center p-1
+                  ${activeElement === key
                   ? 'border-primary bg-primary/10 z-20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.5)] scale-[1.01]'
-                  : 'border-dashed border-slate-400/30 bg-transparent z-10 hover:border-slate-400/60 hover:bg-slate-400/5'
-                }
-                                    `}
+                  : 'border-dashed border-slate-400/30 bg-transparent z-10 hover:border-slate-400/60 hover:bg-slate-400/5'}`}
                   style={{
                     top: `${currentLayout[key].top}%`,
                     left: `${currentLayout[key].left}%`,

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Info as InfoIcon, Check as CheckIcon } from 'lucide-react'
+import { Check as CheckIcon } from 'lucide-react'
+import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
+
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
 import { useUser } from '@clerk/nextjs'
@@ -12,10 +14,11 @@ import { getTranslation } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import CopyButton from '@/components/common/CopyButton'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import LobbySettingToggle from './LobbySettingToggle'
+import GameModeTabs from './GameModeTabs'
 
 type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
@@ -97,17 +100,23 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'lobbies', filter: `id=eq.${lobby.id}` },
-        (payload) => {
+        (payload: RealtimePostgresUpdatePayload<Lobby>) => {
           if (payload.new) {
             const updatedLobby = payload.new as Lobby
-            setCurrentLobby(updatedLobby)
-            // Update selected decks when host changes them
-            if (updatedLobby.settings && typeof updatedLobby.settings === 'object') {
-              const parsed = LobbySettingsSchema.safeParse(updatedLobby.settings)
-              if (parsed.success) {
-                setSelectedDeckIds(parsed.data.selectedDecks)
+            setCurrentLobby((prev) => {
+              // Merge the update with previous state to preserve fields not included in payload
+              const mergedLobby = { ...prev, ...updatedLobby }
+
+              // Update selected decks when host changes them
+              if (mergedLobby.settings && typeof mergedLobby.settings === 'object') {
+                const parsed = LobbySettingsSchema.safeParse(mergedLobby.settings)
+                if (parsed.success) {
+                  setSelectedDeckIds(parsed.data.selectedDecks)
+                }
               }
-            }
+
+              return mergedLobby
+            })
           }
         },
       )
@@ -126,10 +135,10 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   useEffect(() => {
     const newChannel = supabase.channel(`lobby:${lobby.id}`)
       .on('presence', { event: 'sync' }, () => {
-        const newState = newChannel.presenceState<LobbyPresence>()
+        const newState = newChannel.presenceState()
         const onlineIds = new Set<string>()
         for (const key in newState) {
-          newState[key].forEach((presence) => {
+          newState[key].forEach((presence: LobbyPresence) => {
             if (presence.player_id) onlineIds.add(presence.player_id)
           })
         }
@@ -261,6 +270,38 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     }
   }, [settings.allowSpectators]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Effect to handle Solo Mode - switch players to spectators
+  useEffect(() => {
+    if (settings.gameMode === 'solo') {
+      const guestId = !user ? getGuestId() : undefined
+      const currentPlayer = players.find(p =>
+        (user && p.user_id === user.id)
+        || (!user && p.guest_id === guestId),
+      )
+
+      // If current user is a player (not host) and solo mode is enabled, switch to spectator
+      if (currentPlayer && currentPlayer.role !== 'host' && currentPlayer.role !== 'spectator') {
+        handleRoleChange('spectator')
+      }
+    }
+  }, [settings.gameMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effect to disconnect users when Solo Mode enabled and spectators not allowed
+  useEffect(() => {
+    if (settings.gameMode === 'solo' && !settings.allowSpectators) {
+      const guestId = !user ? getGuestId() : undefined
+      const currentPlayer = players.find(p =>
+        (user && p.user_id === user.id)
+        || (!user && p.guest_id === guestId),
+      )
+
+      // If current user is not the host and spectators are not allowed, disconnect them
+      if (currentPlayer && currentPlayer.role !== 'host') {
+        handleLeave()
+      }
+    }
+  }, [settings.gameMode, settings.allowSpectators]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const currentPlayer = players.find(p =>
     (user && p.user_id === user.id)
     || (!user && p.guest_id === getGuestId()),
@@ -271,6 +312,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
     const isSelf = (user && p.user_id === user.id) || (!user && p.guest_id === getGuestId())
     return onlineUsers.has(p.id) || isSelf
   })
+
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
@@ -308,72 +350,61 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                           </Label>
                         </div>
                         <div className="flex flex-col gap-2 p-4 border border-border rounded-lg">
-                          <div className="flex items-center justify-between py-2">
-                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-hot-join">{t('allow_hot_join')}</Label>
-                            <Switch checked={settings.allowHotJoin} disabled id="allow-hot-join" />
-                          </div>
-                          <div className="flex items-center justify-between py-2">
-                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="game-visibility">{t('public_game')}</Label>
-                            <Switch checked={settings.publicGame} disabled id="game-visibility" />
-                          </div>
-                          <div className="flex items-center justify-between py-2">
-                            <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-spectators">{t('allow_spectators')}</Label>
-                            <Switch checked={settings.allowSpectators} disabled id="allow-spectators" />
-                          </div>
+                          <LobbySettingToggle
+                            label={t('allow_hot_join')}
+                            checked={settings.allowHotJoin}
+                            disabled
+                            htmlFor="allow-hot-join"
+                          />
+                          <LobbySettingToggle
+                            label={t('public_game')}
+                            checked={settings.publicGame}
+                            disabled
+                            htmlFor="game-visibility"
+                          />
+                          <LobbySettingToggle
+                            label={t('allow_spectators')}
+                            checked={settings.allowSpectators}
+                            disabled
+                            htmlFor="allow-spectators"
+                          />
                         </div>
                       </div>
                       <div className="flex-1"></div>
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl opacity-70">
-                    <div className="flex flex-col gap-4 pb-6 border-b border-border mb-6">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em]">{t('game_rules')}</h2>
-                        <div className="flex bg-muted p-1 rounded-lg">
-                          <div
-                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'main' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
-                          >
-                            {t('main_game_mode')}
-                          </div>
-                          <div
-                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'fast' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
-                          >
-                            {t('fast_game_mode')}
-                          </div>
-                          <div
-                            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${settings.gameMode === 'tutorial' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground opacity-50'}`}
-                          >
-                            {t('tutorial_game_mode')}
-                          </div>
-                        </div>
-                      </div>
-                      {settings.gameMode === 'fast' && (
-                        <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
-                      )}
-                      {settings.gameMode === 'tutorial' && (
-                        <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
-                      )}
-                    </div>
+                    <GameModeTabs
+                      settings={settings}
+                      lng={lng}
+                      readOnly
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                      <div className="flex items-center justify-between py-2">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-foreground text-base font-medium leading-normal" htmlFor="allow-interrupts">{t('allow_interrupts')}</Label>
-                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground transition-colors"><InfoIcon className="w-4 h-4" /></Button>
-                        </div>
-                        <Switch checked={settings.allowInterrupts} disabled id="allow-interrupts" />
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="timer-per-turn">{t('timer_per_turn')}</Label>
-                        <Switch checked={settings.timerPerTurn} disabled id="timer-per-turn" />
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="happy-ending">{t('happy_ending_variant')}</Label>
-                        <Switch checked={settings.happyEnding} disabled id="happy-ending" />
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <Label className="text-foreground text-base font-medium leading-normal" htmlFor="enable-video-chat">{t('enable_video_chat')}</Label>
-                        <Switch checked={settings.enableVideoChat} disabled id="enable-video-chat" />
-                      </div>
+                      <LobbySettingToggle
+                        label={t('allow_interrupts')}
+                        checked={settings.allowInterrupts}
+                        disabled
+                        infoText="When enabled, players can interrupt and play cards out of turn. This is disabled in fast mode."
+                        htmlFor="allow-interrupts"
+                      />
+                      <LobbySettingToggle
+                        label={t('timer_per_turn')}
+                        checked={settings.timerPerTurn}
+                        disabled
+                        htmlFor="timer-per-turn"
+                      />
+                      <LobbySettingToggle
+                        label={t('happy_ending_variant')}
+                        checked={settings.happyEnding}
+                        disabled
+                        htmlFor="happy-ending"
+                      />
+                      <LobbySettingToggle
+                        label={t('enable_video_chat')}
+                        checked={settings.enableVideoChat}
+                        disabled
+                        htmlFor="enable-video-chat"
+                      />
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl opacity-70">
@@ -451,6 +482,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                         <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-muted">
                           <Button
                             onClick={() => handleRoleChange('player')}
+                            disabled={settings.gameMode === 'solo'}
                             className={`px-4 py-2 text-sm font-bold ${currentPlayer?.role !== 'spectator' ? '' : 'bg-transparent text-muted-foreground hover:bg-muted/70'}`}
                             variant={currentPlayer?.role !== 'spectator' ? 'default' : 'ghost'}
                           >
@@ -466,11 +498,11 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                           </Button>
                         </div>
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col xl:flex-row gap-3">
                         <Button
                           onClick={handleReadyToggle}
                           disabled={currentPlayer?.role === 'spectator'}
-                          className={`min-w-[84px] w-full h-14 px-4 text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 gap-2 ${currentPlayer?.status === 'ready' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                          className={`min-w-[84px] w-full xl:flex-1 h-14 px-4 text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 gap-2 ${currentPlayer?.status === 'ready' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
                         >
                           <CheckIcon className="w-5 h-5" />
                           <span className="truncate">{currentPlayer?.status === 'ready' ? t('ready') : t('not_ready')}</span>
@@ -478,7 +510,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                         <Button
                           onClick={handleLeave}
                           variant="ghost"
-                          className="min-w-[84px] h-14 px-4 bg-muted/50 text-muted-foreground text-base font-bold leading-normal tracking-[0.015em] hover:bg-muted/70"
+                          className="min-w-[84px] w-full xl:flex-1 h-14 px-4 bg-muted/50 text-muted-foreground text-base font-bold leading-normal tracking-[0.015em] hover:bg-muted/70"
                         >
                           <span className="truncate">{t('leave')}</span>
                         </Button>

@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import confetti from 'canvas-confetti'
-import { Trophy, Users, BarChart3, ArrowLeft } from 'lucide-react'
+import { Trophy, BarChart3, ArrowLeft } from 'lucide-react'
 import { Database } from '@/supabase/types'
 import { PlayerAvatar } from '../lobby/PlayerDisplay'
 
@@ -32,7 +32,7 @@ export default function GameCompletionOverlay({
 
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
 
-    const interval: any = setInterval(() => {
+    const interval = setInterval(() => {
       const timeLeft = animationEnd - Date.now()
 
       if (timeLeft <= 0) {
@@ -57,10 +57,10 @@ export default function GameCompletionOverlay({
   }, [])
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
       <div className="max-w-2xl w-full mx-4 bg-background-dark/90 border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col items-center">
         {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-yellow-500 to-transparent" />
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
 

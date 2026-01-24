@@ -1,52 +1,71 @@
-import { createMachine, assign, setup, fromPromise, sendTo, raise } from 'xstate'
+import { assign, setup, sendTo, raise, assertEvent, type DoneActorEvent } from 'xstate'
 import {
   tutorialStorytellingMachine,
   simpleStorytellingMachine,
   fullStorytellingMachine,
   soloStorytellingMachine,
 } from './ruleVariants'
-import { createClient } from '@/utils/supabase/client'
+import { Database } from '@/supabase/types'
+import { type CardData } from '@/utils/gameUtils'
+import { type GameMode } from '@/types/lobby'
+import { playCardActor, type PlayCardActorInput, type PlayCardActorOutput } from './actors/playCardActor'
+import { drawCardsActor, type DrawCardsActorInput } from './actors/drawCardsActor'
+import { passTurnActor, type PassTurnActorInput } from './actors/passTurnActor'
+import { confirmCardActor, type ConfirmCardActorInput } from './actors/confirmCardActor'
+import { finalizeWinActor, type FinalizeWinActorInput } from './actors/finalizeWinActor'
+import { objectActor, type ObjectActorInput } from './actors/objectActor'
 
-export interface CardData {
-  id: string
-  name?: string
-  type?: string
-  category?: string
-  hand_id?: string
-  played_card_id?: string
-  played_by?: string
-  status?: 'PENDING' | 'CONFIRMED' | 'REVERTED'
-  [key: string]: any
-}
+type Player = Database['public']['Tables']['players']['Row']
 
+/**
+ * Main context interface for the XState game machine.
+ * Contains all state information needed to manage a game session,
+ * including player data, game flow, error handling, and UI state.
+ */
 export interface GameContext {
+  /** The current game session ID - null when no game is active */
   gameSessionId: string | null
+  /** The lobby ID this game belongs to - null when no game is active */
   lobbyId: string | null
-  gameMode: 'tutorial' | 'simple' | 'full' | 'solo' | 'main' | 'fast'
+  /** The current game mode (tutorial, simple, full, solo storytelling) */
+  gameMode: GameMode
+  /** General error message for display to users - null when no error */
   error: string | null
+  /** Last database persistence error - null when no persistence error */
   lastPersistenceError: string | null
+  /** ID of the player whose turn it currently is - null when game not started */
   currentPlayerId: string | null
+  /** Optimistic UI: Shows card instantly on click while database saves in background */
+  /** Prevents UI delay - card appears immediately, then syncs with real database record */
   optimisticCard: CardData | null
+  /** ID of the hand being processed for card operations - null when none in flight */
   inFlightHandId: string | null
+  /** Whether the rules explanation phase has been completed */
   rulesFinished: boolean
+  /** Array of all players in the current game session */
+  players: Player[]
+  /** ID of the player who will take the next turn - null when not determined */
+  nextPlayerId: string | null
 }
 
+/**
+ * Union type of all possible events that can be sent to the game machine.
+ * Includes game lifecycle events, player actions, error handling, and state synchronization.
+ */
 export type GameEvent
-  = | { type: 'START_GAME', sessionId: string, lobbyId: string, mode: 'tutorial' | 'simple' | 'full' | 'solo' | 'main' | 'fast', currentPlayerId: string }
-    | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-    | { type: 'PASS', nextPlayerId: string }
-    | { type: 'INTERRUPT' }
-    | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
-    | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
-    | { type: 'CONFIRM_CARD', playedCardId: string }
-    | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
-    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
-    | { type: 'RULES_DONE' }
-    | { type: 'SYNC_COMPLETE' }
-    | { type: 'SYNC_ERROR', error: string }
-    | { type: 'RESET_RULES' }
-
-const supabase = createClient()
+  = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[] }
+  | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+  | { type: 'PASS', nextPlayerId?: string }
+  | { type: 'INTERRUPT' }
+  | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
+  | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
+  | { type: 'CONFIRM_CARD', playedCardId: string }
+  | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
+  | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
+  | { type: 'RULES_DONE' }
+  | { type: 'SYNC_COMPLETE' }
+  | { type: 'SYNC_ERROR', error: string }
+  | { type: 'RESET_RULES' }
 
 export const gameMachine = setup({
   types: {
@@ -58,118 +77,12 @@ export const gameMachine = setup({
     ruleSimple: simpleStorytellingMachine,
     ruleFull: fullStorytellingMachine,
     ruleSolo: soloStorytellingMachine,
-    playCardActor: fromPromise(async ({ input }: { input: { sessionId: string, playerId: string, cardId: string, position: number } }) => {
-      const { data, error } = await supabase
-        .from('played_cards')
-        .insert({
-          game_session_id: input.sessionId,
-          player_id: input.playerId,
-          card_id: input.cardId,
-          position: input.position,
-          status: 'PENDING',
-        })
-        .select('*, cards(*)')
-        .single()
-
-      if (error) throw error
-
-      await supabase
-        .from('player_hands')
-        .delete()
-        .eq('game_session_id', input.sessionId)
-        .eq('player_id', input.playerId)
-        .eq('card_id', input.cardId)
-
-      return data
-    }),
-    drawCardsActor: fromPromise(async ({ input }: { input: { sessionId: string, playerId: string, count: number } }) => {
-      const { data: drawCards, error: drawError } = await supabase
-        .from('draw_pile')
-        .select('*')
-        .eq('game_session_id', input.sessionId)
-        .order('position', { ascending: true })
-        .limit(input.count)
-
-      if (drawError || !drawCards || drawCards.length === 0) throw drawError || new Error('No cards in draw pile')
-
-      const cardsToAdd = drawCards.map((dc: any, index: number) => ({
-        game_session_id: input.sessionId,
-        player_id: input.playerId,
-        card_id: dc.card_id,
-        position: 999 + index,
-      }))
-
-      const { error: handError } = await supabase
-        .from('player_hands')
-        .insert(cardsToAdd)
-
-      if (handError) throw handError
-
-      await supabase
-        .from('draw_pile')
-        .delete()
-        .in('id', drawCards.map((dc: any) => dc.id))
-
-      return true
-    }),
-    passTurnActor: fromPromise(async ({ input }: { input: { sessionId: string, nextPlayerId: string } }) => {
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          current_turn_player_id: input.nextPlayerId,
-          storyteller_id: input.nextPlayerId,
-        })
-        .eq('id', input.sessionId)
-      if (error) throw error
-      return true
-    }),
-    confirmCardActor: fromPromise(async ({ input }: { input: { playedCardId: string } }) => {
-      const { error } = await supabase
-        .from('played_cards')
-        .update({ status: 'CONFIRMED' })
-        .eq('id', input.playedCardId)
-      if (error) throw error
-      return true
-    }),
-    finalizeWinActor: fromPromise(async ({ input }: { input: { sessionId: string, winnerId: string, lobbyId: string } }) => {
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          winner_id: input.winnerId,
-          status: 'COMPLETED',
-        })
-        .eq('id', input.sessionId)
-
-      if (error) throw error
-
-      await supabase
-        .from('lobbies')
-        .update({ status: 'finished' })
-        .eq('id', input.lobbyId)
-
-      return true
-    }),
-    objectActor: fromPromise(async ({ input }: { input: { sessionId: string, playedCardId: string, storytellerId: string, nextPlayerId: string } }) => {
-      const { data: playedCard, error: fetchError } = await supabase
-        .from('played_cards')
-        .select('*')
-        .eq('id', input.playedCardId)
-        .single()
-
-      if (fetchError || !playedCard) throw fetchError || new Error('Played card not found')
-
-      await supabase
-        .from('player_hands')
-        .insert({
-          game_session_id: input.sessionId,
-          player_id: input.storytellerId,
-          card_id: playedCard.card_id,
-          position: 0,
-        })
-
-      await supabase.from('played_cards').delete().eq('id', input.playedCardId)
-      return true
-    }),
+    playCardActor,
+    drawCardsActor,
+    passTurnActor,
+    confirmCardActor,
+    finalizeWinActor,
+    objectActor,
   },
 }).createMachine({
   id: 'gameRoot',
@@ -183,6 +96,8 @@ export const gameMachine = setup({
     optimisticCard: null,
     inFlightHandId: null,
     rulesFinished: false,
+    players: [],
+    nextPlayerId: null,
   },
   initial: 'idle',
   states: {
@@ -191,10 +106,11 @@ export const gameMachine = setup({
         START_GAME: {
           target: 'active',
           actions: assign({
-            gameSessionId: ({ event }) => event.sessionId,
+            gameSessionId: ({ event }) => event.gameSessionId,
             lobbyId: ({ event }) => event.lobbyId,
             gameMode: ({ event }) => event.mode,
             currentPlayerId: ({ event }) => event.currentPlayerId,
+            players: ({ event }) => event.players || [],
           }),
         },
       },
@@ -220,19 +136,73 @@ export const gameMachine = setup({
                       played_by: context.currentPlayerId!,
                     }
                   },
-                  inFlightHandId: ({ event }) => (event as any).card.hand_id || null,
+                  inFlightHandId: ({ event }) => {
+                    const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
+                    // Note: hand_id is not part of CardData type, using card id instead
+                    return playCardEvent.card.id || null
+                  },
                 }),
-                sendTo('rulesActor', ({ event }) => ({ type: 'PLAY_CARD', cardId: (event as any).card.id })),
+                sendTo('rulesActor', ({ event }) => {
+                  const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
+                  return { type: 'PLAY_CARD', cardId: playCardEvent.card.id }
+                }),
               ],
             },
             PASS: {
-              actions: sendTo('rulesActor', { type: 'PASS' }),
+              actions: [
+                assign(({ context }) => {
+                  // Calculate nextPlayerId if not provided
+                  let calculatedNextPlayerId: string | null = context.currentPlayerId
+
+                  // Auto-calculate next player
+                  const players = context.players || []
+                  const sortedPlayers = players
+                    .filter((p: Player) => p.role !== 'spectator')
+                    .sort((a: Player, b: Player) => {
+                      if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
+                        return a.turn_order - b.turn_order
+                      }
+                      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+                    })
+
+                  const currentIndex = sortedPlayers.findIndex((p: Player) => p.id === context.currentPlayerId)
+                  if (currentIndex === -1) {
+                    calculatedNextPlayerId = context.currentPlayerId
+                  }
+                  else {
+                    // For solo mode, keep the same player
+                    if (sortedPlayers.length === 1) {
+                      calculatedNextPlayerId = context.currentPlayerId
+                    }
+                    else {
+                      const nextIndex = (currentIndex + 1) % sortedPlayers.length
+                      calculatedNextPlayerId = sortedPlayers[nextIndex].id
+                    }
+                  }
+
+                  return {
+                    nextPlayerId: calculatedNextPlayerId,
+                  }
+                }),
+                sendTo('rulesActor', { type: 'PASS' }),
+              ],
+            },
+            CHALLENGE_STUTTER: {
+              actions: [
+                assign({ nextPlayerId: ({ event }) => event.nextPlayerId }),
+              ],
             },
             INTERRUPT: {
               actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
             },
             OBJECT: {
-              actions: sendTo('rulesActor', ({ event }) => ({ type: 'OBJECT', playedCardId: (event as any).playedCardId, storytellerId: (event as any).storytellerId })),
+              actions: [
+                assign({ nextPlayerId: ({ event }) => event.nextPlayerId }), // Persist for post-penalty turn update
+                sendTo('rulesActor', ({ event }) => {
+                  const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
+                  return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
+                }),
+              ],
             },
             RESET_RULES: {
               actions: assign({ rulesFinished: false }),
@@ -292,35 +262,43 @@ export const gameMachine = setup({
             playingCard: {
               invoke: {
                 src: 'playCardActor',
-                input: ({ context, event }) => {
-                  const playEvent = event as { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+                input: ({ context, event }): PlayCardActorInput => {
+                  assertEvent(event, 'PLAY_CARD')
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.currentPlayerId) throw new Error('Current player ID is missing')
+
                   return {
-                    sessionId: context.gameSessionId!,
-                    playerId: context.currentPlayerId!,
-                    cardId: playEvent.card.id,
-                    position: playEvent.playedCardsCount,
+                    gameSessionId: context.gameSessionId,
+                    playerId: context.currentPlayerId,
+                    cardId: event.card.id,
+                    position: event.playedCardsCount,
                   }
                 },
                 onDone: {
                   target: 'idle',
                   actions: [
-                    sendTo('rulesActor', ({ event }) => ({ type: 'PLAY_CARD_ACK', playedCardId: (event.output as any).id })),
+                    sendTo('rulesActor', ({ event }) => ({ type: 'PLAY_CARD_ACK', playedCardId: event.output.id })),
                   ],
                 },
                 onError: {
                   target: 'idle',
-                  actions: assign({ lastPersistenceError: ({ event }) => (event.error as any)?.message || 'Unknown error' }),
+                  actions: assign({ lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error' }),
                 },
               },
             },
             passingTurn: {
               invoke: {
                 src: 'drawCardsActor',
-                input: ({ context }) => ({
-                  sessionId: context.gameSessionId!,
-                  playerId: context.currentPlayerId!,
-                  count: 1,
-                }),
+                input: ({ context }): DrawCardsActorInput => {
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.currentPlayerId) throw new Error('Current player ID is missing')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    playerId: context.currentPlayerId,
+                    count: 1,
+                  }
+                },
                 onDone: 'updateTurn',
                 onError: 'idle',
               },
@@ -328,10 +306,13 @@ export const gameMachine = setup({
             updateTurn: {
               invoke: {
                 src: 'passTurnActor',
-                input: ({ context, event }) => {
+                input: ({ context }): PassTurnActorInput => {
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.nextPlayerId) throw new Error('Next player ID is missing')
+
                   return {
-                    sessionId: context.gameSessionId!,
-                    nextPlayerId: (event as any).nextPlayerId,
+                    gameSessionId: context.gameSessionId,
+                    nextPlayerId: context.nextPlayerId,
                   }
                 },
                 onDone: {
@@ -345,33 +326,51 @@ export const gameMachine = setup({
             objecting: {
               invoke: {
                 src: 'objectActor',
-                input: ({ context, event }) => ({
-                  sessionId: context.gameSessionId!,
-                  playedCardId: (event as any).playedCardId,
-                  storytellerId: (event as any).storytellerId,
-                  nextPlayerId: (event as any).nextPlayerId,
-                }),
+                input: ({ context, event }): ObjectActorInput => {
+                  assertEvent(event, 'OBJECT')
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    playedCardId: event.playedCardId,
+                    storytellerId: event.storytellerId,
+                    nextPlayerId: event.nextPlayerId,
+                  }
+                },
                 onDone: 'penaltyForStoryteller',
               },
             },
             penaltyForStoryteller: {
               invoke: {
                 src: 'drawCardsActor',
-                input: ({ context, event }) => ({
-                  sessionId: context.gameSessionId!,
-                  playerId: (event as any).input.storytellerId,
-                  count: 1,
-                }),
+                input: ({ context, event }): DrawCardsActorInput => {
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+
+                  // Event is done.invoke.objectActor. We need access to output.
+                  const output = ((event as unknown) as DoneActorEvent<ObjectActorInput>).output
+                  if (!output?.storytellerId) throw new Error('Storyteller ID missing from objectActor output')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    playerId: output.storytellerId,
+                    count: 1,
+                  }
+                },
                 onDone: 'updateTurnFromObject',
               },
             },
             updateTurnFromObject: {
               invoke: {
                 src: 'passTurnActor',
-                input: ({ context, event }) => ({
-                  sessionId: context.gameSessionId!,
-                  nextPlayerId: (event as any).input.nextPlayerId,
-                }),
+                input: ({ context }): PassTurnActorInput => {
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.nextPlayerId) throw new Error('Next player ID is missing (should have been set in objecting entry)')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    nextPlayerId: context.nextPlayerId,
+                  }
+                },
                 onDone: {
                   target: 'idle',
                   actions: [
@@ -383,21 +382,31 @@ export const gameMachine = setup({
             challengingStutter: {
               invoke: {
                 src: 'drawCardsActor',
-                input: ({ context, event }) => ({
-                  sessionId: context.gameSessionId!,
-                  playerId: (event as any).storytellerId,
-                  count: 1,
-                }),
+                input: ({ context, event }): DrawCardsActorInput => {
+                  assertEvent(event, 'CHALLENGE_STUTTER')
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    playerId: event.storytellerId,
+                    count: 1,
+                  }
+                },
                 onDone: 'updateTurnFromChallenge',
               },
             },
             updateTurnFromChallenge: {
               invoke: {
                 src: 'passTurnActor',
-                input: ({ context, event }) => ({
-                  sessionId: context.gameSessionId!,
-                  nextPlayerId: (event as any).nextPlayerId,
-                }),
+                input: ({ context }): PassTurnActorInput => {
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.nextPlayerId) throw new Error('Next player ID is missing (should have been set in challengingStutter entry)')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    nextPlayerId: context.nextPlayerId,
+                  }
+                },
                 onDone: {
                   target: 'idle',
                   actions: [
@@ -409,9 +418,12 @@ export const gameMachine = setup({
             confirmingCard: {
               invoke: {
                 src: 'confirmCardActor',
-                input: ({ event }) => ({
-                  playedCardId: (event as any).playedCardId,
-                }),
+                input: ({ event }): ConfirmCardActorInput => {
+                  assertEvent(event, 'CONFIRM_CARD')
+                  return {
+                    playedCardId: event.playedCardId,
+                  }
+                },
                 onDone: {
                   target: 'idle',
                   actions: assign({
@@ -431,32 +443,48 @@ export const gameMachine = setup({
         playingCard: {
           invoke: {
             src: 'playCardActor',
-            input: ({ context, event }: { context: GameContext, event: GameEvent }) => ({
-              sessionId: context.gameSessionId!,
-              playerId: context.currentPlayerId!,
-              cardId: (event as any).cardId,
-              position: (event as any).playedCardsCount,
-            }),
+            input: ({ context, event }): PlayCardActorInput => {
+              assertEvent(event, 'WIN_GAME')
+              if (!context.gameSessionId) throw new Error('Game session ID is missing')
+              if (!context.currentPlayerId) throw new Error('Current player ID is missing')
+
+              return {
+                gameSessionId: context.gameSessionId,
+                playerId: context.currentPlayerId,
+                cardId: event.cardId,
+                position: event.playedCardsCount,
+              }
+            },
             onDone: 'confirming',
           },
         },
         confirming: {
           invoke: {
             src: 'confirmCardActor',
-            input: ({ event }: { event: any }) => ({
-              playedCardId: event.output.id,
-            }),
+            input: ({ event }): ConfirmCardActorInput => {
+              const output = ((event as unknown) as DoneActorEvent<PlayCardActorOutput>).output
+              if (!output?.id) throw new Error('Play card output missing ID')
+              return {
+                playedCardId: output.id,
+              }
+            },
             onDone: 'finalizing',
           },
         },
         finalizing: {
           invoke: {
             src: 'finalizeWinActor',
-            input: ({ context }: { context: GameContext }) => ({
-              sessionId: context.gameSessionId!,
-              winnerId: context.currentPlayerId!,
-              lobbyId: context.lobbyId!,
-            }),
+            input: ({ context }): FinalizeWinActorInput => {
+              if (!context.gameSessionId) throw new Error('Game session ID is missing')
+              if (!context.currentPlayerId) throw new Error('Current player ID is missing')
+              if (!context.lobbyId) throw new Error('Lobby ID is missing')
+
+              return {
+                gameSessionId: context.gameSessionId,
+                winnerId: context.currentPlayerId,
+                lobbyId: context.lobbyId,
+              }
+            },
             onDone: '#gameRoot.gameOver',
           },
         },

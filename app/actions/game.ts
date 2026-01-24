@@ -197,5 +197,16 @@ export async function initializeGame(lobbyId: string) {
     }
   }
 
+  // Update lobby status to playing
+  const { error: statusError } = await supabase
+    .from('lobbies')
+    .update({ status: 'playing' })
+    .eq('id', lobbyId)
+
+  if (statusError) {
+    console.error('Error updating lobby status:', statusError)
+    // Don't fail the whole operation for this, but log it
+  }
+
   return { success: true, gameSessionId: gameSession.id }
 }

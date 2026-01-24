@@ -1,7 +1,12 @@
-import { Database } from '@/supabase/types'
+/**
+ * Type definitions for XState game machine actors
+ *
+ * This file contains shared type definitions for the game machine,
+ * providing type safety and centralized type definitions following
+ * XState v5's modular design principles.
+ */
 
-export type CardData = Database['public']['Tables']['cards']['Row']
-export type PartialCardData = Partial<CardData>
+import { type CardData } from '@/utils/gameUtils'
 
 /**
  * Extended card interfaces for different contexts
@@ -28,28 +33,7 @@ export interface PlayedCardData extends CardData {
   /** The player ID who played this card */
   played_by: string
   /** The status of the played card (PENDING, CONFIRMED, REVERTED) */
-  status: Database['public']['Enums']['played_card_status'] | null
+  status: string
   /** The played card record ID from played_cards table */
   played_card_id: string
-}
-
-export function getLocalizedCardContent(card: PartialCardData, language: string) {
-  if (card.translations) {
-    const translations = (card.translations || {}) as Record<string, { name?: string, description?: string } | undefined>
-    const localized = translations[language]
-
-    if (localized) {
-      return {
-        name: localized.name || card.name || '',
-        description: localized.description || card.description,
-        type: card.category,
-      }
-    }
-  }
-
-  return {
-    name: card.name ?? '',
-    description: card.description,
-    type: card.category,
-  }
 }

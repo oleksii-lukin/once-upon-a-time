@@ -11,9 +11,16 @@ interface WebRTCState {
   remoteStreams: Record<string, MediaStream> // playerId -> MediaStream
 }
 
+/**
+ * Interface for media device information used in WebRTC setup.
+ * Contains device identification and metadata for audio/video devices.
+ */
 export interface DeviceInfo {
+  /** Unique device identifier provided by the browser */
   deviceId: string
+  /** Human-readable device name/label */
   label: string
+  /** Type of media device (audioinput, audiooutput, videoinput) */
   kind: MediaDeviceKind
 }
 

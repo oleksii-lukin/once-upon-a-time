@@ -60,7 +60,7 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                   <div className="h-full w-0.5 bg-linear-to-b from-transparent via-yellow-500/50 to-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
                 </div>
               )}
-              <div className={`w-48 shrink-0 transition-all duration-300 ease-out mb-0 ${isSelected ? 'transform -translate-y-16 z-30 scale-105' : 'hover:-translate-y-10 hover:z-10'} ${!isMyTurn ? 'pointer-events-none' : 'cursor-pointer'}`}>
+              <div className={`w-48 shrink-0 transition-all duration-300 ease-out mb-0 ${isSelected ? 'transform -translate-y-16 z-30 scale-105' : 'hover:-translate-y-10 hover:z-10'} cursor-pointer`}>
                 <Card
                   card={card}
                   isHoverable={false}
@@ -70,7 +70,11 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                   layout={deck?.card_layout}
                   onShowDetails={onShowDetails ? () => onShowDetails(card) : undefined}
                   showInfoButton={isSelected}
-                  className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-rose-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_40px_rgba(255,255,255,0.5)]' : ''}`}
+                  className={`
+                    ${!isMyTurn ? 'opacity-70 grayscale hover:opacity-100 hover:grayscale-0' : ''} 
+                    ${isEnding ? 'ring-2 ring-rose-500/30' : ''} 
+                    ${isSelected ? 'ring-4 ring-white shadow-[0_0_40px_rgba(255,255,255,0.5)]' : ''}
+                  `}
                 />
               </div>
             </React.Fragment>

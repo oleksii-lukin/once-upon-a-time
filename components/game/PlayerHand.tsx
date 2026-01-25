@@ -38,8 +38,12 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
   }, [cards])
 
   return (
-    <div className="relative w-full bg-black/20 dark:bg-black/30 backdrop-blur-md border-t border-white/10 pt-4 pb-6">
-      <div className="player-hand flex justify-center items-end h-72 gap-4 px-4 overflow-x-auto pb-4">
+    <div className="relative w-full h-72 shrink-0 z-40">
+      {/* Visual Tray Background - This is the part that takes up space and has the border */}
+      <div className="absolute inset-0 bg-black/20 dark:bg-black/30 backdrop-blur-md border-t border-white/10 pointer-events-none" />
+
+      {/* Scrollable Area - Taller than the tray to allow cards to stick out without clipping */}
+      <div className="player-hand absolute inset-x-0 bottom-0 h-96 flex justify-center items-end gap-6 px-8 overflow-x-auto pb-1 overflow-y-visible scrollbar-hide">
         {sortedCards.map((card, index) => {
           const isEnding = card.category?.toLowerCase() === 'ending'
           // Check if previous card was NOT an ending, and this one IS an ending
@@ -51,26 +55,25 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
           return (
             <React.Fragment key={card.id}>
               {isFirstEnding && index > 0 && (
-                <div className="flex flex-col items-center justify-center h-48 mx-6 animate-fade-in">
+                <div className="flex flex-col items-center justify-center h-48 mx-6 animate-fade-in mb-8">
                   <div className="h-full w-0.5 bg-linear-to-b from-transparent via-yellow-500/50 to-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]" />
                 </div>
               )}
-              <div className={`w-48 shrink-0 transition-all duration-300 ${isEnding ? 'transform hover:-translate-y-4' : ''} ${isSelected ? 'transform -translate-y-6 z-10' : ''}`}>
+              <div className={`w-48 shrink-0 transition-all duration-300 ease-out mb-0 ${isSelected ? 'transform -translate-y-16 z-30 scale-105' : 'hover:-translate-y-10 hover:z-10'} ${!isMyTurn ? 'pointer-events-none' : 'cursor-pointer'}`}>
                 <Card
                   card={card}
-                  isHoverable={isMyTurn}
+                  isHoverable={false}
                   onClick={() => isMyTurn && onSelectCard(card)}
                   cardBackImageUrl={deck?.card_back_image_url}
                   categoryImages={deck?.category_images as Record<string, string> | null}
                   layout={deck?.card_layout}
-                  className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-yellow-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_20px_rgba(255,255,255,0.4)]' : ''}`}
+                  className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-rose-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_40px_rgba(255,255,255,0.5)]' : ''}`}
                 />
               </div>
             </React.Fragment>
           )
         })}
       </div>
-      {/* Action buttons moved to TurnControls/Sidebar as requested */}
     </div>
   )
 }

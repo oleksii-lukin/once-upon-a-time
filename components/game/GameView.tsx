@@ -36,6 +36,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const [hand, setHand] = useState<HandCardData[]>([])
   const [playedCards, setPlayedCards] = useState<PlayedCardData[]>([])
   const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
+  const [remainingEndingCardsCount, setRemainingEndingCardsCount] = useState<number>(0)
   const [deck, setDeck] = useState<Deck | null>(null)
   const [detailsCard, setDetailsCard] = useState<CardData | null>(null)
   const supabase = createClient()
@@ -133,6 +134,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         })
         setPlayerHandCounts(counts)
       }
+
+      // Fetch remaining ending cards in draw pile
+      const { count: endingCount } = await supabase
+        .from('draw_pile')
+        .select(`*, cards!inner(category)`, { count: 'exact', head: true })
+        .eq('game_session_id', session.id)
+        .eq('cards.category', 'ending')
+
+      setRemainingEndingCardsCount(endingCount || 0)
     }
   }, [supabase, lobby.id, currentPlayer])
 
@@ -169,6 +179,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     optimisticCard,
     inFlightHandId,
     gameMode,
+    exchangeCard,
   } = useGameEngine(
     gameSession,
     currentPlayer,
@@ -346,7 +357,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             handSize={handSize}
             selectedCardId={selectedCardId}
             onPlaySelected={handlePlaySelected}
-            onPass={passTurn}
+            onPass={() => passTurn(handSize === 0)}
             onInterrupt={interrupt}
             onWin={onWin}
             isEndingSelected={isEndingSelected}
@@ -357,6 +368,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             gameMode={gameMode}
             isPending={!!inFlightHandId}
             rulesFinished={state.context.rulesFinished}
+            onExchange={(cardId) => exchangeCard(cardId, isEndingSelected)}
+            hasRemainingEndingCards={remainingEndingCardsCount > 0}
           />
         )}
       </main>

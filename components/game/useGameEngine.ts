@@ -65,8 +65,12 @@ export const useGameEngine = (
     send({ type: 'PLAY_CARD', card, playedCardsCount })
   }, [send])
 
-  const passTurn = useCallback(async () => {
-    send({ type: 'PASS' })
+  const passTurn = useCallback(async (isHandEmpty?: boolean) => {
+    send({ type: 'PASS', isHandEmpty })
+  }, [send])
+
+  const exchangeCard = useCallback(async (cardId: string, isEnding?: boolean) => {
+    send({ type: 'EXCHANGE', cardId, isEnding })
   }, [send])
 
   const interrupt = useCallback(async () => {
@@ -107,10 +111,12 @@ export const useGameEngine = (
     confirmCard,
     winGame,
     finalizeWin,
+    exchangeCard,
     gameMode: state.context.gameMode,
     optimisticCard: state.context.optimisticCard,
     inFlightHandId: state.context.inFlightHandId,
     isDrawing: state.matches({ active: { persistence: 'passingTurn' } } as any)
+      || state.matches({ active: { persistence: 'exchangingCard' } } as any)
       || state.matches({ active: { persistence: 'challengingStutter' } } as any)
       || state.matches({ active: { persistence: 'penaltyForStoryteller' } } as any),
   }

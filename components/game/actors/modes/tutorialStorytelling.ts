@@ -73,6 +73,7 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
       on: {
         PLAY_CARD: 'cardPlay',
         PASS: { target: 'finished' },
+        EXCHANGE: { target: 'finished' },
       },
     },
     cardPlay: {

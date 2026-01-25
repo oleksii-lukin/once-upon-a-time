@@ -182,6 +182,8 @@
     "fast_mode_description": "A faster version of the game with some rules locked for speed.",
     "tutorial_mode_description": "Learn the basics of the game with guided tips and simplified rules.",
     "solo_mode_description": "Tell your story alone, with no interruptions or pressure. Perfect for practicing your narrative adventure.",
+    "exchange_card_btn": "Exchange Card",
+    "end_turn_btn": "End Turn",
     "select_decks_to_include": "Select decks to include:",
     "no_decks_available": "No decks available. Create a deck in the admin panel first.",
     "no_decks_selected": "No decks selected yet.",
@@ -314,6 +316,8 @@
         "played_by": "Played by {{name}}",
         "no_cards_played": "No cards played yet...",
         "play_card_btn": "Play Card",
+        "exchange_card_btn": "Exchange Card",
+        "end_turn_btn": "End Turn",
         "pass_turn_btn": "Pass Turn",
         "draw_card_btn": "Draw Card",
         "play_ending_win_btn": "Play Ending & Win!",
@@ -490,6 +494,38 @@
             "dark": "Dark",
             "system": "System",
             "sign_out": "Sign Out"
+        }
+    },
+    "game_modes_info": {
+        "main": {
+            "title": "Main Mode",
+            "description": "The classic Once Upon a Time experience. Players take turns as the Storyteller, playing cards that match their narration. Other players can interrupt by playing matching keywords or objecting to cards that don't fit the story.",
+            "examples": [
+                "Storyteller: 'The brave knight reached the Dark Forest...' (plays Dark Forest card).",
+                "Another player: 'Dark Forest! Actually, it was a beautiful meadow...' (interrupts and takes over storytelling)."
+            ]
+        },
+        "fast": {
+            "title": "Fast Mode",
+            "description": "A quicker version of the game. Interruptions are disabled, allowing the Storyteller to focus on their narrative without constant takeover. Perfect for shorter sessions or learning the flow.",
+            "examples": [
+                "Storyteller plays 3 cards in a row without being interrupted, reaching the climax quickly."
+            ]
+        },
+        "tutorial": {
+            "title": "Tutorial Mode",
+            "description": "Simplified rules for beginners. Each turn is limited to playing exactly 1 card or exchanging a card for a new one. No interruptions or objections. Helps you learn how to connect your hand to a story.",
+            "examples": [
+                "Player plays 'The King' and describes how he ruled the land. Turn ends automatically after one card.",
+                "Player has no good cards to play, clicks 'Exchange Card' to swap one card and pass the turn."
+            ]
+        },
+        "solo": {
+            "title": "Solo Mode",
+            "description": "A sandbox for creative writing and practice. You are the only storyteller. No pressure, no competition. Just you and the cards.",
+            "examples": [
+                "Write a complete fairy tale using all the cards in the deck, one by one."
+            ]
         }
     }
 }

@@ -14,6 +14,7 @@ import { passTurnActor, type PassTurnActorInput } from './actors/passTurnActor'
 import { confirmCardActor, type ConfirmCardActorInput } from './actors/confirmCardActor'
 import { finalizeWinActor, type FinalizeWinActorInput } from './actors/finalizeWinActor'
 import { objectActor, type ObjectActorInput } from './actors/objectActor'
+import { exchangeCardActor, type ExchangeCardActorInput } from './actors/exchangeCardActor'
 
 type Player = Database['public']['Tables']['players']['Row']
 
@@ -59,11 +60,12 @@ export interface GameContext {
 export type GameEvent
   = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number }
   | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-  | { type: 'PASS', nextPlayerId?: string }
+  | { type: 'PASS', isHandEmpty?: boolean }
   | { type: 'INTERRUPT' }
   | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
   | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
   | { type: 'CONFIRM_CARD', playedCardId: string }
+  | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
   | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
   | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
   | { type: 'RULES_DONE' }
@@ -91,6 +93,7 @@ export const gameMachine = setup({
     confirmCardActor,
     finalizeWinActor,
     objectActor,
+    exchangeCardActor,
   },
 }).createMachine({
   id: 'gameRoot',
@@ -232,6 +235,32 @@ export const gameMachine = setup({
                 }),
               ],
             },
+            EXCHANGE: {
+              actions: [
+                assign(({ context }) => {
+                  // Calculate next player
+                  const players = context.players || []
+                  const sortedPlayers = players
+                    .filter((p: Player) => p.role !== 'spectator')
+                    .sort((a: Player, b: Player) => {
+                      if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
+                        return a.turn_order - b.turn_order
+                      }
+                      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
+                    })
+
+                  const currentIndex = sortedPlayers.findIndex((p: Player) => p.id === context.currentPlayerId)
+                  let nextPlayerId = context.currentPlayerId
+                  if (currentIndex !== -1 && sortedPlayers.length > 1) {
+                    const nextIndex = (currentIndex + 1) % sortedPlayers.length
+                    nextPlayerId = sortedPlayers[nextIndex].id
+                  }
+
+                  return { nextPlayerId }
+                }),
+                sendTo('rulesActor', { type: 'PASS' }),
+              ],
+            },
             RESET_RULES: {
               actions: assign({ rulesFinished: false }),
               target: '.decideMode',
@@ -283,6 +312,7 @@ export const gameMachine = setup({
               on: {
                 PLAY_CARD: 'playingCard',
                 PASS: 'passingTurn',
+                EXCHANGE: 'exchangingCard',
                 OBJECT: 'objecting',
                 CHALLENGE_STUTTER: 'challengingStutter',
                 CONFIRM_CARD: 'confirmingCard',
@@ -309,6 +339,7 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
+                    assign({ lastPlayedCardId: ({ event }) => event.output.id }),
                     sendTo('rulesActor', ({ event }) => ({ type: 'PLAY_CARD_ACK', playedCardId: event.output.id })),
                   ],
                 },
@@ -338,6 +369,41 @@ export const gameMachine = setup({
                 onDone: 'updateTurn',
                 onError: 'idle',
               },
+              always: [
+                {
+                  target: 'updateTurn',
+                  guard: ({ context, event }) => {
+                    const passEvent = event as Extract<GameEvent, { type: 'PASS' }>
+                    return context.gameMode === 'tutorial' &&
+                      context.lastPlayedCardId !== null &&
+                      !passEvent.isHandEmpty
+                  }
+                }
+              ]
+            },
+            exchangingCard: {
+              invoke: {
+                src: 'exchangeCardActor',
+                input: ({ context, event }): ExchangeCardActorInput => {
+                  assertEvent(event, 'EXCHANGE')
+                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
+                  if (!context.currentPlayerId) throw new Error('Current player ID is missing')
+
+                  return {
+                    gameSessionId: context.gameSessionId,
+                    playerId: context.currentPlayerId,
+                    cardId: event.cardId,
+                    isEnding: event.isEnding,
+                  }
+                },
+                onDone: 'updateTurn',
+                onError: {
+                  target: 'idle',
+                  actions: assign({
+                    lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error',
+                  }),
+                },
+              },
             },
             updateTurn: {
               invoke: {
@@ -358,6 +424,7 @@ export const gameMachine = setup({
                     assign({
                       optimisticCard: null,
                       inFlightHandId: null,
+                      lastPlayedCardId: null,
                     }),
                   ],
                 },
@@ -418,6 +485,7 @@ export const gameMachine = setup({
                     assign({
                       optimisticCard: null,
                       inFlightHandId: null,
+                      lastPlayedCardId: null,
                     }),
                   ],
                 },
@@ -571,6 +639,7 @@ export const gameMachine = setup({
                 assign({
                   optimisticCard: null,
                   inFlightHandId: null,
+                  lastPlayedCardId: null,
                 }),
               ],
             },

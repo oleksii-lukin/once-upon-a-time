@@ -18,6 +18,16 @@ export default function CardDetailsOverlay({ card, onClose, categoryImages, type
   const localizedContent = getLocalizedCardContent(card, i18n.language)
   const [showUsage, setShowUsage] = useState(false)
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const normalizeTypeKey = (raw?: string) => {
     const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
     const map: Record<string, string> = {

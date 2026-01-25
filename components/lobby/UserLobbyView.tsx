@@ -405,6 +405,23 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                         disabled
                         htmlFor="enable-video-chat"
                       />
+
+                      <div className="col-span-1 md:col-span-2 space-y-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <LobbySettingToggle
+                            label={t('enable_pacing_delay')}
+                            checked={settings.enablePacingDelay}
+                            disabled
+                            htmlFor="enable-pacing-delay"
+                            infoText={t('pacing_delay_tooltip')}
+                          />
+                          {settings.enablePacingDelay && (
+                            <span className="text-sm font-bold text-foreground opacity-70 min-w-[3rem] text-right">
+                              {settings.pacingDelayDuration}s
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl opacity-70">
@@ -418,7 +435,7 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
                             className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${selectedDeckIds.includes(deck.id)
                               ? 'bg-primary/20 border-primary'
                               : 'border-transparent'
-                            }`}
+                              }`}
                           >
                             <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
                             <span className="text-foreground font-medium">{deck.name}</span>

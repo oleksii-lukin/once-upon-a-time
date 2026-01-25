@@ -88,13 +88,14 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QDMCuAbdBlALgewCcBPHMTASwDsoA6SgQwIPpyqgGIAFAGQEEBNAPoBhXgCUAIgG0ADAF1EoAA55Y5VnkqKQAD0QBGABwB2GgCYAbAFYLZqwBoQRRGZkyahgMzefv7wBYAX0DHNExcQhIydDY6RmZWai5eLCxZBSQQFTUNLUy9BH0LU0sbO0dnBGMZQxoavz8gkJAw7HxiUgpqOKYWNnYASQA5ABUAUTExAFVOEfTtbPVyTW0C-QBOEutbBycDTzNg0Iw2yM6Y7oBjRghOdHoidghNMBpYHBZX1oiO6Njrgi3e5EeaZRa5VYGYxbMq7SpWQzrDwNRpHFonH5RLq0AFAh40egAd3oS2ovEuAGsuHwhKJJIJeMIANKg5SqJYrfKIKxGcyefyeYxwlz+Kw0Tw2aH1VHNb7tLEXHE3O74pRgSgQfoAeQAQgApMbCObyBbsiFchCGSw0fQydaC4UITzrMV2NFys5-K7K4E0NUa-rCLVDABiAzEAFlWVkzcs8qAClaLDa7Q6Ki4LLVpSjvMZ3Rj5ed-j7VerNUkdO9PgTkKQCAAKKxuGQASnYHt+2JouJVRD9ZbY0fBcchluttvtQvTCDMrhoCJzPiax3Cha9SsBvZoeAARgArMCXRIcABqvG4A2kJrBsc5CYM-n0Zg8VknjqbSIXi8F+dXnq7Pa+ruB5Hv0wxnheV4ZGyOQjhatqGPoNAClOexOoYtReN+P6ygW-6KjQVB1gQqBKLk7AQZeQ63vGuiIP4hj+MhaZoYi85Yd+v6nJ2BFEWATCkeR4HnlR14wRytFrJs5jbOUrFIVYwTNJQeAQHA2gdgqbCmrBd50QgAC0FjTkZXGYkW3QML0x46RJo7+GY07rMu6J-jxxabsCtnmveTrWq+LGVPonjuF+i4uZpFkbnifZEiSx7khS3lwb5gpMQFqGVJYtRhTmea4W5Wnep5pYBtQyV6QU1SmBOgUZjlHF5WZa4ASWfbAYeNk3rpkmIC6SKlDs07OmKQrNfhHkxd2mjIOQBAALaQBVvWFGYwXzm+05rVmjUohFeHud0fECWRKUxj1o78ulm1oes7jZou42HbQs2UOQsAABZLd1dnwTySLGIhcmVAxYrYbmSmBEAA */
   id: 'fullStorytelling',
   initial: 'narrating',
-  context: {
+  context: ({ input }) => ({
     cardsPlayedThisTurn: 0,
     maxCardsPerTurn: null,
     canInterrupt: true,
     canObject: true,
     lastPlayedCardId: null,
-  },
+    pacingDelay: input.pacingDelay,
+  }),
   states: {
     narrating: {
       on: {
@@ -120,7 +121,7 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
             CONFIRM: 'confirmed',
           },
           after: {
-            5000: 'confirmed',
+            PACING_DELAY: 'confirmed',
           },
         },
         objecting: {

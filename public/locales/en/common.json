@@ -171,6 +171,8 @@
     "timer_per_turn": "Timer per Turn",
     "happy_ending_variant": "Happy Ending Variant",
     "enable_video_chat": "Enable Video Chat",
+    "enable_pacing_delay": "Enable Pacing Delay",
+    "pacing_delay_tooltip": "Enforces a pause after playing a card to allow for narration or objections. Range 3-30 seconds. Delay is 0s if disabled.",
     "select_decks": "Decks",
     "game_mode": "Game Mode",
     "main_game_mode": "Main Mode",

@@ -21,6 +21,7 @@ export const useGameEngine = (
   currentPlayer: Player | undefined,
   players: Player[],
   fetchGameState: () => Promise<void>,
+  pacingDelay: number = 0,
 ) => {
   const [state, send] = useMachine(gameMachine, {
     inspect: inspector?.inspect || undefined,
@@ -37,9 +38,10 @@ export const useGameEngine = (
         mode: (gameSession.game_mode as any) || 'full',
         currentPlayerId: currentPlayer.id,
         players: players,
+        pacingDelay: pacingDelay,
       })
     }
-  }, [gameSession, currentPlayer, players, send, state.value])
+  }, [gameSession, currentPlayer, players, send, state.value, pacingDelay])
 
   const nextPlayer = useMemo(() => {
     if (!currentPlayer || players.length === 0) return null
@@ -85,8 +87,8 @@ export const useGameEngine = (
     send({ type: 'CONFIRM_CARD', playedCardId })
   }, [send])
 
-  const winGame = useCallback(async (cardId: string, playedCardsCount: number) => {
-    send({ type: 'WIN_GAME', cardId, playedCardsCount })
+  const winGame = useCallback(async (card: CardData, playedCardsCount: number) => {
+    send({ type: 'WIN_GAME', card, playedCardsCount })
   }, [send])
 
   const finalizeWin = useCallback(async (winnerId: string) => {

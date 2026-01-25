@@ -39,5 +39,6 @@ If the Storyteller passes, is interrupted correctly, or is successfully challeng
 - If the ending doesn't make sense or is challenged by others, the Ending Card returns to the hand, they draw a new Ending Card and a Story Card, and play passes.
 
 ## 6. Digital Adaptation Specifics
-- **Turn Timer**: Optional timer to prevent stalling?
+- **Turn Timer**: Optional timer to prevent stalling.
+- **Configurable Pacing**: Admins can set a "Pacing Delay" (0-30s) that enforces a pause after a card is played. This allows time for narration or objections before the card is permanently confirmed.
 - **Keyword Matching**: The system could highlight playability if speech-to-text is used, or players manually trigger interruptions.

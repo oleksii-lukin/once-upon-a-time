@@ -11,6 +11,7 @@ import { getTranslation } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
+import { Slider } from '@/components/ui/slider'
 import CopyButton from '@/components/common/CopyButton'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import type { LobbySettings } from '@/types/lobby'
@@ -382,6 +383,35 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
                         onCheckedChange={() => updateSettings({ enableVideoChat: !settings.enableVideoChat })}
                         htmlFor="enable-video-chat"
                       />
+
+                      <div className="col-span-1 md:col-span-2 space-y-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <LobbySettingToggle
+                            label={t('enable_pacing_delay')}
+                            checked={settings.enablePacingDelay}
+                            onCheckedChange={() => updateSettings({ enablePacingDelay: !settings.enablePacingDelay })}
+                            htmlFor="enable-pacing-delay"
+                            infoText={t('pacing_delay_tooltip')}
+                          />
+                          {settings.enablePacingDelay && (
+                            <span className="text-sm font-bold text-primary min-w-[3rem] text-right">
+                              {settings.pacingDelayDuration}s
+                            </span>
+                          )}
+                        </div>
+
+                        {settings.enablePacingDelay && (
+                          <div className="px-2 pb-2">
+                            <Slider
+                              defaultValue={[settings.pacingDelayDuration]}
+                              max={30}
+                              min={3}
+                              step={1}
+                              onValueChange={(vals: number[]) => updateSettings({ pacingDelayDuration: vals[0] })}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-card p-6 rounded-xl">

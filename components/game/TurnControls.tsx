@@ -73,7 +73,8 @@ export default function TurnControls({
 
           <button
             onClick={onPass}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
+            disabled={isPending}
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {gameMode === 'solo' ? t('game.draw_card_btn') : t('game.pass_turn_btn')}
           </button>

@@ -75,13 +75,14 @@ export const soloStorytellingMachine = storytellingSetup.createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5SwPYBsUGUAuKBOAntmGmgJYB2UAdBQIZ553aVQDEACgDICCAmgH0AwjwBKAEQDaABgC6iUAAcUsMixQUFIAB6IAjADYA7NQBMBgKwG9pgCymAHHocOjpgDQgCiAMw+L1JYGPk7SAJxhBg62PgC+sZ6oGDj4RCTkVLQMTCxUnDyYmDLySCDKquqapboIhibmVjb2Ti5unt610gFGFtLSURY+MeZ6FvGJ6Fi4hMSkrNQAxgwQHGh0BJy8giISAjxCANLFWuVqZBpaNXVmQU2Ozq4eXvpWZr16fTHBEQYG8QkgCgoCBwLRJKapWYZKAnFRnC7VRAAWgM7WRAQiER84RiPkMtnGIHBKRm6Xm9EYzFYsIq5yqoBq9jRtTCpmoRmkPlMdicHK65kJxOmaTmmSWeBWaw6SjhlUuvleels-Q+0miDlM-WZpiMPmoFl14VGphsDjxgsmJJF0OoADNKGRYAALSA0+H0nQKgzUJUqvrqzWo54IJz6vr9MJdX5mv7-IA */
   id: 'soloStorytelling',
   initial: 'narrating',
-  context: {
+  context: ({ input }) => ({
     cardsPlayedThisTurn: 0,
     maxCardsPerTurn: null,
     canInterrupt: false,
     canObject: false,
     lastPlayedCardId: null,
-  },
+    pacingDelay: input.pacingDelay,
+  }),
   states: {
     narrating: {
       on: {
@@ -92,13 +93,20 @@ export const soloStorytellingMachine = storytellingSetup.createMachine({
     cardPlay: {
       on: {
         PLAY_CARD_ACK: {
-          actions: [
-            assign({ lastPlayedCardId: ({ event }) => event.playedCardId }),
-            sendParent(({ event }) => ({ type: 'CONFIRM_CARD', playedCardId: event.playedCardId })),
-          ],
-          target: 'narrating',
+          actions: assign({ lastPlayedCardId: ({ event }) => event.playedCardId }),
+          target: 'waiting',
         },
       },
+    },
+    waiting: {
+      always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+      after: {
+        PACING_DELAY: { target: 'confirming' },
+      },
+    },
+    confirming: {
+      entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
+      always: 'narrating',
     },
     finished: {
       type: 'final',

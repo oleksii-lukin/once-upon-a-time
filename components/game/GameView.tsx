@@ -174,6 +174,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     currentPlayer,
     players,
     fetchGameState,
+    useMemo(() => {
+      if (lobby.settings && typeof lobby.settings === 'object') {
+        const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+        if (parsed.success && parsed.data.enablePacingDelay) {
+          return parsed.data.pacingDelayDuration
+        }
+      }
+      return 0
+    }, [lobby.settings]),
   )
 
   // Subscriptions
@@ -253,7 +262,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const onWin = () => {
     const currentEndingCard = endingCard || hand.find(c => c.type === 'ending')
     if (currentEndingCard && gameSession?.status !== 'COMPLETED') {
-      winGame(currentEndingCard.id, playedCards.length)
+      winGame(currentEndingCard, playedCards.length)
     }
   }
 

@@ -60,13 +60,14 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QBcCuyD2AnAlgQwBsBlTLAT2TAIJwDsoA6WvLLPZOqAYgAUAZAIIBNAPoBhAQCUAIgG0ADAF1EoAA4ZYODhloqQAD0QBGAOwmGAJgBsAVitGLATmsBmGyccAaEGUQX5FgyORlZWACwmYS4WRvIuABxhAL5J3mik+MSkFFQ09EwsbBz0vAJERArKSCDqmtq61YYIpubWdg7OVm4e3r4Ibo4M9o4modZGRmH2KWno2Jkk2DnUnAwAxiwQPAR4ZLyCohIyIgJiANKVerVaODp6TWERDPJWFhFhRo6hNkbxVr3GUJBLo2CzxNzxRLyIwzEDpeaERbkSgrfIQMBrHDogByYH0yC4l2q13q90QZhcDF+kRs8UcoKsJjBAIQzgYYUcnPiozcLle8kcsPhuER2RReUY6MxOLxBNkRiqag0NzujUQEUpApcJkmj3B1nkJhZiXZIXCwRMAt+1hSqRAtAw6Pg1WFCzFuU4V2VpLVCAAtP8fIg-TYgpzwxGIy4hXMRVkluLVsxWOxPcTvbcGqAHhYWcFnh9wiYbDYwjEwjZBXbXaKEx78hssFsdn0lXVM2T+mDnq8IgLEmZKyz-JTC6EXC8vnY-jGMrXkfXJRisWBcfive3VdnECCgtqpr97B56Xn5AxIpzLTY4jF7PFZwj4wvUYwAGZ0HCwAAWkA3KqzBiII4hoMHS8i0jYLhGKCTg2MaRjsuG8RxBMkFmraSRAA */
   id: 'tutorialStorytelling',
   initial: 'narrating',
-  context: {
+  context: ({ input }) => ({
     cardsPlayedThisTurn: 0,
     maxCardsPerTurn: 1,
     canInterrupt: false,
     canObject: false,
     lastPlayedCardId: null,
-  },
+    pacingDelay: input.pacingDelay,
+  }),
   states: {
     narrating: {
       on: {
@@ -77,16 +78,23 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
     cardPlay: {
       on: {
         PLAY_CARD_ACK: {
-          actions: [
-            assign({
-              lastPlayedCardId: ({ event }) => event.playedCardId,
-              cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
-            }),
-            sendParent(({ event }) => ({ type: 'CONFIRM_CARD', playedCardId: event.playedCardId })),
-          ],
-          target: 'decideNext',
+          actions: assign({
+            lastPlayedCardId: ({ event }) => event.playedCardId,
+            cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
+          }),
+          target: 'waiting',
         },
       },
+    },
+    waiting: {
+      always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+      after: {
+        PACING_DELAY: { target: 'confirming' },
+      },
+    },
+    confirming: {
+      entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
+      always: 'decideNext',
     },
     decideNext: {
       always: [

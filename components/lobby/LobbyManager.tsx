@@ -102,8 +102,22 @@ export default function LobbyManager({
   }
 
   if (isHost) {
-    return <AdminLobbyView lobby={lobby} initialPlayers={players} />
+    return (
+      <AdminLobbyView
+        lobby={lobby}
+        initialPlayers={players}
+        userId={userId}
+        guestId={guestId}
+      />
+    )
   }
 
-  return <UserLobbyView lobby={lobby} initialPlayers={players} />
+  return (
+    <UserLobbyView
+      lobby={lobby}
+      initialPlayers={players}
+      userId={userId}
+      guestId={guestId}
+    />
+  )
 }

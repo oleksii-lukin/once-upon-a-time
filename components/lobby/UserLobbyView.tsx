@@ -26,16 +26,24 @@ type Deck = Database['public']['Tables']['decks']['Row']
 
 type LobbyPresence = {
   player_id?: string
-  user_id?: string
+  user_id?: string | null
   guest_id?: string
+  presence_ref: string
 }
 
 interface UserLobbyViewProps {
   lobby: Lobby
   initialPlayers: Player[]
+  userId: string | null
+  guestId: string | undefined
 }
 
-export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewProps) {
+export default function UserLobbyView({
+  lobby,
+  initialPlayers,
+  userId,
+  guestId,
+}: UserLobbyViewProps) {
   const { user } = useUser()
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby)
@@ -175,28 +183,26 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   useEffect(() => {
     if (!channelRef.current) return
 
-    const guestId = !user ? getGuestId() : undefined
     const currentPlayer = players.find(p =>
-      (user && p.user_id === user.id)
-      || (!user && p.guest_id === guestId),
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
     )
     const playerId = currentPlayer?.id
 
     if (playerId) {
       channelRef.current.track({
         player_id: playerId,
-        user_id: user?.id,
+        user_id: userId,
         guest_id: guestId,
       })
     }
-  }, [user, players])
+  }, [userId, guestId, players])
 
   // Handle role change
   const handleRoleChange = async (newRole: 'player' | 'spectator') => {
-    const guestId = !user ? getGuestId() : undefined
     const currentPlayer = players.find(p =>
-      (user && p.user_id === user.id)
-      || (!user && p.guest_id === guestId),
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
     )
 
     if (!currentPlayer) return
@@ -213,10 +219,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
 
   // Handle ready toggle
   const handleReadyToggle = async () => {
-    const guestId = !user ? getGuestId() : undefined
     const currentPlayer = players.find(p =>
-      (user && p.user_id === user.id)
-      || (!user && p.guest_id === guestId),
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
     )
 
     if (!currentPlayer) return
@@ -234,10 +239,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
 
   // Handle leave lobby
   const handleLeave = async () => {
-    const guestId = !user ? getGuestId() : undefined
     const currentPlayer = players.find(p =>
-      (user && p.user_id === user.id)
-      || (!user && p.guest_id === guestId),
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
     )
 
     if (!currentPlayer) return
@@ -258,10 +262,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   // Effect to force player role if allowSpectators is disabled
   useEffect(() => {
     if (!settings.allowSpectators) {
-      const guestId = !user ? getGuestId() : undefined
       const currentPlayer = players.find(p =>
-        (user && p.user_id === user.id)
-        || (!user && p.guest_id === guestId),
+        (userId && p.user_id === userId)
+        || (guestId && p.guest_id === guestId),
       )
 
       if (currentPlayer?.role === 'spectator') {
@@ -273,10 +276,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   // Effect to handle Solo Mode - switch players to spectators
   useEffect(() => {
     if (settings.gameMode === 'solo') {
-      const guestId = !user ? getGuestId() : undefined
       const currentPlayer = players.find(p =>
-        (user && p.user_id === user.id)
-        || (!user && p.guest_id === guestId),
+        (userId && p.user_id === userId)
+        || (guestId && p.guest_id === guestId),
       )
 
       // If current user is a player (not host) and solo mode is enabled, switch to spectator
@@ -289,10 +291,9 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   // Effect to disconnect users when Solo Mode enabled and spectators not allowed
   useEffect(() => {
     if (settings.gameMode === 'solo' && !settings.allowSpectators) {
-      const guestId = !user ? getGuestId() : undefined
       const currentPlayer = players.find(p =>
-        (user && p.user_id === user.id)
-        || (!user && p.guest_id === guestId),
+        (userId && p.user_id === userId)
+        || (guestId && p.guest_id === guestId),
       )
 
       // If current user is not the host and spectators are not allowed, disconnect them
@@ -303,13 +304,13 @@ export default function UserLobbyView({ lobby, initialPlayers }: UserLobbyViewPr
   }, [settings.gameMode, settings.allowSpectators]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentPlayer = players.find(p =>
-    (user && p.user_id === user.id)
-    || (!user && p.guest_id === getGuestId()),
+    (userId && p.user_id === userId)
+    || (guestId && p.guest_id === guestId),
   )
 
   // Filter players to only show online ones (plus self)
   const displayedPlayers = players.filter((p) => {
-    const isSelf = (user && p.user_id === user.id) || (!user && p.guest_id === getGuestId())
+    const isSelf = (userId && p.user_id === userId) || (guestId && p.guest_id === guestId)
     return onlineUsers.has(p.id) || isSelf
   })
 

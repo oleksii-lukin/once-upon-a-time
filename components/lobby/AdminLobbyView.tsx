@@ -26,16 +26,24 @@ type Deck = Database['public']['Tables']['decks']['Row']
 
 type LobbyPresence = {
   player_id?: string
-  user_id?: string
+  user_id?: string | null
   guest_id?: string
+  presence_ref: string
 }
 
 interface AdminLobbyViewProps {
   lobby: Lobby
   initialPlayers: Player[]
+  userId: string | null
+  guestId: string | undefined
 }
 
-export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyViewProps) {
+export default function AdminLobbyView({
+  lobby,
+  initialPlayers,
+  userId,
+  guestId,
+}: AdminLobbyViewProps) {
   const { user } = useUser()
   const params = useParams()
   const lng = params.lng as string
@@ -228,20 +236,29 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
 
   // 2. Track presence when player ID is available
   useEffect(() => {
-    if (!channelRef.current || !user) return
+    if (!channelRef.current) return
 
-    const currentPlayer = players.find(p => p.user_id === user.id)
+    const currentPlayer = players.find(p =>
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
+    )
     const playerId = currentPlayer?.id
 
     if (playerId) {
-      channelRef.current.track({ player_id: playerId, user_id: user.id })
+      channelRef.current.track({
+        player_id: playerId,
+        user_id: userId,
+        guest_id: guestId,
+      })
     }
-  }, [user, players, lobby.id])
+  }, [userId, guestId, players, lobby.id])
 
   // Handle role change for host
   const handleRoleChange = async (newRole: 'host' | 'spectator') => {
-    if (!user) return
-    const currentPlayer = players.find(p => p.user_id === user.id)
+    const currentPlayer = players.find(p =>
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
+    )
     if (!currentPlayer) return
 
     const { error } = await supabase
@@ -254,12 +271,16 @@ export default function AdminLobbyView({ lobby, initialPlayers }: AdminLobbyView
     }
   }
 
-  const currentPlayer = players.find(p => p.user_id === user?.id)
+  const currentPlayer = players.find(p =>
+    (userId && p.user_id === userId)
+    || (guestId && p.guest_id === guestId),
+  )
 
   // Filter players to only show online ones (plus self if not yet synced)
-  const displayedPlayers = players.filter(p =>
-    onlineUsers.has(p.id) || p.user_id === user?.id, // Always show self
-  )
+  const displayedPlayers = players.filter((p) => {
+    const isSelf = (userId && p.user_id === userId) || (guestId && p.guest_id === guestId)
+    return onlineUsers.has(p.id) || isSelf // Always show self
+  })
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">

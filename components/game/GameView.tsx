@@ -9,6 +9,7 @@ import TableArea from './TableArea'
 import GameSidebar from './GameSidebar'
 import TurnControls from './TurnControls'
 import GameCompletionOverlay from './GameCompletionOverlay'
+import CardDetailsOverlay from './CardDetailsOverlay'
 import { useGameEngine } from './useGameEngine'
 import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import { useRouter, useParams } from 'next/navigation'
@@ -36,6 +37,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const [playedCards, setPlayedCards] = useState<PlayedCardData[]>([])
   const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
   const [deck, setDeck] = useState<Deck | null>(null)
+  const [detailsCard, setDetailsCard] = useState<CardData | null>(null)
   const supabase = createClient()
   const router = useRouter()
   const params = useParams()
@@ -299,13 +301,14 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           playedCards={displayedPlayedCards}
           storytellerPlayer={storytellerPlayer}
           players={players}
+          onShowDetails={(card) => setDetailsCard(card)}
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as CardLayout,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />
@@ -314,13 +317,14 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           onSelectCard={onSelectCard}
           selectedCardId={selectedCardId}
           isMyTurn={isMyTurn}
+          onShowDetails={(card: HandCardData) => setDetailsCard(card)}
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as CardLayout,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />
@@ -365,6 +369,27 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
       {gameSession?.status === 'COMPLETED' && (
         <GameCompletionOverlay winner={winner} players={players} cardsPlayedCount={cardsPlayedCount} onReturnToLobbies={handleReturnToLobbies} />
+      )}
+
+      {/* Card Details Overlay */}
+      {detailsCard && (
+        <CardDetailsOverlay
+          card={detailsCard}
+          onClose={() => setDetailsCard(null)}
+          categoryImages={deck?.category_images as Record<string, string> | null}
+          typeColorMap={{
+            ending: 'bg-rose-500/90 border-rose-400/50',
+            protagonist: 'bg-sky-500/90 border-sky-400/50',
+            antagonist: 'bg-amber-600/90 border-amber-500/50',
+            setting: 'bg-emerald-500/90 border-emerald-400/50',
+            object: 'bg-violet-500/90 border-violet-400/50',
+            catalyst: 'bg-fuchsia-500/90 border-fuchsia-400/50',
+            trait: 'bg-indigo-500/90 border-indigo-400/50',
+            character: 'bg-blue-500/90 border-blue-400/50',
+            aspect: 'bg-teal-500/90 border-teal-400/50',
+            card: 'bg-slate-600/90 border-slate-500/50',
+          }}
+        />
       )}
     </div>
   )

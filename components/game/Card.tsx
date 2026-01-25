@@ -31,6 +31,9 @@ import { useTranslation } from 'react-i18next'
 import { getLocalizedCardContent } from '@/utils/gameUtils'
 import Image from 'next/image'
 import { CardLayout, parseCardLayout } from '@/types/card'
+import { Info as InfoIcon } from 'lucide-react'
+
+// ... normalizeTypeKey stays at top ...
 
 interface CardProps {
   card: Partial<CardData> // Allow partial for now as we might mock data
@@ -40,6 +43,8 @@ interface CardProps {
   cardBackImageUrl?: string | null
   categoryImages?: Record<string, string> | null
   layout?: CardLayout | null
+  onShowDetails?: (e: React.MouseEvent) => void
+  showInfoButton?: boolean
 }
 
 const typeColorMap: Record<string, string> = {
@@ -55,7 +60,7 @@ const typeColorMap: Record<string, string> = {
   card: 'bg-slate-600/90 border-slate-500/50',
 }
 
-export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout }: CardProps) {
+export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout, onShowDetails, showInfoButton }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
 
@@ -70,7 +75,7 @@ export default function Card({ card, isHoverable = false, onClick, className = '
       onClick={onClick}
       className={`
                 relative aspect-[2.5/3.5] overflow-hidden rounded-xl shadow-2xl
-                transition-all duration-300 ease-out
+                transition-all duration-300 ease-out group/card
                 ${isHoverable ? 'cursor-pointer hover:-translate-y-8 hover:scale-105 hover:z-10 hover:shadow-yellow-500/20' : ''}
                 ${className}
             `}
@@ -175,6 +180,26 @@ export default function Card({ card, isHoverable = false, onClick, className = '
       <div className={`absolute bottom-0 left-0 right-0 ${categoryStyles} text-white py-1.5 text-[8px] sm:text-[10px] font-bold text-center uppercase tracking-[0.2em] z-40 backdrop-blur-md border-t shadow-[0_-4px_10px_rgba(0,0,0,0.2)]`}>
         {localizedType}
       </div>
+
+      {/* Info Button - Top Right */}
+      {onShowDetails && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onShowDetails(e);
+          }}
+          className={`
+            absolute top-2 right-2 z-50 w-8 h-8 rounded-full 
+            bg-slate-900/40 backdrop-blur-md border border-white/20
+            flex items-center justify-center text-white
+            transition-all duration-300 transform scale-0
+            hover:bg-primary hover:scale-110 hover:border-primary-light
+            ${showInfoButton ? 'scale-100 animate-in zoom-in' : 'group-hover/card:scale-100'}
+          `}
+        >
+          <InfoIcon className="w-5 h-5" />
+        </button>
+      )}
 
     </div>
   )

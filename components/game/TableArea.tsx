@@ -18,9 +18,10 @@ interface TableAreaProps {
     category_images?: Record<string, string> | null
     card_layout?: CardLayout | null
   }
+  onShowDetails?: (card: PlayedCardData) => void
 }
 
-export default function TableArea({ playedCards, storytellerPlayer, players, deck }: TableAreaProps) {
+export default function TableArea({ playedCards, storytellerPlayer, players, deck, onShowDetails }: TableAreaProps) {
   const { t } = useTranslation()
   return (
     <div className="grow flex items-start justify-center p-6 overflow-auto">
@@ -61,6 +62,7 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
                     cardBackImageUrl={deck?.card_back_image_url}
                     categoryImages={deck?.category_images as Record<string, string> | null}
                     layout={deck?.card_layout}
+                    onShowDetails={onShowDetails ? () => onShowDetails(card) : undefined}
                   />
                   {/* Pending Indicator */}
                   {card.status === 'PENDING' && (

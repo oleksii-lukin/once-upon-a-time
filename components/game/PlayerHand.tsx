@@ -18,9 +18,10 @@ interface PlayerHandProps {
     category_images?: Record<string, string> | null
     card_layout?: CardLayout | null
   }
+  onShowDetails?: (card: HandCardData) => void
 }
 
-export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck }: PlayerHandProps) {
+export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck, onShowDetails }: PlayerHandProps) {
   const { t } = useTranslation()
   // Sort cards: Story cards first, Ending cards last
   // We use useMemo to prevent re-sorting on every render if cards dependencies don't change
@@ -67,6 +68,8 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
                   cardBackImageUrl={deck?.card_back_image_url}
                   categoryImages={deck?.category_images as Record<string, string> | null}
                   layout={deck?.card_layout}
+                  onShowDetails={onShowDetails ? () => onShowDetails(card) : undefined}
+                  showInfoButton={isSelected}
                   className={`${!isMyTurn ? 'opacity-70 grayscale' : ''} ${isEnding ? 'ring-2 ring-rose-500/30' : ''} ${isSelected ? 'ring-4 ring-white shadow-[0_0_40px_rgba(255,255,255,0.5)]' : ''}`}
                 />
               </div>

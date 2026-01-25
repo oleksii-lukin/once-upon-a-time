@@ -42,6 +42,7 @@ export function getLocalizedCardContent(card: PartialCardData, language: string)
       return {
         name: localized.name || card.name || '',
         description: localized.description || card.description,
+        usage_examples: (localized as any).usage_examples || card.usage_examples,
         type: card.category,
       }
     }
@@ -50,6 +51,7 @@ export function getLocalizedCardContent(card: PartialCardData, language: string)
   return {
     name: card.name ?? '',
     description: card.description,
+    usage_examples: card.usage_examples,
     type: card.category,
   }
 }

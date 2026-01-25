@@ -54,18 +54,18 @@ export interface GameContext {
  */
 export type GameEvent
   = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[] }
-    | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-    | { type: 'PASS', nextPlayerId?: string }
-    | { type: 'INTERRUPT' }
-    | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
-    | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
-    | { type: 'CONFIRM_CARD', playedCardId: string }
-    | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
-    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
-    | { type: 'RULES_DONE' }
-    | { type: 'SYNC_COMPLETE' }
-    | { type: 'SYNC_ERROR', error: string }
-    | { type: 'RESET_RULES' }
+  | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+  | { type: 'PASS', nextPlayerId?: string }
+  | { type: 'INTERRUPT' }
+  | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
+  | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
+  | { type: 'CONFIRM_CARD', playedCardId: string }
+  | { type: 'WIN_GAME', cardId: string, playedCardsCount: number }
+  | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
+  | { type: 'RULES_DONE' }
+  | { type: 'SYNC_COMPLETE' }
+  | { type: 'SYNC_ERROR', error: string }
+  | { type: 'RESET_RULES' }
 
 export const gameMachine = setup({
   types: {
@@ -126,6 +126,7 @@ export const gameMachine = setup({
           on: {
             RULES_DONE: { actions: assign({ rulesFinished: true }) },
             PLAY_CARD: {
+              guard: ({ context }) => !context.inFlightHandId && !context.rulesFinished,
               actions: [
                 assign({
                   optimisticCard: ({ context, event }) => {
@@ -282,7 +283,11 @@ export const gameMachine = setup({
                 },
                 onError: {
                   target: 'idle',
-                  actions: assign({ lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error' }),
+                  actions: assign({
+                    lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error',
+                    inFlightHandId: null, // Clear the lock explicitly on error
+                    optimisticCard: null, // Rollback optimistic update
+                  }),
                 },
               },
             },

@@ -346,6 +346,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             canChallengeStutter={!isMyTurn && !pendingCard && !!storytellerPlayer}
             onChallengeStutter={() => storytellerPlayer && challengeStutter(storytellerPlayer.id)}
             gameMode={gameMode}
+            isPending={!!inFlightHandId}
+            rulesFinished={state.context.rulesFinished}
           />
         )}
       </main>

@@ -416,7 +416,8 @@ export default function AdminLobbyView({
                           />
                           {settings.enablePacingDelay && (
                             <span className="text-sm font-bold text-primary min-w-[3rem] text-right">
-                              {settings.pacingDelayDuration}s
+                              {settings.pacingDelayDuration}
+                              s
                             </span>
                           )}
                         </div>

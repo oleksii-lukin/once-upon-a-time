@@ -321,14 +321,14 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           playedCards={displayedPlayedCards}
           storytellerPlayer={storytellerPlayer}
           players={players}
-          onShowDetails={(card) => setDetailsCard(card)}
+          onShowDetails={card => setDetailsCard(card)}
           deck={
             deck
               ? {
-                card_back_image_url: deck.card_back_image_url,
-                category_images: deck.category_images as Record<string, string> | null,
-                card_layout: deck.card_layout as CardLayout,
-              }
+                  card_back_image_url: deck.card_back_image_url,
+                  category_images: deck.category_images as Record<string, string> | null,
+                  card_layout: deck.card_layout as CardLayout,
+                }
               : undefined
           }
         />
@@ -341,10 +341,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                card_back_image_url: deck.card_back_image_url,
-                category_images: deck.category_images as Record<string, string> | null,
-                card_layout: deck.card_layout as CardLayout,
-              }
+                  card_back_image_url: deck.card_back_image_url,
+                  category_images: deck.category_images as Record<string, string> | null,
+                  card_layout: deck.card_layout as CardLayout,
+                }
               : undefined
           }
         />
@@ -368,7 +368,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             gameMode={gameMode}
             isPending={!!inFlightHandId}
             rulesFinished={state.context.rulesFinished}
-            onExchange={(cardId) => exchangeCard(cardId, isEndingSelected)}
+            onExchange={cardId => exchangeCard(cardId, isEndingSelected)}
             hasRemainingEndingCards={remainingEndingCardsCount > 0}
           />
         )}

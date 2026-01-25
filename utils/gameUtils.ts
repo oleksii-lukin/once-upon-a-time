@@ -35,14 +35,14 @@ export interface PlayedCardData extends CardData {
 
 export function getLocalizedCardContent(card: PartialCardData, language: string) {
   if (card.translations) {
-    const translations = (card.translations || {}) as Record<string, { name?: string, description?: string } | undefined>
+    const translations = (card.translations || {}) as Record<string, { name?: string, description?: string, usage_examples?: string } | undefined>
     const localized = translations[language]
 
     if (localized) {
       return {
         name: localized.name || card.name || '',
         description: localized.description || card.description,
-        usage_examples: (localized as any).usage_examples || card.usage_examples,
+        usage_examples: localized.usage_examples || card.usage_examples,
         type: card.category,
       }
     }

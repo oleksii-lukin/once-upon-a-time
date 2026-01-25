@@ -59,19 +59,19 @@ export interface GameContext {
  */
 export type GameEvent
   = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number }
-  | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-  | { type: 'PASS', isHandEmpty?: boolean }
-  | { type: 'INTERRUPT' }
-  | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
-  | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
-  | { type: 'CONFIRM_CARD', playedCardId: string }
-  | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
-  | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
-  | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
-  | { type: 'RULES_DONE' }
-  | { type: 'SYNC_COMPLETE' }
-  | { type: 'SYNC_ERROR', error: string }
-  | { type: 'RESET_RULES' }
+    | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+    | { type: 'PASS', isHandEmpty?: boolean }
+    | { type: 'INTERRUPT' }
+    | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
+    | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
+    | { type: 'CONFIRM_CARD', playedCardId: string }
+    | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
+    | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
+    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
+    | { type: 'RULES_DONE' }
+    | { type: 'SYNC_COMPLETE' }
+    | { type: 'SYNC_ERROR', error: string }
+    | { type: 'RESET_RULES' }
 
 export const gameMachine = setup({
   types: {
@@ -374,12 +374,12 @@ export const gameMachine = setup({
                   target: 'updateTurn',
                   guard: ({ context, event }) => {
                     const passEvent = event as Extract<GameEvent, { type: 'PASS' }>
-                    return context.gameMode === 'tutorial' &&
-                      context.lastPlayedCardId !== null &&
-                      !passEvent.isHandEmpty
-                  }
-                }
-              ]
+                    return context.gameMode === 'tutorial'
+                      && context.lastPlayedCardId !== null
+                      && !passEvent.isHandEmpty
+                  },
+                },
+              ],
             },
             exchangingCard: {
               invoke: {

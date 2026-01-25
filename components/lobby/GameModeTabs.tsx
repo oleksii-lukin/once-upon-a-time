@@ -3,6 +3,7 @@
 import { getTranslation } from '@/app/i18n/client'
 import type { LobbySettings } from '@/types/lobby'
 import { Info as InfoIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,52 +19,58 @@ interface GameModeTabsProps {
   readOnly?: boolean
 }
 
+const ModeInfo = ({ mode, lng }: { mode: 'main' | 'fast' | 'tutorial' | 'solo', lng: string }) => {
+  const { t } = getTranslation(lng, 'common')
+  const [content, setContent] = useState<string>('')
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`/api/game-modes/${lng}/${mode}`)
+        if (response.ok) {
+          const html = await response.text()
+          setContent(html)
+        }
+        else {
+          setContent('<h1>Game Mode Info Not Found</h1><p>The game mode information could not be loaded.</p>')
+        }
+      }
+      catch (e) {
+        console.error(e)
+        setContent('<h1>Game Mode Info Not Found</h1><p>The game mode information could not be loaded.</p>')
+      }
+    }
+
+    loadContent()
+  }, [mode, lng])
+
+  if (!content) return null
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="p-1 hover:bg-muted rounded-full transition-colors ml-1">
+          <InfoIcon className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            {t('info')}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 mt-4 prose prose-invert prose-headings:font-bold prose-p:text-white/90">
+          <div dangerouslySetInnerHTML={{ __html: content }} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function GameModeTabs({ settings, updateSettings, lng, readOnly = false }: GameModeTabsProps) {
   const { t } = getTranslation(lng, 'common')
 
   const TabComponent = readOnly ? 'div' : 'button'
-
-  const ModeInfo = ({ mode }: { mode: 'main' | 'fast' | 'tutorial' | 'solo' }) => {
-    const info = (t as any)(`game_modes_info.${mode}`, { returnObjects: true })
-    if (!info || typeof info === 'string') return null
-
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <button className="p-1 hover:bg-muted rounded-full transition-colors ml-1">
-            <InfoIcon className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              {info.title}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 mt-4">
-            <div>
-              <h4 className="text-lg font-bold mb-2 text-foreground">{t('description')}</h4>
-              <p className="text-muted-foreground leading-relaxed">
-                {info.description}
-              </p>
-            </div>
-            {info.examples && info.examples.length > 0 && (
-              <div>
-                <h4 className="text-lg font-bold mb-2 text-foreground">{t('usage_examples')}</h4>
-                <div className="space-y-3">
-                  {info.examples.map((example: string, i: number) => (
-                    <div key={i} className="p-3 bg-muted/50 rounded-lg border border-border italic text-sm text-muted-foreground">
-                      "{example}"
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
 
   return (
     <div className="flex flex-col gap-4 pb-6 border-b border-border mb-6">
@@ -77,7 +84,7 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('main_game_mode')}
             </TabComponent>
-            <ModeInfo mode="main" />
+            <ModeInfo mode="main" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -86,7 +93,7 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('fast_game_mode')}
             </TabComponent>
-            <ModeInfo mode="fast" />
+            <ModeInfo mode="fast" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -95,7 +102,7 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('tutorial_game_mode')}
             </TabComponent>
-            <ModeInfo mode="tutorial" />
+            <ModeInfo mode="tutorial" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -104,7 +111,7 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('solo_game_mode')}
             </TabComponent>
-            <ModeInfo mode="solo" />
+            <ModeInfo mode="solo" lng={lng} />
           </div>
         </div>
       </div>

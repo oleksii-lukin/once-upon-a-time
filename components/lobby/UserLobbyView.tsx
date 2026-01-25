@@ -417,8 +417,9 @@ export default function UserLobbyView({
                             infoText={t('pacing_delay_tooltip')}
                           />
                           {settings.enablePacingDelay && (
-                            <span className="text-sm font-bold text-foreground opacity-70 min-w-[3rem] text-right">
-                              {settings.pacingDelayDuration}s
+                            <span className="text-sm font-bold text-foreground opacity-70 min-w-12 text-right">
+                              {settings.pacingDelayDuration}
+                              {t('seconds_abbrev')}
                             </span>
                           )}
                         </div>
@@ -436,7 +437,7 @@ export default function UserLobbyView({
                             className={`flex items-center gap-3 p-3 rounded-lg border pointer-events-none ${selectedDeckIds.includes(deck.id)
                               ? 'bg-primary/20 border-primary'
                               : 'border-transparent'
-                              }`}
+                            }`}
                           >
                             <Checkbox disabled checked={selectedDeckIds.includes(deck.id)} />
                             <span className="text-foreground font-medium">{deck.name}</span>

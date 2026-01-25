@@ -31,19 +31,19 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
           <div className="shrink-0 flex flex-col items-center gap-2 w-24 text-center pt-2">
             {storytellerPlayer
               ? (
-                <>
-                  <div className="border-2 border-primary rounded-full">
-                    <PlayerAvatar player={storytellerPlayer} size="lg" />
-                  </div>
-                  <p className="font-bold text-white text-sm">{getPlayerDisplayName(storytellerPlayer)}</p>
-                </>
-              )
+                  <>
+                    <div className="border-2 border-primary rounded-full">
+                      <PlayerAvatar player={storytellerPlayer} size="lg" />
+                    </div>
+                    <p className="font-bold text-white text-sm">{getPlayerDisplayName(storytellerPlayer)}</p>
+                  </>
+                )
               : (
-                <>
-                  <div className="bg-gray-600 rounded-full h-14 w-14"></div>
-                  <p className="font-bold text-white text-sm">{t('game.unknown_player')}</p>
-                </>
-              )}
+                  <>
+                    <div className="bg-gray-600 rounded-full h-14 w-14"></div>
+                    <p className="font-bold text-white text-sm">{t('game.unknown_player')}</p>
+                  </>
+                )}
             <p className="text-xs text-white/70">{t('game.storyteller_label')}</p>
           </div>
 

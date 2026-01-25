@@ -72,40 +72,44 @@ export default function CardDetailsOverlay({ card, onClose, categoryImages, type
           {/* Category Label */}
           <div className={`flex items-center gap-4 px-6 py-3 rounded-full ${categoryStyles} text-white shadow-2xl animate-in slide-in-from-left duration-500`}>
             <div className="relative w-16 h-16 drop-shadow-md">
-              {categoryImages?.[typeKey] ? (
-                <Image
-                  src={categoryImages[typeKey]}
-                  alt={localizedType}
-                  fill
-                  className="object-contain"
-                />
-              ) : (
-                <InfoIcon className="w-full h-full" />
-              )}
+              {categoryImages?.[typeKey]
+                ? (
+                    <Image
+                      src={categoryImages[typeKey]}
+                      alt={localizedType}
+                      fill
+                      className="object-contain"
+                    />
+                  )
+                : (
+                    <InfoIcon className="w-full h-full" />
+                  )}
             </div>
             <span className="text-base font-bold uppercase tracking-[0.2em] drop-shadow-sm">{localizedType}</span>
           </div>
 
           {/* Main Image Container */}
           <div className="relative w-80 aspect-[2.5/3.5] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10 bg-slate-900 group animate-in slide-in-from-bottom duration-500">
-            {card.image_url ? (
-              <Image
-                src={card.image_url}
-                alt={localizedContent.name || ''}
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-                priority
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center opacity-20">
-                <Image
-                  src="/images/cards/Border.jpg"
-                  alt="Placeholder"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
+            {card.image_url
+              ? (
+                  <Image
+                    src={card.image_url}
+                    alt={localizedContent.name || ''}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    priority
+                  />
+                )
+              : (
+                  <div className="w-full h-full flex items-center justify-center opacity-20">
+                    <Image
+                      src="/images/cards/Border.jpg"
+                      alt="Placeholder"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
 
             {/* Image Overlay Gradient */}
             <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent" />

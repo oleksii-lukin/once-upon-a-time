@@ -158,7 +158,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
               : 'bg-white/5 text-white/70 hover:bg-white/10'
             }`}
           >
-            {t('common.all')}
+            {t('all')}
             {' '}
             (
             {lobbies.length}
@@ -198,12 +198,12 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 text-left">
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.name')}</TableHead>
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.code')}</TableHead>
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.players')}</TableHead>
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.status')}</TableHead>
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.created')}</TableHead>
-                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('common.actions')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('name')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('code')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('players')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('status')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('created')}</TableHead>
+                  <TableHead className="px-6 py-3 text-sm font-medium text-muted-foreground">{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-border">
@@ -239,7 +239,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
                         }}
                         className="text-primary hover:text-primary/80 text-sm font-medium"
                       >
-                        {t('common.view')}
+                        {t('view')}
                       </button>
                     </TableCell>
                   </TableRow>
@@ -274,26 +274,26 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
             <div className="space-y-6">
               {/* Basic Info */}
               <div>
-                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('common.info')}</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('info')}</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.name')}</label>
+                    <label className="text-muted-foreground text-xs">{t('name')}</label>
                     <p className="text-foreground font-medium">{selectedLobby.name}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.code')}</label>
+                    <label className="text-muted-foreground text-xs">{t('code')}</label>
                     <p className="text-foreground font-mono">{selectedLobby.code}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.status')}</label>
+                    <label className="text-muted-foreground text-xs">{t('status')}</label>
                     <div className="mt-1">{getStatusBadge(selectedLobby)}</div>
                   </div>
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.language')}</label>
+                    <label className="text-muted-foreground text-xs">{t('language')}</label>
                     <p className="text-foreground">{selectedLobby.language.toUpperCase()}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.players')}</label>
+                    <label className="text-muted-foreground text-xs">{t('players')}</label>
                     <p className="text-foreground">{selectedLobby.players?.[0]?.count || 0}</p>
                   </div>
                 </div>
@@ -301,10 +301,10 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
               {/* Timestamps */}
               <div>
-                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('common.timestamps')}</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('timestamps')}</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.created')}</label>
+                    <label className="text-muted-foreground text-xs">{t('created')}</label>
                     <p className="text-foreground text-sm">{formatDate(selectedLobby.created_at)}</p>
                   </div>
                   {selectedLobby.deleted_at && (
@@ -318,7 +318,7 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
               {/* Settings */}
               <div>
-                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('common.settings')}</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('settings')}</h3>
                 <pre className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg overflow-auto max-h-40">
                   {JSON.stringify(selectedLobby.settings, null, 2)}
                 </pre>
@@ -326,14 +326,14 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
               {/* IDs */}
               <div>
-                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('common.ids')}</h3>
+                <h3 className="text-muted-foreground text-xs font-medium uppercase mb-2">{t('ids')}</h3>
                 <div className="space-y-2">
                   <div>
                     <label className="text-muted-foreground text-xs">{t('admin.lobbies.labels.lobbyId')}</label>
                     <p className="text-muted-foreground text-xs font-mono break-all">{selectedLobby.id}</p>
                   </div>
                   <div>
-                    <label className="text-muted-foreground text-xs">{t('common.createdBy')}</label>
+                    <label className="text-muted-foreground text-xs">{t('createdBy')}</label>
                     <p className="text-muted-foreground text-xs font-mono break-all">{selectedLobby.created_by}</p>
                   </div>
                   {selectedLobby.deck_id && (

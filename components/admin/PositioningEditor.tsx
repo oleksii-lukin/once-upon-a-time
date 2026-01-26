@@ -36,17 +36,28 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
   const [dragStart, setDragStart] = useState<{ x: number, y: number, initial: LayoutElement, initialRatio: number } | null>(null)
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const selectedCardIdRef = useRef(selectedCardId)
+
+  // Update ref when selectedCardId changes
+  useEffect(() => {
+    selectedCardIdRef.current = selectedCardId
+  }, [selectedCardId])
 
   const previewCard = cards.find(c => c.id === selectedCardId) || cards[0]
 
+  // Reset state when dialog opens - use setTimeout to avoid synchronous setState
   useEffect(() => {
     if (isOpen) {
-      setCurrentLayout(layout)
-      if (cards.length > 0 && !selectedCardId) {
-        setSelectedCardId(cards[0].id)
+      setTimeout(() => {
+        setCurrentLayout(layout)
+      }, 0)
+      if (cards.length > 0 && !selectedCardIdRef.current) {
+        setTimeout(() => {
+          setSelectedCardId(cards[0].id)
+        }, 0)
       }
     }
-  }, [isOpen, layout, cards, selectedCardId])
+  }, [isOpen, layout, cards])
 
   const filteredCards = cards
     .filter(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))

@@ -385,13 +385,6 @@ export default function AdminLobbyView({
                         htmlFor="allow_interrupts"
                       />
                       <LobbySettingToggle
-                        label={t('timer_per_turn')}
-                        checked={settings.timerPerTurn}
-                        onCheckedChange={() => updateSettings({ timerPerTurn: !settings.timerPerTurn })}
-                        infoText={t('timer_per_turn_info')}
-                        htmlFor="timer-per-turn"
-                      />
-                      <LobbySettingToggle
                         label={t('happy_ending_variant')}
                         checked={settings.happyEnding}
                         onCheckedChange={() => updateSettings({ happyEnding: !settings.happyEnding })}
@@ -406,6 +399,34 @@ export default function AdminLobbyView({
                       />
 
                       <div className="col-span-1 md:col-span-2 space-y-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <LobbySettingToggle
+                            label={t('timer_per_turn')}
+                            checked={settings.timerPerTurn}
+                            onCheckedChange={() => updateSettings({ timerPerTurn: !settings.timerPerTurn })}
+                            infoText={t('timer_per_turn_info')}
+                            htmlFor="timer-per-turn"
+                          />
+                          {settings.timerPerTurn && (
+                            <span className="text-sm font-bold text-primary min-w-12 text-right">
+                              {settings.timerPerTurnDuration}
+                              {t('seconds_abbrev')}
+                            </span>
+                          )}
+                        </div>
+
+                        {settings.timerPerTurn && (
+                          <div className="px-2 pb-2">
+                            <Slider
+                              defaultValue={[settings.timerPerTurnDuration]}
+                              max={120}
+                              min={10}
+                              step={1}
+                              onValueChange={(vals: number[]) => updateSettings({ timerPerTurnDuration: vals[0] })}
+                            />
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between">
                           <LobbySettingToggle
                             label={t('enable_pacing_delay')}

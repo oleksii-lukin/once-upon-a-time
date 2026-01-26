@@ -8,10 +8,11 @@ export const LobbySettingsSchema = z.object({
   allowSpectators: z.boolean().default(true),
   allowInterrupts: z.boolean().default(true),
   timerPerTurn: z.boolean().default(false),
+  timerPerTurnDuration: z.number().min(10).max(120).default(30),
   happyEnding: z.boolean().default(false),
   enableVideoChat: z.boolean().default(false),
   enablePacingDelay: z.boolean().default(false),
-  pacingDelayDuration: z.number().min(3).max(30).default(5),
+  pacingDelayDuration: z.number().min(3).max(30).default(10),
   gameMode: z.enum(['main', 'fast', 'tutorial', 'solo', 'simple', 'full']).default('main'),
   selectedDecks: z.array(z.string()).default([]),
 })

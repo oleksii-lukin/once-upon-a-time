@@ -53,13 +53,13 @@ const ModeInfo = ({ mode, lng }: { mode: 'main' | 'fast' | 'tutorial' | 'solo', 
           <InfoIcon className="w-4 h-4 text-muted-foreground" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-card border-border">
+      <DialogContent className="w-[60vw]! max-w-[60vw]! bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             {t('info')}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 mt-4 prose prose-invert prose-headings:font-bold prose-p:text-white/90">
+        <div className="max-h-[60vh] overflow-y-auto pr-2">
           <div dangerouslySetInnerHTML={{ __html: content }} />
         </div>
       </DialogContent>
@@ -84,7 +84,6 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('main_game_mode')}
             </TabComponent>
-            <ModeInfo mode="main" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -93,7 +92,6 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('fast_game_mode')}
             </TabComponent>
-            <ModeInfo mode="fast" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -102,7 +100,6 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('tutorial_game_mode')}
             </TabComponent>
-            <ModeInfo mode="tutorial" lng={lng} />
           </div>
           <div className="flex items-center p-1">
             <TabComponent
@@ -111,19 +108,29 @@ export default function GameModeTabs({ settings, updateSettings, lng, readOnly =
             >
               {t('solo_game_mode')}
             </TabComponent>
-            <ModeInfo mode="solo" lng={lng} />
           </div>
         </div>
       </div>
-      {settings.gameMode === 'fast' && (
-        <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
-      )}
-      {settings.gameMode === 'tutorial' && (
-        <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
-      )}
-      {settings.gameMode === 'solo' && (
-        <p className="text-muted-foreground text-xs italic">{t('solo_mode_description')}</p>
-      )}
+      <div className="flex items-center justify-between gap-4">
+        {settings.gameMode === 'fast' && (
+          <p className="text-muted-foreground text-xs italic">{t('fast_mode_description')}</p>
+        )}
+        {settings.gameMode === 'tutorial' && (
+          <p className="text-muted-foreground text-xs italic">{t('tutorial_mode_description')}</p>
+        )}
+        {settings.gameMode === 'solo' && (
+          <p className="text-muted-foreground text-xs italic">{t('solo_mode_description')}</p>
+        )}
+        {settings.gameMode === 'main' && (
+          <p className="text-muted-foreground text-xs italic">{t('main_mode_description')}</p>
+        )}
+        <div className="flex items-center gap-2">
+          {settings.gameMode === 'fast' && <ModeInfo mode="fast" lng={lng} />}
+          {settings.gameMode === 'tutorial' && <ModeInfo mode="tutorial" lng={lng} />}
+          {settings.gameMode === 'solo' && <ModeInfo mode="solo" lng={lng} />}
+          {settings.gameMode === 'main' && <ModeInfo mode="main" lng={lng} />}
+        </div>
+      </div>
     </div>
   )
 }

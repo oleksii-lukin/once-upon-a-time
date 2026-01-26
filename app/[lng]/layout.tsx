@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, JetBrains_Mono, Epilogue } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
@@ -61,7 +62,9 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <SiteHeader lng={lng} />
+            <Suspense fallback={<div className="h-16 border-b border-gray-200/10 dark:border-white/10 bg-white/80 dark:bg-background/80 backdrop-blur" />}>
+              <SiteHeader lng={lng} />
+            </Suspense>
             {children}
             <Toaster />
           </ThemeProvider>

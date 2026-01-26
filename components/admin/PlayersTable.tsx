@@ -10,18 +10,10 @@ import {
 } from '@/components/ui/table'
 import { useTranslation } from 'react-i18next'
 import Image from 'next/image'
-
-interface Player {
-  user_id: string
-  display_name: string | null
-  avatar_url: string | null
-  total_games_played: number
-  total_games_won: number
-  created_at: string
-}
+import { Tables } from '@/supabase/types'
 
 interface PlayersTableProps {
-  players: Player[]
+  players: Tables<'user_profiles'>[]
 }
 
 export function PlayersTable({ players }: PlayersTableProps) {
@@ -62,8 +54,8 @@ export function PlayersTable({ players }: PlayersTableProps) {
                 </div>
               </TableCell>
               <TableCell className="font-medium">{player.display_name || player.user_id}</TableCell>
-              <TableCell>{player.total_games_played}</TableCell>
-              <TableCell>{player.total_games_won}</TableCell>
+              <TableCell>{player.total_games_played || 0}</TableCell>
+              <TableCell>{player.total_games_won || 0}</TableCell>
               <TableCell className="text-right">
                 {new Date(player.created_at).toLocaleDateString('en-US')}
               </TableCell>

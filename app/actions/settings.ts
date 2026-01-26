@@ -7,7 +7,12 @@ import type { AIProvider } from '@/lib/ai/config'
 export async function saveGeneralSettings(settings: Record<string, unknown>) {
   try {
     console.log('Attempting to save general settings:', settings)
-    const result = await updateGeneralSettings(settings)
+    // Convert all values to strings for database storage
+    const stringSettings: Record<string, string> = {}
+    Object.entries(settings).forEach(([key, value]) => {
+      stringSettings[key] = typeof value === 'string' ? value : JSON.stringify(value)
+    })
+    const result = await updateGeneralSettings(stringSettings)
     console.log('Successfully saved general settings:', result)
     return { success: true }
   }
@@ -19,7 +24,12 @@ export async function saveGeneralSettings(settings: Record<string, unknown>) {
 
 export async function saveGameplaySettings(settings: Record<string, unknown>) {
   try {
-    await updateGameplaySettings(settings)
+    // Convert all values to strings for database storage
+    const stringSettings: Record<string, string> = {}
+    Object.entries(settings).forEach(([key, value]) => {
+      stringSettings[key] = typeof value === 'string' ? value : JSON.stringify(value)
+    })
+    await updateGameplaySettings(stringSettings)
     return { success: true }
   }
   catch (error) {
@@ -30,7 +40,12 @@ export async function saveGameplaySettings(settings: Record<string, unknown>) {
 
 export async function saveAISettings(settings: Record<string, unknown>) {
   try {
-    await updateAISettings(settings)
+    // Convert all values to strings for database storage
+    const stringSettings: Record<string, string> = {}
+    Object.entries(settings).forEach(([key, value]) => {
+      stringSettings[key] = typeof value === 'string' ? value : JSON.stringify(value)
+    })
+    await updateAISettings(stringSettings)
     return { success: true }
   }
   catch (error) {

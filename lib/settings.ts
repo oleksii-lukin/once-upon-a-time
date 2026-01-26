@@ -49,7 +49,7 @@ export async function getSetting(key: string, category?: string) {
   return data.value
 }
 
-export async function updateSetting(key: string, value: unknown, category?: string) {
+export async function updateSetting(key: string, value: string, category?: string) {
   const supabase = await createClient()
 
   let query = supabase
@@ -75,7 +75,7 @@ export async function updateSetting(key: string, value: unknown, category?: stri
 }
 
 export async function updateMultipleSettings(
-  settings: Record<string, { value: unknown }>,
+  settings: Record<string, { value: string }>,
   category?: string,
 ) {
   const supabase = await createClient()
@@ -119,8 +119,8 @@ export async function getAISettings() {
   return await getSettings('ai')
 }
 
-export async function updateGeneralSettings(settings: Record<string, unknown>) {
-  const updates: Record<string, { value: unknown }> = {}
+export async function updateGeneralSettings(settings: Record<string, string>) {
+  const updates: Record<string, { value: string }> = {}
 
   Object.entries(settings).forEach(([key, value]) => {
     updates[key] = { value }
@@ -129,8 +129,8 @@ export async function updateGeneralSettings(settings: Record<string, unknown>) {
   return await updateMultipleSettings(updates, 'general')
 }
 
-export async function updateGameplaySettings(settings: Record<string, unknown>) {
-  const updates: Record<string, { value: unknown }> = {}
+export async function updateGameplaySettings(settings: Record<string, string>) {
+  const updates: Record<string, { value: string }> = {}
 
   Object.entries(settings).forEach(([key, value]) => {
     updates[key] = { value }
@@ -139,8 +139,8 @@ export async function updateGameplaySettings(settings: Record<string, unknown>) 
   return await updateMultipleSettings(updates, 'gameplay')
 }
 
-export async function updateAISettings(settings: Record<string, unknown>) {
-  const updates: Record<string, { value: unknown }> = {}
+export async function updateAISettings(settings: Record<string, string>) {
+  const updates: Record<string, { value: string }> = {}
 
   Object.entries(settings).forEach(([key, value]) => {
     updates[key] = { value }

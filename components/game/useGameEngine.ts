@@ -1,10 +1,10 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { useCallback, useMemo, useEffect } from 'react'
 import { Database } from '@/supabase/types'
 import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { useMachine } from '@xstate/react'
 import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
+import { GameMode } from '@/types/lobby'
 
 const inspector
   = process.env.NODE_ENV === 'development'
@@ -26,7 +26,6 @@ export const useGameEngine = (
   const [state, send] = useMachine(gameMachine, {
     inspect: inspector?.inspect || undefined,
   })
-  const supabase = createClient()
 
   // Initialize machine if session is loaded
   useEffect(() => {
@@ -35,7 +34,7 @@ export const useGameEngine = (
         type: 'START_GAME',
         gameSessionId: gameSession.id,
         lobbyId: gameSession.lobby_id,
-        mode: (gameSession.game_mode as any) || 'full',
+        mode: gameSession.game_mode as GameMode || 'full',
         currentPlayerId: currentPlayer.id,
         players: players,
         pacingDelay: pacingDelay,
@@ -115,9 +114,9 @@ export const useGameEngine = (
     gameMode: state.context.gameMode,
     optimisticCard: state.context.optimisticCard,
     inFlightHandId: state.context.inFlightHandId,
-    isDrawing: state.matches({ active: { persistence: 'passingTurn' } } as any)
-      || state.matches({ active: { persistence: 'exchangingCard' } } as any)
-      || state.matches({ active: { persistence: 'challengingStutter' } } as any)
-      || state.matches({ active: { persistence: 'penaltyForStoryteller' } } as any),
+    isDrawing: state.matches({ active: { persistence: 'passingTurn' } })
+      || state.matches({ active: { persistence: 'exchangingCard' } })
+      || state.matches({ active: { persistence: 'challengingStutter' } })
+      || state.matches({ active: { persistence: 'penaltyForStoryteller' } }),
   }
 }

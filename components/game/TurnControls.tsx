@@ -4,7 +4,6 @@ import { Play as PlayIcon } from 'lucide-react'
 
 interface TurnControlsProps {
   isMyTurn: boolean
-  isStoryteller: boolean
   canInterrupt: boolean
   handSize: number
   selectedCardId: string | null
@@ -26,7 +25,6 @@ interface TurnControlsProps {
 
 export default function TurnControls({
   isMyTurn,
-  isStoryteller,
   canInterrupt,
   handSize,
   selectedCardId,

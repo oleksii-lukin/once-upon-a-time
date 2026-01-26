@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { useUser } from '@clerk/nextjs'
 
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
@@ -44,7 +43,6 @@ export default function AdminLobbyView({
   userId,
   guestId,
 }: AdminLobbyViewProps) {
-  const { user } = useUser()
   const params = useParams()
   const lng = params.lng as string
   const { t } = getTranslation(lng, 'common')
@@ -415,9 +413,9 @@ export default function AdminLobbyView({
                             infoText={t('pacing_delay_tooltip')}
                           />
                           {settings.enablePacingDelay && (
-                            <span className="text-sm font-bold text-primary min-w-[3rem] text-right">
+                            <span className="text-sm font-bold text-primary min-w-12 text-right">
                               {settings.pacingDelayDuration}
-                              s
+                              {t('seconds_abbrev')}
                             </span>
                           )}
                         </div>

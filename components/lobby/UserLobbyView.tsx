@@ -6,8 +6,6 @@ import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
 import { createClient } from '@/utils/supabase/client'
 import { Database } from '@/supabase/types'
-import { useUser } from '@clerk/nextjs'
-import { getGuestId } from '@/lib/auth/guest'
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import { useParams } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/client'
@@ -44,7 +42,6 @@ export default function UserLobbyView({
   userId,
   guestId,
 }: UserLobbyViewProps) {
-  const { user } = useUser()
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
   const [currentLobby, setCurrentLobby] = useState<Lobby>(lobby)
   const [decks, setDecks] = useState<Deck[]>([])

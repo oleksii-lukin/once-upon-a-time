@@ -1,4 +1,4 @@
-import { assign, setup, sendTo, raise, assertEvent, type DoneActorEvent } from 'xstate'
+import { assign, setup, sendTo, raise, assertEvent, type DoneActorEvent, type ErrorActorEvent } from 'xstate'
 import {
   tutorialStorytellingMachine,
   simpleStorytellingMachine,
@@ -346,7 +346,7 @@ export const gameMachine = setup({
                 onError: {
                   target: 'idle',
                   actions: assign({
-                    lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error',
+                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
                     inFlightHandId: null, // Clear the lock explicitly on error
                     optimisticCard: null, // Rollback optimistic update
                   }),
@@ -400,7 +400,7 @@ export const gameMachine = setup({
                 onError: {
                   target: 'idle',
                   actions: assign({
-                    lastPersistenceError: ({ event }) => (event.error as any).message || 'Unknown error',
+                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
                   }),
                 },
               },
@@ -570,7 +570,7 @@ export const gameMachine = setup({
             onDone: {
               target: 'waiting',
               actions: assign({
-                lastPlayedCardId: ({ event }) => (event as any).output.id,
+                lastPlayedCardId: ({ event }) => ((event as unknown) as DoneActorEvent<PlayCardActorOutput>).output.id,
               }),
             },
           },

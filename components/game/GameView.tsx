@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
+import { z } from 'zod'
 import { Database } from '@/supabase/types'
 import { createClient } from '@/utils/supabase/client'
 import PlayerHand from './PlayerHand'
@@ -23,6 +23,25 @@ type Lobby = Database['public']['Tables']['lobbies']['Row']
 type Player = Database['public']['Tables']['players']['Row']
 type GameSession = Database['public']['Tables']['game_sessions']['Row']
 type Deck = Database['public']['Tables']['decks']['Row']
+
+const GameSessionSchema = z.object({
+  id: z.string(),
+  created_at: z.string(),
+  current_turn_player_id: z.string().nullable(),
+  deck_id: z.string(),
+  game_mode: z.string().nullable(),
+  is_turn_pending_confirmation: z.boolean().nullable(),
+  last_card_played_at: z.string().nullable(),
+  lobby_id: z.string(),
+  status: z.string(),
+  storyteller_id: z.string().nullable(),
+  updated_at: z.string(),
+  winner_id: z.string().nullable(),
+})
+
+const isValidGameSession = (obj: unknown): obj is GameSession => {
+  return GameSessionSchema.safeParse(obj).success
+}
 
 interface GameViewProps {
   lobby: Lobby
@@ -172,10 +191,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     interrupt,
     objectToCard,
     challengeStutter,
-    confirmCard,
     winGame,
-    finalizeWin,
-    isDrawing,
     optimisticCard,
     inFlightHandId,
     gameMode,
@@ -198,15 +214,16 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
   // Subscriptions
   useEffect(() => {
-    fetchGameState()
+    const timer = setTimeout(fetchGameState, 0)
 
     const channel = supabase.channel(`game:${lobby.id}`)
+
     channel
-      .on(
+      .on<GameSession>(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'game_sessions', filter: `lobby_id=eq.${lobby.id}` },
-        (payload: RealtimePostgresUpdatePayload<GameSession>) => {
-          if (payload.new) setGameSession(payload.new)
+        (payload) => {
+          if (payload.new && isValidGameSession(payload.new)) setGameSession(payload.new)
         },
       )
 
@@ -227,15 +244,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     channel.subscribe()
 
     return () => {
+      clearTimeout(timer)
       supabase.removeChannel(channel)
     }
-  }, [supabase, lobby.id, gameSession?.id])
+  }, [supabase, lobby.id, gameSession?.id, fetchGameState])
 
   // Derived State
   const currentTurnPlayerId = gameSession?.current_turn_player_id
   const isMyTurn = currentTurnPlayerId === currentPlayer?.id
   const storytellerPlayer = players.find(p => p.id === gameSession?.storyteller_id)
-  const isStoryteller = storytellerPlayer?.id === currentPlayer?.id
 
   const displayedPlayedCards = useMemo(() => {
     const all = [...playedCards]
@@ -352,7 +369,6 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         {!isSpectator && gameSession?.status !== 'COMPLETED' && (
           <TurnControls
             isMyTurn={!!isMyTurn}
-            isStoryteller={!!isStoryteller}
             canInterrupt={!isMyTurn && !!currentPlayer && !pendingCard}
             handSize={handSize}
             selectedCardId={selectedCardId}

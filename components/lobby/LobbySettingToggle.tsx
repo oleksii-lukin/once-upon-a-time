@@ -30,9 +30,11 @@ export default function LobbySettingToggle({
   const labelElement = (
     <label
       className={
-        checked && !disabled
-          ? 'text-foreground text-base font-medium leading-normal'
-          : 'text-muted-foreground text-base font-medium leading-normal'
+        disabled
+          ? 'text-muted-foreground/50 text-base font-medium leading-normal'
+          : checked
+            ? 'text-foreground text-base font-medium leading-normal'
+            : 'text-muted-foreground text-base font-medium leading-normal'
       }
       htmlFor={htmlFor}
     >

@@ -380,7 +380,7 @@ export default function AdminLobbyView({
                         label={t('allow_interrupts')}
                         checked={settings.allowInterrupts}
                         onCheckedChange={() => updateSettings({ allowInterrupts: !settings.allowInterrupts })}
-                        disabled={settings.gameMode === 'fast'}
+                        disabled={settings.gameMode === 'fast' || settings.gameMode === 'solo'}
                         infoText="When enabled, players can interrupt and play cards out of turn. This is disabled in fast mode."
                         htmlFor="allow_interrupts"
                       />

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/server'
 import { ArrowLeft as ArrowLeftIcon } from 'lucide-react'
+import { Deck } from '@/types/deck'
 
 export default async function DeckDetailsPage({
   params,
@@ -14,14 +15,25 @@ export default async function DeckDetailsPage({
   const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
 
-  const { data: deck } = await supabase
+  const { data: rawDeck } = await supabase
     .from('decks')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (!deck) {
+  if (!rawDeck) {
     notFound()
+  }
+
+  // Transform raw database data to match Deck type expectations
+  const deck: Deck = {
+    ...rawDeck,
+    category_images: typeof rawDeck.category_images === 'string'
+      ? JSON.parse(rawDeck.category_images)
+      : rawDeck.category_images,
+    card_layout: typeof rawDeck.card_layout === 'string'
+      ? JSON.parse(rawDeck.card_layout)
+      : rawDeck.card_layout,
   }
 
   return (

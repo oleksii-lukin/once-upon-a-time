@@ -381,19 +381,21 @@ export default function AdminLobbyView({
                         checked={settings.allowInterrupts}
                         onCheckedChange={() => updateSettings({ allowInterrupts: !settings.allowInterrupts })}
                         disabled={settings.gameMode === 'fast' || settings.gameMode === 'solo'}
-                        infoText="When enabled, players can interrupt and play cards out of turn. This is disabled in fast mode."
+                        infoText={t('allow_interrupts_info')}
                         htmlFor="allow_interrupts"
                       />
                       <LobbySettingToggle
                         label={t('timer_per_turn')}
                         checked={settings.timerPerTurn}
                         onCheckedChange={() => updateSettings({ timerPerTurn: !settings.timerPerTurn })}
+                        infoText={t('timer_per_turn_info')}
                         htmlFor="timer-per-turn"
                       />
                       <LobbySettingToggle
                         label={t('happy_ending_variant')}
                         checked={settings.happyEnding}
                         onCheckedChange={() => updateSettings({ happyEnding: !settings.happyEnding })}
+                        infoText={t('happy_ending_variant_info')}
                         htmlFor="happy-ending"
                       />
                       <LobbySettingToggle

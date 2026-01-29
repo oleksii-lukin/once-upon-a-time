@@ -8,6 +8,7 @@
     "anseki.vscode-color",
     "swiftlydaniel.oklch-color-visualiser",
     "statelyai.stately-vscode",
-    "vitest.explorer"
+    "vitest.explorer",
+    "ms-playwright.playwright"
   ]
 }

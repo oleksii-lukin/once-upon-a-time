@@ -41,7 +41,24 @@ To speed up tests by avoiding sign-in for every test:
     ```
 2.  Follow the [Clerk Documentation on Authenticated Flows](https://clerk.com/docs/guides/development/testing/playwright/test-authenticated-flows) to save and reuse session state.
 
-## 5. Running Tests
+## 5. Install Dependencies
+
+Install the required dependencies and Playwright browsers:
+
+```bash
+# Install project dependencies
+pnpm i
+
+# Install Playwright system dependencies (for Linux)
+pnpm exec playwright install-deps
+
+# Install Playwright browsers
+# (you may need to re-run this regularly when Playwright browsers get updated)
+# (tests will fail with an error informing you about updates)
+pnpm exec playwright install
+```
+
+## 6. Running Tests
 
 To run the Playwright tests:
 
@@ -55,7 +72,7 @@ To run with the UI:
 pnpm test:e2e:ui
 ```
 
-## 6. References
+## 7. References
 
 - [Clerk Testing Documentation](https://clerk.com/docs/guides/development/testing/playwright/overview)
 - [Test Authenticated Flows](https://clerk.com/docs/guides/development/testing/playwright/test-authenticated-flows)

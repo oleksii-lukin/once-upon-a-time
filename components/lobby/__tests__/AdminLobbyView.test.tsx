@@ -59,6 +59,20 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock i18n
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: {
+      changeLanguage: () => Promise.resolve(),
+      resolvedLanguage: 'en',
+    },
+  }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: vi.fn(),
+  },
+}))
+
 vi.mock('@/app/i18n/client', () => ({
   getTranslation: vi.fn(() => ({
     t: (key: string) => key,
@@ -119,7 +133,7 @@ const mockPlayers = [
 ]
 
 describe('AdminLobbyView', () => {
-  it('renders correctly with default settings', () => {
+  it('renders correctly with default settings', async () => {
     render(
       <AdminLobbyView
         lobby={mockLobby as any}
@@ -132,6 +146,9 @@ describe('AdminLobbyView', () => {
     expect(screen.getByText('game_lobby')).toBeDefined()
     expect(screen.getByDisplayValue('Test Lobby')).toBeDefined()
     expect(screen.getByText('main_game_mode')).toBeDefined()
+
+    // Wait for decks to load to avoid act warnings from useEffect
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('updates settings and disables allow_interrupts when switching to fast mode', async () => {
@@ -150,6 +167,9 @@ describe('AdminLobbyView', () => {
     const interruptToggle = screen.getByLabelText('allow_interrupts')
     expect(interruptToggle).toBeDisabled()
     expect(interruptToggle).toHaveAttribute('aria-checked', 'false')
+
+    // Wait for async updates to avoid act warnings
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('updates settings and disables allow_interrupts when switching to solo mode', async () => {
@@ -168,6 +188,8 @@ describe('AdminLobbyView', () => {
     const interruptToggle = screen.getByLabelText('allow_interrupts')
     expect(interruptToggle).toBeDisabled()
     expect(interruptToggle).toHaveAttribute('aria-checked', 'false')
+
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('allows interrupts in main mode', async () => {
@@ -185,6 +207,8 @@ describe('AdminLobbyView', () => {
 
     const interruptToggle = screen.getByLabelText('allow_interrupts')
     expect(interruptToggle).not.toBeDisabled()
+
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('toggles timer_per_turn and updates duration via slider', async () => {
@@ -208,6 +232,8 @@ describe('AdminLobbyView', () => {
     fireEvent.change(slider, { target: { value: '60' } })
 
     expect(screen.getByText(/60seconds_abbrev/)).toBeDefined()
+
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('toggles enable_pacing_delay and updates duration via slider', async () => {
@@ -229,6 +255,8 @@ describe('AdminLobbyView', () => {
     fireEvent.change(slider, { target: { value: '15' } })
 
     expect(screen.getByText(/15seconds_abbrev/)).toBeDefined()
+
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 
   it('renders available decks and allows selection', async () => {
@@ -256,7 +284,7 @@ describe('AdminLobbyView', () => {
     expect(deck1Label).toHaveClass('bg-primary/20')
   })
 
-  it('renders correctly for a guest user', () => {
+  it('renders correctly for a guest user', async () => {
     const guestPlayers = [
       {
         ...mockPlayers[0],
@@ -277,5 +305,7 @@ describe('AdminLobbyView', () => {
 
     expect(screen.getByText('Guest Player')).toBeDefined()
     expect(screen.getByText('host')).toBeDefined()
+
+    await waitFor(() => expect(screen.queryByText('Deck 1')).toBeTruthy())
   })
 })

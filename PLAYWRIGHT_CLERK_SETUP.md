@@ -1,37 +1,47 @@
 # Playwright + Clerk Testing Setup
 
-This project uses `@clerk/testing` for E2E tests with Playwright. To run these tests successfully, you need to configure your Clerk dashboard and set up the necessary environment variables.
+This project uses `@clerk/testing` for E2E tests with Playwright. Testing is handled programmatically using Testing Tokens retrieved via the Clerk Backend API.
 
-## 1. Enable Testing Tokens in Clerk Dashboard
+## 1. Prerequisites (Clerk Dashboard)
 
-Testing Tokens are required for bypass bot detection during automated tests.
+Ensure the following are configured in your [Clerk Dashboard](https://dashboard.clerk.com/):
 
-1.  Go to your [Clerk Dashboard](https://dashboard.clerk.com/).
-2.  Select your application.
-3.  Navigate to **Settings** -> **Advanced** -> **Security**.
-4.  Enable **Testing tokens**.
+1.  **Authentication**: Enable **Email/Password** or **Username/Password** under **Authentication** -> **Sign-up, Sign-in & Profile**.
+2.  **API Keys**: You will need your **Publishable Key** and **Secret Key** from the **API Keys** section.
 
-## 2. Configure Authentication
+## 2. Programmatic Setup
 
-Ensure that **Username and Password** authentication is enabled in your Clerk Dashboard under **Authentication** -> **Sign-up, Sign-in & Profile**.
+The integration is already configured in this repository:
+- `tests/e2e/global.setup.ts` calls `clerkSetup()`, which automatically retrieves a short-lived Testing Token.
+- `playwright.config.ts` is configured to run the setup before any tests.
 
 ## 3. Set Environment Variables
 
-You need to provide your Clerk API keys for the test runner. These should be set in your `.env.local` or directly in your environment.
+Provide your Clerk API keys for the test runner. These should be set in your `.env.local` or your environment.
 
 ```bash
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 ```
 
-For the automated tests to run authenticated flows, you might also need a test user credentials:
+For automated authenticated flows, you may also need test user credentials:
 
 ```bash
 E2E_USER_EMAIL=test@example.com
 E2E_USER_PASSWORD=password123
 ```
 
-## 4. Running Tests
+## 4. Reusable Authentication State (Optional)
+
+To speed up tests by avoiding sign-in for every test:
+
+1.  Create a storage directory:
+    ```bash
+    mkdir -p playwright/.clerk
+    ```
+2.  Follow the [Clerk Documentation on Authenticated Flows](https://clerk.com/docs/guides/development/testing/playwright/test-authenticated-flows) to save and reuse session state.
+
+## 5. Running Tests
 
 To run the Playwright tests:
 
@@ -45,7 +55,8 @@ To run with the UI:
 pnpm test:e2e:ui
 ```
 
-## 5. References
+## 6. References
 
 - [Clerk Testing Documentation](https://clerk.com/docs/guides/development/testing/playwright/overview)
+- [Test Authenticated Flows](https://clerk.com/docs/guides/development/testing/playwright/test-authenticated-flows)
 - [Clerk Playwright Helpers](https://clerk.com/docs/guides/development/testing/playwright/test-helpers)

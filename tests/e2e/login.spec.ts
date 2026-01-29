@@ -1,11 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { setupClerkTestingToken } from '@clerk/testing/playwright';
 
 test.describe('Login System', () => {
   test('should display get started button when logged out', async ({ page }) => {
-    // Inject testing token to bypass bot detection
-    await setupClerkTestingToken({ page });
-
     // Navigate to the home page (English version)
     await page.goto('/en');
 
@@ -22,13 +18,15 @@ test.describe('Login System', () => {
   });
 
   test('should open sign in modal when clicking get started button', async ({ page }) => {
-    await setupClerkTestingToken({ page });
     await page.goto('/en');
 
     const getStartedButton = page.getByRole('button', { name: /Get Started/i });
     await getStartedButton.click();
 
-    // Clerk's SignIn modal usually contains certain text or elements.
-    // For this simple test, we just verify the button is clickable.
+    // Verify modal interaction
+    // Clerk's modal usually contains "Sign in" or "Continue" text.
+    // We look for a common Clerk element or text to confirm the modal opened.
+    const clerkModal = page.locator('.cl-rootBox, .cl-card, :text("Sign in")').first();
+    await expect(clerkModal).toBeVisible();
   });
 });

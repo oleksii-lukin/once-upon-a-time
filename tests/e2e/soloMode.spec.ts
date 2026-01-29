@@ -3,17 +3,19 @@ import { clerk } from '@clerk/testing/playwright';
 
 test.describe('Solo Game Mode', () => {
   test('should complete a full solo game workflow', async ({ page }) => {
-    // 1. Sign in (using clerk helper if available, otherwise manual)
-    // For this test, we assume we are using a testing token and can just navigate
+    // 1. Sign in using Clerk testing helper
     await page.goto('/en');
+    await clerk.signIn({
+      page,
+      signInParams: {
+        strategy: 'password',
+        identifier: process.env.E2E_USER_EMAIL!,
+        password: process.env.E2E_USER_PASSWORD!,
+      },
+    });
 
-    // Note: In a real CI environment, you'd use clerk.signIn() here if not already handled by global setup
-
-    // 2. Create a lobby or navigate to an existing one with solo mode
-    // For the sake of this test, we'll navigate to the lobbies page
-    await page.getByRole('button', { name: /Get Started/i }).click();
-
-    // Wait for navigation to lobbies
+    // 2. Navigate to lobbies
+    await page.goto('/en/lobbies');
     await expect(page).toHaveURL(/\/lobbies/);
 
     // 3. Create a new lobby with Solo mode
@@ -36,14 +38,6 @@ test.describe('Solo Game Mode', () => {
     await expect(page).toHaveURL(/\/game\//);
 
     // 5. Verify initial hand: 5 story cards + 1 ending card
-    // We can look for elements with specific test IDs or roles
-    const storyCards = page.locator('.story-card');
-    const endingCards = page.locator('.ending-card');
-
-    // Note: The actual class names or selectors depend on implementation.
-    // Based on Card.tsx and PlayerHand.tsx
-
-    // Let's wait for cards to appear
     await expect(page.locator('text=Story Cards')).toBeVisible();
 
     // 6. Play 5 story cards
@@ -53,13 +47,9 @@ test.describe('Solo Game Mode', () => {
 
       // Click Play Card button
       await page.getByRole('button', { name: /Play Card/i }).click();
-
-      // Wait for card to be played (optimistic UI should be fast)
-      // Check if it appeared in TableArea
     }
 
     // 7. Play ending card
-    // After 5 story cards, the "Play Ending" button should appear
     await page.locator('.card-item.type-ending').first().click();
     await page.getByRole('button', { name: /Play Ending/i }).click();
 

@@ -265,6 +265,7 @@
                 "protagonist": "Protagonist",
                 "antagonist": "Antagonist",
                 "setting": "Setting",
+                "object": "Object",
                 "ending": "Ending",
                 "catalyst": "Catalyst",
                 "trait": "Trait"

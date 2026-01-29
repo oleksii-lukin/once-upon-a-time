@@ -262,9 +262,10 @@
                 "story": "Сюжетна"
             },
             "categories": {
-                "protagonist": "Головний герой",
+                "protagonist": "Протагоніст",
                 "antagonist": "Антагоніст",
                 "setting": "Місце",
+                "object": "Об'єкт",
                 "ending": "Завершення",
                 "catalyst": "Каталізатор",
                 "trait": "Риса"

@@ -265,6 +265,7 @@
                 "protagonist": "Протагонист",
                 "antagonist": "Антагонист",
                 "setting": "Место",
+                "object": "Предмет",
                 "ending": "Завершение",
                 "catalyst": "Катализатор",
                 "trait": "Черта"

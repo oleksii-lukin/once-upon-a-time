@@ -66,6 +66,7 @@ export default function LobbySettingToggle({
     <div className="flex items-center justify-between py-2">
       {labelWithInfo}
       <Switch
+        id={htmlFor}
         checked={checked}
         onCheckedChange={onCheckedChange}
         disabled={disabled}

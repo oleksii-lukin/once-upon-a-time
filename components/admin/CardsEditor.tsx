@@ -168,6 +168,17 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     return matchesSearch && matchesCategory
   })
 
+  // Count cards by category
+  const getCategoryCount = (categoryId: string) => {
+    if (categoryId === 'all') {
+      return cards.length
+    }
+    if (categoryId === 'ending') {
+      return cards.filter(card => card.type === 'ending').length
+    }
+    return cards.filter(card => card.category === categoryId).length
+  }
+
   const handleCardSelect = useCallback((card: Card | null, updateUrl = true) => {
     setSelectedCard(card)
     setActiveLang('en')
@@ -496,6 +507,10 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   }`}
                 >
                   {cat.label}
+                  {' '}
+                  (
+                  {getCategoryCount(cat.id)}
+                  )
                 </button>
               )
             })}

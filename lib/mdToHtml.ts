@@ -51,10 +51,10 @@ export function mdToHtml(md: string): string {
         inList = false
       }
       // Process bold text and add styling to paragraphs
-      let processedLine = line
+      const processedLine = line
         .replace(/\*\*(.*?)\*\*/g, '<span class="text-cyan-400 font-semibold">$1</span>')
         .replace(/(\d+\.\s)/g, '<span class="text-purple-400 font-bold mr-2">$1</span>')
-      
+
       html.push(`<p class="text-gray-200 mb-4 leading-relaxed">${processedLine}</p>`)
     }
   }

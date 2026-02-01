@@ -12,7 +12,7 @@ const mockDecks = [
 // Mock Supabase client
 vi.mock('@/utils/supabase/client', () => {
   const mockSupabase = {
-    from: vi.fn((table) => ({
+    from: vi.fn(table => ({
       select: vi.fn(() => {
         if (table === 'decks') {
           return {
@@ -50,7 +50,7 @@ global.fetch = vi.fn(() =>
   Promise.resolve({
     ok: true,
     text: () => Promise.resolve('<h1>Mock Content</h1>'),
-  })
+  }),
 ) as any
 
 // Mock next/navigation
@@ -92,7 +92,7 @@ vi.mock('@/components/ui/slider', () => ({
       min={min}
       max={max}
       defaultValue={defaultValue ? defaultValue[0] : min}
-      onChange={(e) => onValueChange([parseInt(e.target.value)])}
+      onChange={e => onValueChange([parseInt(e.target.value)])}
     />
   ),
 }))
@@ -140,7 +140,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     expect(screen.getByText('game_lobby')).toBeDefined()
@@ -158,7 +158,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     const fastModeTab = screen.getByText('fast_game_mode')
@@ -179,7 +179,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     const soloModeTab = screen.getByText('solo_game_mode')
@@ -199,7 +199,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     const mainModeTab = screen.getByText('main_game_mode')
@@ -218,7 +218,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     const timerToggle = screen.getByLabelText('timer_per_turn')
@@ -243,7 +243,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     const pacingToggle = screen.getByLabelText('enable_pacing_delay')
@@ -266,7 +266,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={mockPlayers as any}
         userId="user-1"
         guestId={undefined}
-      />
+      />,
     )
 
     // Wait for decks to be fetched and rendered
@@ -300,7 +300,7 @@ describe('AdminLobbyView', () => {
         initialPlayers={guestPlayers as any}
         userId={null}
         guestId="guest-1"
-      />
+      />,
     )
 
     expect(screen.getByText('Guest Player')).toBeDefined()

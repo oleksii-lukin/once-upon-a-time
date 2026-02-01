@@ -28,8 +28,8 @@ const mockRuleMachine = createMachine({
   id: 'mockRule',
   initial: 'idle',
   states: {
-    idle: {}
-  }
+    idle: {},
+  },
 })
 
 const mockPromiseActor = fromPromise(async () => ({ id: 'mock-id' }))
@@ -47,7 +47,7 @@ const testMachine = gameMachine.provide({
     finalizeWinActor: mockPromiseActor,
     objectActor: mockPromiseActor,
     exchangeCardActor: mockPromiseActor,
-  }
+  },
 })
 
 describe('gameMachine', () => {
@@ -65,8 +65,8 @@ describe('gameMachine', () => {
       mode: 'full',
       currentPlayerId: 'player-1',
       players: [
-        { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any
-      ]
+        { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
+      ],
     })
 
     expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'full', persistence: 'idle' } })
@@ -81,8 +81,8 @@ describe('gameMachine', () => {
       mode: 'full',
       currentPlayerId: 'player-1',
       players: [
-        { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any
-      ]
+        { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
+      ],
     })
 
     const card = { id: 'card-1', name: 'Test Card', image_url: 'http://test.com/img.png' }
@@ -90,14 +90,14 @@ describe('gameMachine', () => {
     actor.send({
       type: 'PLAY_CARD',
       card: card as any,
-      playedCardsCount: 1
+      playedCardsCount: 1,
     })
 
     const snapshot = actor.getSnapshot()
     expect(snapshot.context.optimisticCard).toMatchObject({
       id: 'card-1',
       status: 'PENDING',
-      played_by: 'player-1'
+      played_by: 'player-1',
     })
     expect(snapshot.context.inFlightHandId).toBe('card-1')
     expect(snapshot.value).toMatchObject({ active: { rules: 'full', persistence: 'playingCard' } })
@@ -112,7 +112,7 @@ describe('gameMachine', () => {
       gameSessionId: 'session-123',
       lobbyId: 'lobby-123',
       mode: 'simple',
-      currentPlayerId: 'player-1'
+      currentPlayerId: 'player-1',
     })
     expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'simple' } })
 
@@ -123,7 +123,7 @@ describe('gameMachine', () => {
       gameSessionId: 'session-123',
       lobbyId: 'lobby-123',
       mode: 'solo',
-      currentPlayerId: 'player-1'
+      currentPlayerId: 'player-1',
     })
     expect(actorSolo.getSnapshot().value).toMatchObject({ active: { rules: 'solo' } })
   })

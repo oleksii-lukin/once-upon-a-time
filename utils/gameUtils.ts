@@ -55,3 +55,29 @@ export function getLocalizedCardContent(card: PartialCardData, language: string)
     type: card.category,
   }
 }
+
+export function normalizeTypeKey(raw?: string) {
+  const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+  const map: Record<string, string> = {
+    endings: 'ending',
+    ending: 'ending',
+    catalysts: 'catalyst',
+    catalyst: 'catalyst',
+    characters: 'character',
+    character: 'character',
+    protagonists: 'protagonist',
+    protagonist: 'protagonist',
+    antagonists: 'antagonist',
+    antagonist: 'antagonist',
+    settings: 'setting',
+    setting: 'setting',
+    objects: 'object',
+    object: 'object',
+    traits: 'trait',
+    trait: 'trait',
+    aspects: 'aspect',
+    aspect: 'aspect',
+    card: 'card',
+  }
+  return map[s] || 'card'
+}

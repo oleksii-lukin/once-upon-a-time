@@ -1,39 +1,10 @@
 'use client'
 
-function normalizeTypeKey(raw?: string) {
-  const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
-  const map: Record<string, string> = {
-    endings: 'ending',
-    ending: 'ending',
-    catalysts: 'catalyst',
-    catalyst: 'catalyst',
-    characters: 'character',
-    character: 'character',
-    protagonists: 'protagonist',
-    protagonist: 'protagonist',
-    antagonists: 'antagonist',
-    antagonist: 'antagonist',
-    settings: 'setting',
-    setting: 'setting',
-    objects: 'object',
-    object: 'object',
-    traits: 'trait',
-    trait: 'trait',
-    aspects: 'aspect',
-    aspect: 'aspect',
-    card: 'card',
-  }
-  return map[s] || 'card'
-}
-
-import { type CardData } from '@/utils/gameUtils'
+import { type CardData, getLocalizedCardContent, normalizeTypeKey } from '@/utils/gameUtils'
 import { useTranslation } from 'react-i18next'
-import { getLocalizedCardContent } from '@/utils/gameUtils'
 import Image from 'next/image'
 import { CardLayout, parseCardLayout } from '@/types/card'
 import { Info as InfoIcon } from 'lucide-react'
-
-// ... normalizeTypeKey stays at top ...
 
 interface CardProps {
   card: Partial<CardData> // Allow partial for now as we might mock data

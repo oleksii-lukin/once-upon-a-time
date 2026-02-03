@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
 import { X as CloseIcon, Info as InfoIcon, ChevronDown as ChevronDownIcon, ChevronUp as ChevronUpIcon } from 'lucide-react'
-import { type CardData, getLocalizedCardContent } from '@/utils/gameUtils'
+import { type CardData, getLocalizedCardContent, normalizeTypeKey } from '@/utils/gameUtils'
 
 interface CardDetailsOverlayProps {
   card: Partial<CardData>
@@ -27,32 +27,6 @@ export default function CardDetailsOverlay({ card, onClose, categoryImages, type
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
-
-  const normalizeTypeKey = (raw?: string) => {
-    const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
-    const map: Record<string, string> = {
-      endings: 'ending',
-      ending: 'ending',
-      catalysts: 'catalyst',
-      catalyst: 'catalyst',
-      characters: 'character',
-      character: 'character',
-      protagonists: 'protagonist',
-      protagonist: 'protagonist',
-      antagonists: 'antagonist',
-      antagonist: 'antagonist',
-      settings: 'setting',
-      setting: 'setting',
-      objects: 'object',
-      object: 'object',
-      traits: 'trait',
-      trait: 'trait',
-      aspects: 'aspect',
-      aspect: 'aspect',
-      card: 'card',
-    }
-    return map[s] || 'card'
-  }
 
   const typeKey = normalizeTypeKey(localizedContent.type || '')
   const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') })

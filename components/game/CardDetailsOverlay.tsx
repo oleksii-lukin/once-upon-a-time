@@ -28,7 +28,7 @@ export default function CardDetailsOverlay({ card, onClose, categoryImages, type
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const typeKey = normalizeTypeKey(localizedContent.type || '')
+  const typeKey = normalizeTypeKey(card.category)
   const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') })
   const categoryStyles = typeColorMap[typeKey] || typeColorMap.card
 

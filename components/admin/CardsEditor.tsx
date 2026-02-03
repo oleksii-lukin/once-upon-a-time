@@ -17,7 +17,7 @@ import { toast } from 'sonner'
 
 type Card = Database['public']['Tables']['cards']['Row'] & {
   type: 'story' | 'ending'
-  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null
+  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | 'ending'
   translations?: {
     [key: string]: {
       name: string
@@ -42,7 +42,7 @@ type FormData = {
   usage_examples: string
   image_url: string
   type: 'story' | 'ending'
-  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null
+  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | 'ending'
   translations: Translations
 }
 
@@ -89,7 +89,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const [discardedNames, setDiscardedNames] = useState<string[]>([])
 
   // Define categories for filter checkboxes with color coding
-  const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
+  const categoryColors: Record<Card['category'] | 'all', { bg: string, text: string, border: string }> = {
     all: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
     ending: { bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-600' },
     protagonist: { bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-600' },
@@ -161,8 +161,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       matchesCategory = true
     }
     else {
-      const cardCategory = card.category || 'protagonist'
-      matchesCategory = selectedCategories.has(cardCategory)
+      matchesCategory = selectedCategories.has(card.category)
     }
 
     return matchesSearch && matchesCategory
@@ -172,9 +171,6 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const getCategoryCount = (categoryId: string) => {
     if (categoryId === 'all') {
       return cards.length
-    }
-    if (categoryId === 'ending') {
-      return cards.filter(card => card.type === 'ending').length
     }
     return cards.filter(card => card.category === categoryId).length
   }
@@ -203,7 +199,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         usage_examples: card.usage_examples || '',
         image_url: card.image_url || '',
         type: card.type || 'story',
-        category: card.category || 'protagonist',
+        category: card.category as FormData['category'],
         translations: {
           ru: {
             name: card.translations?.ru?.name || '',
@@ -398,9 +394,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     const existingNames = cards
       .filter(c => c.id !== selectedCard?.id) // Don't exclude itself if editing
       .filter((c) => {
-        const cardCategory = c.category || 'ending'
         const formCategory = formData.type === 'story' ? formData.category : 'ending'
-        return c.type === formData.type && cardCategory === formCategory
+        return c.type === formData.type && c.category === formCategory
       })
       .map(c => c.name)
 
@@ -500,10 +495,9 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 <button
                   key={cat.id}
                   onClick={() => toggleCategory(cat.id)}
-                  className={`px-2 py-1 rounded border transition-colors ${
-                    isSelected
-                      ? `${colors.bg} ${colors.text} ${colors.border} border-2`
-                      : `bg-card text-muted-foreground border-border hover:border-primary/50`
+                  className={`px-2 py-1 rounded border transition-colors ${isSelected
+                    ? `${colors.bg} ${colors.text} ${colors.border} border-2`
+                    : `bg-card text-muted-foreground border-border hover:border-primary/50`
                   }`}
                 >
                   {cat.label}
@@ -534,21 +528,17 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   <TableCell className="px-4 py-3 text-sm text-foreground font-medium">
                     <div className="flex justify-between items-center">
                       <span>{card.name}</span>
-                      <span
-                        className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${
-                          card.type === 'ending'
-                            ? `${categoryColors.ending.bg} ${categoryColors.ending.text} border ${categoryColors.ending.border}`
-                            : categoryColors[card.category || 'protagonist']?.bg
-                              && categoryColors[card.category || 'protagonist']?.text
-                              && categoryColors[card.category || 'protagonist']?.border
-                              ? `${categoryColors[card.category || 'protagonist'].bg} ${categoryColors[card.category || 'protagonist'].text} border ${categoryColors[card.category || 'protagonist'].border}`
-                              : 'bg-gray-100 text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {card.type === 'ending'
-                          ? 'END'
-                          : (card.category || 'STY').substring(0, 3)}
-                      </span>
+                      {(() => {
+                        const cat = card.category
+                        const colors = categoryColors[cat]
+                        return (
+                          <span
+                            className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${colors.bg} ${colors.text} border ${colors.border}`}
+                          >
+                            {cat === 'ending' ? 'END' : cat.substring(0, 3)}
+                          </span>
+                        )
+                      })()}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -706,7 +696,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 <label className="block">
                   <span className="text-muted-foreground text-sm font-medium block mb-1">{t('category')}</span>
                   <select
-                    value={formData.category || 'protagonist'}
+                    value={formData.category}
                     onChange={e =>
                       setFormData({
                         ...formData,

@@ -1,6 +1,8 @@
 import { Database } from '@/supabase/types'
 
-export type CardData = Database['public']['Tables']['cards']['Row']
+export type CardData = Omit<Database['public']['Tables']['cards']['Row'], 'category'> & {
+  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | 'ending'
+}
 export type PartialCardData = Partial<CardData>
 
 /**

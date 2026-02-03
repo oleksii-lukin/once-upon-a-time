@@ -34,8 +34,7 @@ const typeColorMap: Record<string, string> = {
 export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout, onShowDetails, showInfoButton }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
-
-  const typeKey = normalizeTypeKey(localizedContent.type || '')
+  const typeKey = normalizeTypeKey(card.category)
   const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') })
 
   const cardLayout = parseCardLayout(layout)

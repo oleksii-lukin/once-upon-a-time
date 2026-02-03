@@ -85,6 +85,12 @@ export interface LocalCardInfo {
     uaFile?: string
     promptFile?: string
   }
+  textContent?: {
+    en?: string
+    ru?: string
+    ua?: string
+    prompt?: string
+  }
   lastModified: Date
 }
 
@@ -401,7 +407,6 @@ export class FileSystemHandler {
 
         for (const cardEntry of cardEntries) {
           if (cardEntry.isDirectory()) {
-            const cardPath = path.join(categoryPath, cardEntry.name)
             const cardInfo = await this.getCardInfo(deckName, category, cardEntry.name)
             allCards.push(cardInfo)
           }
@@ -439,6 +444,37 @@ export class FileSystemHandler {
         promptFile: cardFiles.includes('prompt.md') ? 'prompt.md' : undefined,
       }
 
+      // Read text content
+      const textContent: LocalCardInfo['textContent'] = {}
+
+      if (metadata.enFile) {
+        try {
+          textContent.en = await fs.readFile(path.join(cardPath, metadata.enFile), 'utf-8')
+        }
+        catch (e) { console.warn(`Failed to read en.md for ${cardName}`, e) }
+      }
+
+      if (metadata.ruFile) {
+        try {
+          textContent.ru = await fs.readFile(path.join(cardPath, metadata.ruFile), 'utf-8')
+        }
+        catch (e) { console.warn(`Failed to read ru.md for ${cardName}`, e) }
+      }
+
+      if (metadata.uaFile) {
+        try {
+          textContent.ua = await fs.readFile(path.join(cardPath, metadata.uaFile), 'utf-8')
+        }
+        catch (e) { console.warn(`Failed to read ua.md for ${cardName}`, e) }
+      }
+
+      if (metadata.promptFile) {
+        try {
+          textContent.prompt = await fs.readFile(path.join(cardPath, metadata.promptFile), 'utf-8')
+        }
+        catch (e) { console.warn(`Failed to read prompt.md for ${cardName}`, e) }
+      }
+
       // Get card images
       const images = await this.getCardImages(deckName, category, cardName)
 
@@ -448,6 +484,7 @@ export class FileSystemHandler {
         path: cardPath,
         images,
         metadata,
+        textContent,
         lastModified: cardStats.mtime,
       }
     }
@@ -501,7 +538,8 @@ export class FileSystemHandler {
         if (mimeType && mimeType.startsWith('image/')) {
           const format = this.getImageFormat(mimeType)
           const relativePath = path.join(relativeDirPath, file.name)
-          const serveUrl = `/api/image-editor/serve/${relativePath}`
+          const timestamp = fileStats.mtime.getTime() // Use modification time for cache-busting
+          const serveUrl = `/api/image-editor/serve/${relativePath}?t=${timestamp}`
 
           images.push({
             filename: file.name,
@@ -665,20 +703,6 @@ export class FileSystemHandler {
       // Ensure directory exists
       const dirPath = path.dirname(pathInfo.absolute)
       await this.ensureDirectory(dirPath)
-
-      // Check available disk space (if possible)
-      try {
-        const stats = await fs.stat(dirPath)
-        // Note: Node.js doesn't provide direct disk space checking,
-        // but we can at least verify the directory is accessible
-      }
-      catch (dirError) {
-        throw new FileSystemError(
-          'DIRECTORY_ACCESS',
-          `Cannot access directory "${dirPath}" for writing`,
-          { filePath, directory: dirPath, error: dirError },
-        )
-      }
 
       // Write the file atomically by writing to a temporary file first
       const tempPath = pathInfo.absolute + '.tmp'

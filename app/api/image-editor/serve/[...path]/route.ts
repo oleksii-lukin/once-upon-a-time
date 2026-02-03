@@ -98,7 +98,7 @@ async function handleServeImage(
     const response = new NextResponse(new Uint8Array(fileBuffer))
     response.headers.set('Content-Type', mimeType)
     response.headers.set('Content-Length', fileStats.size.toString())
-    response.headers.set('Cache-Control', 'public, max-age=3600') // Cache for 1 hour
+    response.headers.set('Cache-Control', 'public, max-age=60') // Cache for 1 minute instead of 1 hour
     response.headers.set('Last-Modified', fileStats.mtime.toUTCString())
 
     // Add image dimensions and file information headers (Requirement 7.4)

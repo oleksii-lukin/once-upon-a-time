@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    localPatterns: [
+      {
+        pathname: '/api/image-editor/serve/**',
+      },
+    ],
   },
 }
 

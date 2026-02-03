@@ -497,10 +497,10 @@ export default function ImageEditor({
     try {
       const optimizedBlob = await optimizeImageForSave(canvasRef.current, saveOptions)
 
-      if (isLocalFile && enableLocalFeatures && onLocalSave && localPath) {
+      if (isLocalFile && enableLocalFeatures && onLocalSave) {
         // Local file save logic with format and quality
         try {
-          await onLocalSave(optimizedBlob, localPath, saveOptions.format, saveOptions.quality)
+          await onLocalSave(optimizedBlob, localPath || '', saveOptions.format, saveOptions.quality)
           toast.success(t('admin.imageEditor.save_success'))
           if (onClose) onClose()
         }
@@ -509,17 +509,22 @@ export default function ImageEditor({
           handleSaveError(error instanceof Error ? error : new Error(String(error)), 'save')
         }
       }
-      else if (onSave) {
-        // Existing UploadThing save logic (unchanged)
-        const file = new File([optimizedBlob], 'edited_image.png', { type: optimizedBlob.type })
-        try {
-          await onSave(file)
-          toast.success(t('admin.imageEditor.save_success'))
-          if (onClose) onClose()
+      else {
+        if (onSave) {
+          // Existing UploadThing save logic (unchanged)
+          const file = new File([optimizedBlob], 'edited_image.png', { type: optimizedBlob.type })
+          try {
+            await onSave(file)
+            toast.success(t('admin.imageEditor.save_success'))
+            if (onClose) onClose()
+          }
+          catch (error) {
+            console.error('Error saving file:', error)
+            handleSaveError(error instanceof Error ? error : new Error(String(error)), 'save')
+          }
         }
-        catch (error) {
-          console.error('Error saving file:', error)
-          handleSaveError(error instanceof Error ? error : new Error(String(error)), 'save')
+        else {
+          toast.error('No save method available. Please check your configuration.')
         }
       }
     }
@@ -692,7 +697,7 @@ export default function ImageEditor({
         <div className="relative shadow-lg border border-border/50 bg-[#333] checkered-bg">
           <canvas
             ref={canvasRef}
-            className={`max-w-full max-h-[60vh] object-contain ${
+            className={`max-w-full max-h-[calc(60vh-60px)] object-contain ${
               mode === 'eraser'
                 ? 'cursor-crosshair'
                 : mode === 'crop'

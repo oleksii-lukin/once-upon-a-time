@@ -181,7 +181,7 @@ export class SecurityValidator {
   /**
    * Validate filename for save operations
    */
-  validateFilename(filename: string, requestId?: string): ValidationResult {
+  validateFilename(filename: string): ValidationResult {
     const errors: string[] = []
     const securityViolations: string[] = []
 
@@ -234,7 +234,7 @@ export class SecurityValidator {
   /**
    * Validate image file data
    */
-  validateImageData(data: Buffer, filename: string, requestId?: string): ValidationResult {
+  validateImageData(data: Buffer, filename: string): ValidationResult {
     const errors: string[] = []
     const securityViolations: string[] = []
 

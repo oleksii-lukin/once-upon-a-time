@@ -75,7 +75,7 @@ async function handleSaveImage(request: NextRequest, config: EnvironmentConfig) 
     let imageBuffer = Buffer.from(arrayBuffer) as Buffer
 
     // Validate image data
-    const imageValidation = securityValidator.validateImageData(imageBuffer, imageFile.name, requestId)
+    const imageValidation = securityValidator.validateImageData(imageBuffer, imageFile.name)
     if (!imageValidation.isValid) {
       securityLogger.log({
         level: 'warn',
@@ -394,13 +394,21 @@ async function optimizeImageBuffer(
       }
     }
 
+    // Check if optimization actually helped
+    const compressionRatio = buffer.length > 0 ? optimizedBuffer.length / buffer.length : 1
+
+    if (optimizedBuffer.length > buffer.length) {
+      // Optimization made file larger, return original
+      console.warn(`Image optimization increased file size: ${buffer.length} → ${optimizedBuffer.length} bytes (${Math.round(compressionRatio * 100)}% of original). Using original file instead.`)
+      return buffer
+    }
+
     // Final size check
     if (optimizedBuffer.length > maxFileSize) {
       throw new Error(`Optimized image still too large: ${optimizedBuffer.length} bytes (max: ${maxFileSize})`)
     }
 
     // Log optimization results
-    const compressionRatio = buffer.length > 0 ? optimizedBuffer.length / buffer.length : 1
     console.log(`Image optimization successful: ${buffer.length} → ${optimizedBuffer.length} bytes (${Math.round(compressionRatio * 100)}% of original, format: ${normalizedFormat})`)
 
     return optimizedBuffer

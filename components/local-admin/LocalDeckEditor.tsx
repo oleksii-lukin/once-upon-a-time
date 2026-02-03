@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/client'
 import { LocalDeckInfo } from '@/lib/file-system-handler'
@@ -25,7 +25,7 @@ export default function LocalDeckEditor({ lng }: LocalDeckEditorProps) {
   const [error, setError] = useState<string | null>(null)
 
   // Load available decks from file system
-  const loadDecksFromFileSystem = async () => {
+  const loadDecksFromFileSystem = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -42,20 +42,6 @@ export default function LocalDeckEditor({ lng }: LocalDeckEditorProps) {
         deckImages: [], // Will be populated when needed
       }))
       setDeckList(decks)
-
-      // If a deck is selected in URL, find and set it
-      if (selectedDeckName) {
-        const deck = decks.find(d => d.name === selectedDeckName)
-        if (deck) {
-          setSelectedDeck(deck)
-        }
-        else {
-          // Deck not found, clear URL parameter
-          const params = new URLSearchParams(searchParams)
-          params.delete('deck')
-          router.replace(`${pathname}?${params.toString()}`)
-        }
-      }
     }
     catch (err) {
       console.error('Error loading decks:', err)
@@ -64,11 +50,27 @@ export default function LocalDeckEditor({ lng }: LocalDeckEditorProps) {
     finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  // Handle deck selection from URL
+  useEffect(() => {
+    if (selectedDeckName && deckList.length > 0) {
+      const deck = deckList.find(d => d.name === selectedDeckName)
+      if (deck) {
+        setSelectedDeck(deck)
+      }
+      else {
+        // Deck not found, clear URL parameter
+        const params = new URLSearchParams(searchParams)
+        params.delete('deck')
+        router.replace(`${pathname}?${params.toString()}`)
+      }
+    }
+  }, [selectedDeckName, deckList, searchParams, router, pathname])
 
   useEffect(() => {
     loadDecksFromFileSystem()
-  }, [])
+  }, [loadDecksFromFileSystem])
 
   const setActiveTab = (tab: 'cards' | 'settings') => {
     const params = new URLSearchParams(searchParams)

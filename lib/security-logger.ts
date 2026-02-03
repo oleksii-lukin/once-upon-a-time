@@ -90,7 +90,7 @@ class SecurityLogger {
   }
 
   private isDevelopment = process.env.NODE_ENV === 'development'
-  private isLoggingEnabled = process.env.ENABLE_LOCAL_IMAGE_EDITOR === 'true'
+  private isLoggingEnabled = process.env.ENABLE_LOCAL_IMAGE_EDITOR_LOGGING === 'true'
 
   /**
    * Generate a unique request ID for tracking

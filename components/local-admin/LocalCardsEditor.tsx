@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { LocalCardInfo, LocalImageInfo } from '@/lib/file-system-handler'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
 import ImageEditor from '@/components/admin/ImageEditor'
+import { Plus, FileText, Image as ImageIcon } from 'lucide-react'
 
 interface LocalCardsEditorProps {
   deckName: string
@@ -26,7 +28,7 @@ interface CardsResponse {
   }
 }
 
-export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCardsEditorProps) {
+export default function LocalCardsEditor({ deckName, lng }: LocalCardsEditorProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -43,6 +45,10 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImageEditor, setShowImageEditor] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isNewImage, setIsNewImage] = useState(false)
+  const [newImageFilename, setNewImageFilename] = useState('')
+  const [isDragActive, setIsDragActive] = useState(false)
 
   // Define categories for filter checkboxes with color coding
   const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
@@ -55,9 +61,9 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
     traits: { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600' },
   }
 
-  const fetchCards = useCallback(async () => {
+  const fetchCards = useCallback(async (showLoading = true) => {
     try {
-      setIsLoading(true)
+      if (showLoading) setIsLoading(true)
       setError(null)
 
       const response = await fetch(`/api/image-editor/decks/${encodeURIComponent(deckName)}/cards`)
@@ -66,24 +72,18 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
       }
 
       const data: CardsResponse = await response.json()
-      setCards(data.cards)
 
-      // If a card is selected in URL, find and set it
-      if (selectedCardId) {
-        const card = data.cards.find(c => c.name === selectedCardId)
-        if (card) {
-          setSelectedCard(card)
+      // Convert lastModified strings back to Date objects
+      const processedCards = data.cards.map(card => ({
+        ...card,
+        lastModified: new Date(card.lastModified),
+        images: card.images.map(image => ({
+          ...image,
+          lastModified: new Date(image.lastModified),
+        })),
+      }))
 
-          // If an image is also selected, find and set it
-          if (selectedImagePath) {
-            const image = card.images.find(img => img.relativePath === selectedImagePath)
-            if (image) {
-              setSelectedImage(image)
-              setShowImageEditor(true)
-            }
-          }
-        }
-      }
+      setCards(processedCards)
     }
     catch (err) {
       console.error('Error loading cards:', err)
@@ -92,11 +92,49 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
     finally {
       setIsLoading(false)
     }
-  }, [deckName, selectedCardId, selectedImagePath])
+  }, [deckName])
 
   useEffect(() => {
     fetchCards()
   }, [fetchCards])
+
+  // Synchronize selection with URL parameters
+  useEffect(() => {
+    if (isLoading || cards.length === 0) return
+
+    if (selectedCardId) {
+      const card = cards.find(c => c.name === selectedCardId)
+      if (card) {
+        setSelectedCard(card)
+
+        if (selectedImagePath) {
+          const image = card.images.find(img => img.relativePath === selectedImagePath)
+          if (image) {
+            setSelectedImage(image)
+            setShowImageEditor(true)
+          }
+          else {
+            setSelectedImage(null)
+            setShowImageEditor(false)
+          }
+        }
+        else {
+          setSelectedImage(null)
+          setShowImageEditor(false)
+        }
+      }
+      else {
+        setSelectedCard(null)
+        setSelectedImage(null)
+        setShowImageEditor(false)
+      }
+    }
+    else {
+      setSelectedCard(null)
+      setSelectedImage(null)
+      setShowImageEditor(false)
+    }
+  }, [cards, selectedCardId, selectedImagePath, isLoading])
 
   const toggleCategory = (categoryId: string) => {
     const newCategories = new Set(selectedCategories)
@@ -172,6 +210,7 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
 
   const handleImageSelect = (image: LocalImageInfo) => {
     setSelectedImage(image)
+    setIsNewImage(false) // This is editing an existing image, not a new one
     setShowImageEditor(true)
 
     // Update URL to include selected image
@@ -190,12 +229,120 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
     router.replace(`${pathname}?${params.toString()}`)
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    processFile(file)
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const processFile = useCallback((file: File) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result as string
+      // Create a temporary LocalImageInfo for the new image
+      const tempImage: LocalImageInfo = {
+        filename: file.name,
+        path: '', // Will be set on save
+        relativePath: '', // Will be set on save
+        serveUrl: result, // Use data URL for preview
+        size: file.size,
+        format: file.type.split('/')[1] as 'png' | 'jpg' | 'jpeg' | 'gif' | 'webp',
+        lastModified: new Date(),
+      }
+
+      setSelectedImage(tempImage)
+      setIsNewImage(true)
+
+      // If we already have an image, we'll suggest overwriting it
+      if (selectedCard && selectedCard.images.length > 0) {
+        // For existing cards, use generic name
+        const extension = file.name.split('.').pop() || 'png'
+        setNewImageFilename(`image.${extension}`)
+      }
+      else {
+        // For new cards, use generic name
+        const extension = file.name.split('.').pop() || 'png'
+        setNewImageFilename(`image.${extension}`)
+      }
+
+      setShowImageEditor(true)
+    }
+    reader.readAsDataURL(file)
+  }, [selectedCard])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0]
+      if (file.type.startsWith('image/')) {
+        processFile(file)
+      }
+    }
+  }, [processFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+  }, [])
+
   const handleLocalSave = async (editedImageData: Blob, originalPath: string, format?: string, quality?: number) => {
     try {
       const formData = new FormData()
       formData.append('image', editedImageData)
-      formData.append('filePath', originalPath)
-      formData.append('overwrite', 'true') // Allow overwriting the original file
+
+      // If it's a new image, construct the path
+      if (isNewImage && selectedCard) {
+        const separator = selectedCard.path.includes('\\') ? '\\' : '/'
+        const targetPath = `${selectedCard.path}${separator}${newImageFilename}`
+        formData.append('filePath', targetPath)
+      }
+      else {
+        // For existing images, replace the filename with a generic name based on format
+        let fullPath = originalPath
+        if (!originalPath.startsWith('specs/decks/') && !originalPath.startsWith('/')) {
+          fullPath = `specs/decks/${originalPath}`
+        }
+
+        // Extract directory path and replace filename with generic name
+        const pathParts = fullPath.split('/')
+        const filename = pathParts.pop() || ''
+        const directory = pathParts.join('/')
+
+        // Determine extension from format parameter or original file
+        const extension = format || filename.split('.').pop() || 'png'
+        const genericFilename = `image.${extension}`
+
+        // For absolute paths, we need to ensure we're using the full path
+        let newPath
+        if (fullPath.startsWith('/')) {
+          // It's an absolute path, keep it absolute
+          newPath = `${directory}/${genericFilename}`
+        }
+        else {
+          // It's a relative path, keep it relative
+          newPath = `${directory}/${genericFilename}`
+        }
+
+        formData.append('filePath', newPath)
+      }
+
+      formData.append('overwrite', 'true') // Allow overwriting
 
       // Add format and quality parameters if provided
       if (format) {
@@ -218,7 +365,11 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
       const result = await response.json()
 
       // Refresh the card data to show updated image
-      await fetchCards()
+      await fetchCards(false)
+
+      // Reset new image state
+      setIsNewImage(false)
+      setNewImageFilename('')
 
       // Show success message with optimization info
       const message = result.file.compressionRatio
@@ -253,7 +404,7 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchCards}
+            onClick={() => fetchCards()}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             {t('retry')}
@@ -263,42 +414,17 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
     )
   }
 
-  // Show image editor when an image is selected
-  if (showImageEditor && selectedImage) {
+  // Helper to render text info
+  const renderTextInfo = (title: string, content?: string, icon?: React.ReactNode) => {
+    if (!content) return null
     return (
-      <div className="flex flex-col h-full overflow-hidden">
-        <div className="flex items-center gap-4 mb-4 shrink-0">
-          <button
-            onClick={handleImageEditorClose}
-            className="px-3 py-1 text-sm text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted/50 transition-colors"
-          >
-            ←
-            {' '}
-            {t('back_to_cards')}
-          </button>
-          <h3 className="text-lg font-semibold">
-            {t('editing')}
-            :
-            {selectedImage.filename}
-          </h3>
-          <span className="text-sm text-muted-foreground">
-            {selectedCard?.name}
-            {' '}
-            (
-            {selectedCard?.category}
-            )
-          </span>
-        </div>
-
-        <div className="flex-1 overflow-hidden">
-          <ImageEditor
-            imageUrl={selectedImage.serveUrl}
-            isLocalFile={true}
-            localPath={selectedImage.relativePath}
-            onLocalSave={handleLocalSave}
-            enableLocalFeatures={true}
-            inline={true}
-          />
+      <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border">
+        <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+          {icon || <FileText className="w-4 h-4" />}
+          {title}
+        </h4>
+        <div className="text-sm text-foreground/80 whitespace-pre-wrap font-serif">
+          {content}
         </div>
       </div>
     )
@@ -324,10 +450,9 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
                 <button
                   key={categoryId}
                   onClick={() => toggleCategory(categoryId)}
-                  className={`px-2 py-1 rounded border transition-colors ${
-                    isSelected
-                      ? `${colors.bg} ${colors.text} ${colors.border} border-2`
-                      : `bg-card text-muted-foreground border-border hover:border-primary/50`
+                  className={`px-2 py-1 rounded border transition-colors ${isSelected
+                    ? `${colors.bg} ${colors.text} ${colors.border} border-2`
+                    : `bg-card text-muted-foreground border-border hover:border-primary/50`
                   }`}
                 >
                   {categoryId === 'all' ? t('all') : categoryId}
@@ -351,7 +476,7 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
             <TableBody className="divide-y divide-border">
               {filteredCards.map(card => (
                 <TableRow
-                  key={card.name}
+                  key={`${card.category}-${card.name}`}
                   className={`transition-colors cursor-pointer ${selectedCard?.name === card.name ? 'bg-primary/10' : 'hover:bg-muted/30'}`}
                   onClick={() => handleCardSelect(card)}
                 >
@@ -359,12 +484,11 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
                     <div className="flex justify-between items-center">
                       <span>{card.name}</span>
                       <span
-                        className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${
-                          categoryColors[card.category]?.bg
-                          && categoryColors[card.category]?.text
-                          && categoryColors[card.category]?.border
-                            ? `${categoryColors[card.category].bg} ${categoryColors[card.category].text} border ${categoryColors[card.category].border}`
-                            : 'bg-gray-100 text-gray-700 border border-gray-300'
+                        className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${categoryColors[card.category]?.bg
+                        && categoryColors[card.category]?.text
+                        && categoryColors[card.category]?.border
+                          ? `${categoryColors[card.category].bg} ${categoryColors[card.category].text} border ${categoryColors[card.category].border}`
+                          : 'bg-gray-100 text-gray-700 border border-gray-300'
                         }`}
                       >
                         {card.category.substring(0, 3).toUpperCase()}
@@ -428,50 +552,116 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
                   </div>
                 </div>
 
+                {/* Text Metadata Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {renderTextInfo('English (en.md)', selectedCard.metadata.enFile ? selectedCard.textContent?.en : undefined)}
+                  {renderTextInfo('Prompt', selectedCard.metadata.promptFile ? selectedCard.textContent?.prompt : undefined, <ImageIcon className="w-4 h-4" />)}
+                  {/* Can add RU/UA here if needed, keeping it simple for now based on user request */}
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-semibold">{t('image')}</h4>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+                </div>
+
                 {selectedCard.images.length > 0
                   ? (
-                      <div>
-                        <h4 className="text-md font-semibold mb-4">{t('images')}</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {selectedCard.images.map(image => (
-                            <div
-                              key={image.filename}
-                              className="border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                              onClick={() => handleImageSelect(image)}
-                            >
-                              <div className="aspect-square bg-muted flex items-center justify-center">
-                                <img
-                                  src={image.serveUrl}
-                                  alt={image.filename}
-                                  className="max-w-full max-h-full object-contain"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement
-                                    target.style.display = 'none'
-                                    target.nextElementSibling?.classList.remove('hidden')
-                                  }}
-                                />
-                                <div className="hidden text-muted-foreground text-sm">
-                                  {t('image_load_error')}
-                                </div>
-                              </div>
-                              <div className="p-2">
-                                <p className="text-xs font-medium truncate">{image.filename}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {image.format.toUpperCase()}
-                                  {' '}
-                                  •
-                                  {Math.round(image.size / 1024)}
-                                  KB
-                                </p>
-                              </div>
+                      <div className="w-full">
+                        <div
+                          className={`group relative border ${isDragActive ? 'border-primary border-2 bg-primary/5' : 'border-border'} rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer bg-muted`}
+                          onClick={() => handleImageSelect(selectedCard.images[0])}
+                          onDrop={handleDrop}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                        >
+                          <div className="aspect-video flex items-center justify-center max-w-sm mx-auto">
+                            <Image
+                              src={selectedCard.images[0].serveUrl}
+                              alt={selectedCard.name}
+                              width={300}
+                              height={400}
+                              className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.style.display = 'none'
+                                target.nextElementSibling?.classList.remove('hidden')
+                              }}
+                            />
+                            <div className="hidden text-muted-foreground text-sm">
+                              {t('image_load_error')}
                             </div>
-                          ))}
+                          </div>
+                          <div className={`absolute inset-0 ${isDragActive ? 'bg-primary/20' : 'bg-black/40'} opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity`}>
+                            <ImageIcon className={`w-8 h-8 ${isDragActive ? 'text-primary' : 'text-white'} mb-2`} />
+                            <p className={`font-medium ${isDragActive ? 'text-primary' : 'text-white'}`}>
+                              {isDragActive ? (t('drop_image_here')) : t('edit_image')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-center max-w-sm mx-auto">
+                          <p className="text-xs font-semibold">{selectedCard.images[0].filename}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase">
+                            {selectedCard.images[0].format}
+                            {' '}
+                            •
+                            {Math.round(selectedCard.images[0].size / 1024)}
+                            {' '}
+                            KB
+                          </p>
                         </div>
                       </div>
                     )
                   : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">{t('no_images_found')}</p>
+                      <div
+                        className={`relative border-2 border-dashed ${isDragActive ? 'border-primary bg-primary/5' : 'border-border'} rounded-lg p-4 bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer w-full flex flex-col items-center justify-center gap-3`}
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                        />
+
+                        <div className={`p-4 rounded-full ${isDragActive ? 'bg-primary/20 animate-pulse' : 'bg-muted'}`}>
+                          <ImageIcon className={`w-12 h-12 ${isDragActive ? 'text-primary' : 'text-muted-foreground opacity-50'}`} />
+                        </div>
+
+                        <div className="text-center">
+                          <p className="text-muted-foreground font-medium mb-1">
+                            {isDragActive ? t('drop_image_here') : t('no_images_found')}
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-4 max-w-xs mx-auto">
+                            {isDragActive
+                              ? t('release_to_upload')
+                              : t('upload_image_hint')}
+                          </p>
+                          {!isDragActive && (
+                            <Button
+                              variant="secondary"
+                              className="gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                fileInputRef.current?.click()
+                              }}
+                            >
+                              <Plus className="w-4 h-4" />
+                              {t('add_image')}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     )}
               </div>
@@ -484,6 +674,19 @@ export default function LocalCardsEditor({ deckName, deckPath, lng }: LocalCards
               </div>
             )}
       </div>
+
+      {showImageEditor && selectedImage && (
+        <ImageEditor
+          isOpen={showImageEditor}
+          onClose={handleImageEditorClose}
+          imageUrl={selectedImage.serveUrl}
+          isLocalFile={true}
+          localPath={selectedImage.relativePath}
+          onLocalSave={handleLocalSave}
+          enableLocalFeatures={true}
+          inline={false}
+        />
+      )}
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Crop, Wand2, Undo, Save, Loader2, Scissors, Eraser, Copy } from 'lucide-react'
+import { Crop, Wand2, Undo, Save, Loader2, Scissors, Eraser, Copy, Frame } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -47,7 +47,7 @@ export default function ImageEditor({
 }: ImageEditorProps) {
   const { t } = useTranslation()
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mode, setMode] = useState<'view' | 'crop' | 'magic' | 'eraser'>('view')
+  const [mode, setMode] = useState<'view' | 'crop' | 'magic' | 'eraser' | 'resize-canvas'>('view')
   const [tolerance, setTolerance] = useState([30])
   const [isProcessing, setIsProcessing] = useState(false)
   const [imageHistory, setImageHistory] = useState<ImageData[]>([])
@@ -75,6 +75,57 @@ export default function ImageEditor({
   const [cropStart, setCropStart] = useState<{ x: number, y: number } | null>(null)
   const [cropRect, setCropRect] = useState<{ x: number, y: number, w: number, h: number } | null>(null)
   const [canvasDimensions, setCanvasDimensions] = useState<{ width: number, height: number }>({ width: 1, height: 1 })
+  const [activeHandle, setActiveHandle] = useState<string | null>(null)
+
+  // Handle Resize Logic
+  useEffect(() => {
+    const handleGlobalMove = (e: MouseEvent) => {
+      if (activeHandle && cropRect && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect()
+        const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width)
+        const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height)
+
+        let { x: rx, y: ry, w: rw, h: rh } = cropRect
+        const maxX = canvasDimensions.width
+        const maxY = canvasDimensions.height
+        const minSize = 10
+
+        if (activeHandle.includes('e')) {
+          rw = Math.max(minSize, Math.min(x - rx, maxX - rx))
+        }
+        if (activeHandle.includes('w')) {
+          const newX = Math.max(0, Math.min(x, rx + rw - minSize))
+          rw = rx + rw - newX
+          rx = newX
+        }
+        if (activeHandle.includes('s')) {
+          rh = Math.max(minSize, Math.min(y - ry, maxY - ry))
+        }
+        if (activeHandle.includes('n')) {
+          const newY = Math.max(0, Math.min(y, ry + rh - minSize))
+          rh = ry + rh - newY
+          ry = newY
+        }
+
+        setCropRect({ x: rx, y: ry, w: rw, h: rh })
+      }
+    }
+
+    const handleGlobalUp = () => {
+      if (activeHandle) {
+        setActiveHandle(null)
+      }
+    }
+
+    if (activeHandle) {
+      window.addEventListener('mousemove', handleGlobalMove)
+      window.addEventListener('mouseup', handleGlobalUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMove)
+      window.removeEventListener('mouseup', handleGlobalUp)
+    }
+  }, [activeHandle, cropRect, canvasDimensions])
 
   // Initialize canvas
   useEffect(() => {
@@ -697,15 +748,14 @@ export default function ImageEditor({
         <div className="relative shadow-lg border border-border/50 bg-[#333] checkered-bg">
           <canvas
             ref={canvasRef}
-            className={`max-w-full max-h-[calc(60vh-60px)] object-contain ${
-              mode === 'eraser'
+            className={`max-w-full max-h-[calc(60vh-60px)] object-contain ${mode === 'eraser'
+              ? 'cursor-crosshair'
+              : mode === 'crop'
                 ? 'cursor-crosshair'
-                : mode === 'crop'
+                : mode === 'magic'
                   ? 'cursor-crosshair'
-                  : mode === 'magic'
-                    ? 'cursor-crosshair'
-                    : 'cursor-default'
-            }`}
+                  : 'cursor-default'
+              }`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -725,6 +775,53 @@ export default function ImageEditor({
               }}
             />
           )}
+
+          {/* Resize Handles */}
+          {mode === 'resize-canvas' && cropRect && (
+            <>
+              {['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((handle) => {
+                const style: React.CSSProperties = {
+                  position: 'absolute',
+                  width: '10px',
+                  height: '10px',
+                  backgroundColor: 'white',
+                  border: '1px solid #333',
+                  zIndex: 10,
+                }
+
+                const left = (cropRect.x / canvasDimensions.width) * 100
+                const top = (cropRect.y / canvasDimensions.height) * 100
+                const width = (cropRect.w / canvasDimensions.width) * 100
+                const height = (cropRect.h / canvasDimensions.height) * 100
+
+                if (handle.includes('n')) style.top = `calc(${top}% - 5px)`
+                else if (handle.includes('s')) style.top = `calc(${top + height}% - 5px)`
+                else style.top = `calc(${top + height / 2}% - 5px)`
+
+                if (handle.includes('w')) style.left = `calc(${left}% - 5px)`
+                else if (handle.includes('e')) style.left = `calc(${left + width}% - 5px)`
+                else style.left = `calc(${left + width / 2}% - 5px)`
+
+                let cursor = 'default'
+                if (handle === 'nw' || handle === 'se') cursor = 'nwse-resize'
+                else if (handle === 'ne' || handle === 'sw') cursor = 'nesw-resize'
+                else if (handle === 'n' || handle === 's') cursor = 'ns-resize'
+                else if (handle === 'w' || handle === 'e') cursor = 'ew-resize'
+                style.cursor = cursor
+
+                return (
+                  <div
+                    key={handle}
+                    style={style}
+                    onMouseDown={(e) => {
+                      e.stopPropagation()
+                      setActiveHandle(handle)
+                    }}
+                  />
+                )
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -742,6 +839,28 @@ export default function ImageEditor({
             </Button>
             {mode === 'crop' && (
               <Button variant="secondary" size="sm" onClick={applyCrop} disabled={!cropRect || cropRect.w < 5}>
+                {t('admin.imageEditor.apply_crop')}
+              </Button>
+            )}
+
+            <div className="w-px h-6 bg-border mx-2" />
+
+            <Button
+              variant={mode === 'resize-canvas' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                if (mode !== 'resize-canvas') {
+                  setMode('resize-canvas')
+                  setCropRect({ x: 0, y: 0, w: canvasDimensions.width, h: canvasDimensions.height })
+                  setCropStart(null)
+                }
+              }}
+            >
+              <Frame className="w-4 h-4 mr-2" />
+              {t('admin.imageEditor.tool_resize_canvas')}
+            </Button>
+            {mode === 'resize-canvas' && (
+              <Button variant="secondary" size="sm" onClick={applyCrop} title={t('admin.imageEditor.tool_resize_canvas_hint')}>
                 {t('admin.imageEditor.apply_crop')}
               </Button>
             )}

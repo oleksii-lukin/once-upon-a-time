@@ -300,6 +300,8 @@
             "tool_eraser": "Eraser",
             "tool_trim": "Trim Borders",
             "tool_trim_hint": "Remove empty borders",
+            "tool_resize_canvas": "Resize Canvas",
+            "tool_resize_canvas_hint": "Drag borders to resize canvas",
             "apply_crop": "Apply",
             "tolerance": "Difference Tolerance",
             "eraser_size": "Eraser Size",

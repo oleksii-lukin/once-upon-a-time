@@ -300,6 +300,8 @@
             "tool_eraser": "Ластик",
             "tool_trim": "Убрать поля",
             "tool_trim_hint": "Убрать пустые поля вокруг",
+            "tool_resize_canvas": "Изменить размер холста",
+            "tool_resize_canvas_hint": "Перетащите границы, чтобы изменить размер холста",
             "apply_crop": "Применить",
             "tolerance": "Допуск",
             "eraser_size": "Размер ластика",

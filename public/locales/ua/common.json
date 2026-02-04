@@ -300,6 +300,8 @@
             "tool_eraser": "Гумка",
             "tool_trim": "Прибрати поля",
             "tool_trim_hint": "Прибрати порожні поля навколо",
+            "tool_resize_canvas": "Змінити розмір полотна",
+            "tool_resize_canvas_hint": "Перетягніть межі, щоб змінити розмір полотна",
             "apply_crop": "Застосувати",
             "tolerance": "Допуск",
             "eraser_size": "Розмір гумки",

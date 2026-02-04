@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/client'
-import { Deck } from '@/types/deck'
+import { Deck } from '@/types/model'
 import DeckSettings from './DeckSettings'
 import CardsEditor from './CardsEditor'
 

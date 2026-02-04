@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import CopyButton from '@/components/common/CopyButton'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 import LobbySettingToggle from './LobbySettingToggle'
 import GameModeTabs from './GameModeTabs'
 

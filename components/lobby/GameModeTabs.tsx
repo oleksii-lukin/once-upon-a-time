@@ -1,7 +1,7 @@
 'use client'
 
 import { getTranslation } from '@/app/i18n/client'
-import type { LobbySettings } from '@/types/lobby'
+import type { LobbySettings } from '@/types/model'
 import { Info as InfoIcon } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import {

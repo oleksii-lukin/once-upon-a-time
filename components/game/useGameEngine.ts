@@ -4,7 +4,7 @@ import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { useMachine } from '@xstate/react'
 import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
-import { GameMode } from '@/types/lobby'
+import { GameMode } from '@/types/model'
 
 const inspector
   = process.env.NODE_ENV === 'development'

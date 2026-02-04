@@ -11,10 +11,10 @@ import TurnControls from './TurnControls'
 import GameCompletionOverlay from './GameCompletionOverlay'
 import CardDetailsOverlay from './CardDetailsOverlay'
 import { useGameEngine } from './useGameEngine'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 import { useRouter, useParams } from 'next/navigation'
 import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
-import { CardLayout } from '@/types/card'
+import { CardLayout } from '@/types/model'
 
 // Default background image URL for game when no deck background is provided
 const DEFAULT_BACKGROUND_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys'

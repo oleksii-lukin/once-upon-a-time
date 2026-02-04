@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { type PlayedCardData } from '@/utils/gameUtils'
-import { CardLayout } from '@/types/card'
+import { CardLayout } from '@/types/model'
 import { Database } from '@/supabase/types'
 import { PlayerAvatar, getPlayerDisplayName } from '@/components/lobby/PlayerDisplay'
 

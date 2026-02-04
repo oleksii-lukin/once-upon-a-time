@@ -6,7 +6,7 @@ import fs from 'fs/promises'
  * GET /api/image-editor/environment
  * Verify development mode and file system access
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const config = checkEnvironment()
 

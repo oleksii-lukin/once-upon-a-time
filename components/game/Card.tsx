@@ -3,7 +3,7 @@
 import { type CardData, getLocalizedCardContent, normalizeTypeKey } from '@/utils/gameUtils'
 import { useTranslation } from 'react-i18next'
 import Image from 'next/image'
-import { CardLayout, parseCardLayout } from '@/types/card'
+import { CardLayout, parseCardLayout } from '@/types/model'
 import { Info as InfoIcon } from 'lucide-react'
 
 interface CardProps {

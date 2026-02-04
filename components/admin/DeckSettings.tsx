@@ -10,8 +10,8 @@ import { getTranslation } from '@/app/i18n/client'
 import { Loader2 } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
 
-import { parseCardLayout } from '@/types/card'
-import { Deck } from '@/types/deck'
+import { parseCardLayout } from '@/types/model'
+import { Deck } from '@/types/model'
 import PositioningEditor from './PositioningEditor'
 import { LayoutIcon } from 'lucide-react'
 

@@ -338,7 +338,7 @@ export class SecurityValidator {
       case 'newFilename':
       case 'filename':
         if (typeof value === 'string') {
-          const filenameValidation = this.validateFilename(value, requestId)
+          const filenameValidation = this.validateFilename(value)
           if (!filenameValidation.isValid) {
             errors.push(...filenameValidation.errors)
             securityViolations.push(...filenameValidation.securityViolations)

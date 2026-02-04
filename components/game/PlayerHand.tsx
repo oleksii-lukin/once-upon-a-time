@@ -3,7 +3,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CardLayout } from '@/types/card'
+import { CardLayout } from '@/types/model'
 import { type HandCardData } from '@/utils/gameUtils'
 
 import Card from './Card'
@@ -22,7 +22,6 @@ interface PlayerHandProps {
 }
 
 export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck, onShowDetails }: PlayerHandProps) {
-  const { t } = useTranslation()
   // Sort cards: Story cards first, Ending cards last
   // We use useMemo to prevent re-sorting on every render if cards dependencies don't change
   const sortedCards = React.useMemo(() => {

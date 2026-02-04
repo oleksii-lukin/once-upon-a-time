@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Search, Maximize, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon, type LucideIcon } from 'lucide-react'
 
 import { Database } from '@/supabase/types'
-import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/card'
+import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/model'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'

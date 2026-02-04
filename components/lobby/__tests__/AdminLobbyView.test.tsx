@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import AdminLobbyView from '../AdminLobbyView'
-import { defaultLobbySettings } from '@/types/lobby'
+import { defaultLobbySettings } from '@/types/model'
 
 const mockDecks = [
   { id: 'deck-1', name: 'Deck 1', is_active: true },

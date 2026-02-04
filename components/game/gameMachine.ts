@@ -7,7 +7,7 @@ import {
 } from './ruleVariants'
 import { Database } from '@/supabase/types'
 import { type CardData } from '@/utils/gameUtils'
-import { type GameMode } from '@/types/lobby'
+import { type GameMode } from '@/types/model'
 import { playCardActor, type PlayCardActorInput, type PlayCardActorOutput } from './actors/playCardActor'
 import { drawCardsActor, type DrawCardsActorInput } from './actors/drawCardsActor'
 import { passTurnActor, type PassTurnActorInput } from './actors/passTurnActor'

@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import type { TablesInsert } from '@/supabase/types'
 import type { Tables } from '@/supabase/types'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
+import { LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 
 export async function initializeGame(lobbyId: string) {
   const supabase = await createClient()

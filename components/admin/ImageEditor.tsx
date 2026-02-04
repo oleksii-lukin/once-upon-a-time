@@ -832,7 +832,15 @@ export default function ImageEditor({
             <Button
               variant={mode === 'crop' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setMode('crop')}
+              onClick={() => {
+                if (mode === 'crop') {
+                  setMode('view')
+                  setCropRect(null)
+                } else {
+                  setMode('crop')
+                  setCropRect(null)
+                }
+              }}
             >
               <Crop className="w-4 h-4 mr-2" />
               {t('admin.imageEditor.tool_crop')}
@@ -849,7 +857,10 @@ export default function ImageEditor({
               variant={mode === 'resize-canvas' ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
-                if (mode !== 'resize-canvas') {
+                if (mode === 'resize-canvas') {
+                  setMode('view')
+                  setCropRect(null)
+                } else {
                   setMode('resize-canvas')
                   setCropRect({ x: 0, y: 0, w: canvasDimensions.width, h: canvasDimensions.height })
                   setCropStart(null)
@@ -870,7 +881,7 @@ export default function ImageEditor({
             <Button
               variant={mode === 'magic' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setMode('magic')}
+              onClick={() => setMode(mode === 'magic' ? 'view' : 'magic')}
             >
               <Wand2 className="w-4 h-4 mr-2" />
               {t('admin.imageEditor.tool_magic')}
@@ -893,7 +904,7 @@ export default function ImageEditor({
             <Button
               variant={mode === 'eraser' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setMode('eraser')}
+              onClick={() => setMode(mode === 'eraser' ? 'view' : 'eraser')}
             >
               <Eraser className="w-4 h-4 mr-2" />
               {t('admin.imageEditor.tool_eraser')}

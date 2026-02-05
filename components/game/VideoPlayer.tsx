@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Layers as CardsIcon } from 'lucide-react'
-import { Database } from '@/supabase/types'
+import { type Player } from '@/types/model'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import { useTranslation } from 'react-i18next'
-
-type Player = Database['public']['Tables']['players']['Row']
 
 interface VideoPlayerProps {
   stream: MediaStream | null

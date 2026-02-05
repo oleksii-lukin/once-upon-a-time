@@ -1,10 +1,9 @@
 import { useCallback, useMemo, useEffect } from 'react'
-import { Database } from '@/supabase/types'
 import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { useMachine } from '@xstate/react'
 import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
-import { GameMode } from '@/types/lobby'
+import { GameMode, GameSession, Player } from '@/types/model'
 
 const inspector
   = process.env.NODE_ENV === 'development'
@@ -12,9 +11,6 @@ const inspector
     && localStorage.getItem('xstate-inspector') === 'enabled'
     ? createBrowserInspector()
     : null
-
-type Player = Database['public']['Tables']['players']['Row']
-type GameSession = Database['public']['Tables']['game_sessions']['Row']
 
 export const useGameEngine = (
   gameSession: GameSession | null,

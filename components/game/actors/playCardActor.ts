@@ -27,7 +27,7 @@
 
 import { fromPromise } from 'xstate'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
+import { PlayedCardWithCard as PlayedCardWithDetails } from '@/types/model'
 import { validateUUID, validateNonNegativeNumber } from '../validation'
 
 const supabase = createClient()
@@ -51,9 +51,7 @@ export interface PlayCardActorInput {
  * Output interface for the playCardActor
  * The record returned from the played_cards table
  */
-export type PlayCardActorOutput = Database['public']['Tables']['played_cards']['Row'] & {
-  cards: Database['public']['Tables']['cards']['Row']
-}
+export type PlayCardActorOutput = PlayedCardWithDetails
 
 /**
  * Validates PlayCardActorInput parameters

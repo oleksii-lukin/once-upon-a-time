@@ -5,7 +5,7 @@ import { Check as CheckIcon } from 'lucide-react'
 import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
+import { type Lobby, type Player, type Deck, LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import { useParams } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/client'
@@ -14,13 +14,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import CopyButton from '@/components/common/CopyButton'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import LobbySettingToggle from './LobbySettingToggle'
 import GameModeTabs from './GameModeTabs'
-
-type Lobby = Database['public']['Tables']['lobbies']['Row']
-type Player = Database['public']['Tables']['players']['Row']
-type Deck = Database['public']['Tables']['decks']['Row']
 
 type LobbyPresence = {
   player_id?: string
@@ -63,7 +58,7 @@ export default function UserLobbyView({
         .select('*')
         .eq('is_active', true)
       if (data) {
-        setDecks(data)
+        setDecks(data as unknown as Deck[])
         // Get selected decks from lobby settings
         if (currentLobby.settings && typeof currentLobby.settings === 'object') {
           const parsed = LobbySettingsSchema.safeParse(currentLobby.settings)
@@ -83,7 +78,7 @@ export default function UserLobbyView({
       .select('*')
       .eq('lobby_id', lobby.id)
       .order('joined_at', { ascending: true })
-    if (data) setPlayers(data)
+    if (data) setPlayers(data as Player[])
   }, [supabase, lobby.id])
 
   useEffect(() => {

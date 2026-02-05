@@ -3,16 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Sword as SwordIcon, Hourglass as HourglassIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import { useRouter, useParams } from 'next/navigation'
 import { getGuestId } from '@/lib/auth/guest'
 import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
-import { LobbySettingsSchema } from '@/types/lobby'
-
-export type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
-  players: { count: number }[]
-}
+import { LobbyWithPlayerCount as Lobby, LobbySettingsSchema } from '@/types/model'
 
 import { useUser } from '@clerk/nextjs'
 import { getGuestIdentity } from '@/lib/auth/guestIdentity'
@@ -35,7 +30,7 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
       .order('created_at', { ascending: false })
 
     if (data) {
-      const filtered = data.filter((lobby: Lobby) => {
+      const filtered = (data as unknown as Lobby[]).filter((lobby) => {
         // If not playing, always show
         if (lobby.status !== 'playing') return true
 

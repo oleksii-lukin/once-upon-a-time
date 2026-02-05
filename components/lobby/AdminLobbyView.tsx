@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
+import { type Lobby, type Player, type Deck, LobbySettingsSchema, defaultLobbySettings, type LobbySettings } from '@/types/model'
 import { initializeGame } from '@/app/actions/game'
 import { getTranslation } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
@@ -12,16 +12,9 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import CopyButton from '@/components/common/CopyButton'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
-import type { LobbySettings } from '@/types/lobby'
 import LobbySettingToggle from './LobbySettingToggle'
-
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import GameModeTabs from './GameModeTabs'
-
-type Lobby = Database['public']['Tables']['lobbies']['Row']
-type Player = Database['public']['Tables']['players']['Row']
-type Deck = Database['public']['Tables']['decks']['Row']
 
 type LobbyPresence = {
   player_id?: string
@@ -121,7 +114,7 @@ export default function AdminLobbyView({
         .from('decks')
         .select('*')
         .eq('is_active', true)
-      if (data) setDecks(data)
+      if (data) setDecks(data as unknown as Deck[])
     }
     fetchDecks()
   }, [supabase])
@@ -134,7 +127,7 @@ export default function AdminLobbyView({
         .select('*')
         .eq('lobby_id', lobby.id)
         .order('joined_at', { ascending: true })
-      if (data) setPlayers(data)
+      if (data) setPlayers(data as Player[])
     }
 
     // Subscribe to player changes

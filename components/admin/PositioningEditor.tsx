@@ -4,16 +4,16 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Maximize, Save, X, RotateCcw, TypeIcon, ImageIcon, UserIcon, type LucideIcon } from 'lucide-react'
 
-import { Database } from '@/supabase/types'
-import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/card'
+import { CardLayout, defaultCardLayout, LayoutElement } from '@/types/model'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
-import Card from '@/components/game/Card'
+import CardComponent from '@/components/game/Card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Card } from '@/types/model'
 
 interface PositioningEditorProps {
   isOpen: boolean
@@ -21,7 +21,7 @@ interface PositioningEditorProps {
   layout: CardLayout
   onApply: (layout: CardLayout) => void
   borderImageUrl?: string
-  cards: Database['public']['Tables']['cards']['Row'][]
+  cards: Card[]
   categoryImages: Record<string, string>
 }
 
@@ -191,7 +191,7 @@ export default function PositioningEditor({ isOpen, onClose, layout, onApply, bo
               {/* Actual Live Card Preview */}
               {previewCard && (
                 <div className="absolute inset-0 pointer-events-none">
-                  <Card
+                  <CardComponent
                     card={{
                       ...previewCard,
                       category: previewCard.category,

@@ -5,9 +5,8 @@ import {
   fullStorytellingMachine,
   soloStorytellingMachine,
 } from './ruleVariants'
-import { Database } from '@/supabase/types'
+import { type GameMode, type Player } from '@/types/model'
 import { type CardData } from '@/utils/gameUtils'
-import { type GameMode } from '@/types/lobby'
 import { playCardActor, type PlayCardActorInput, type PlayCardActorOutput } from './actors/playCardActor'
 import { drawCardsActor, type DrawCardsActorInput } from './actors/drawCardsActor'
 import { passTurnActor, type PassTurnActorInput } from './actors/passTurnActor'
@@ -15,8 +14,6 @@ import { confirmCardActor, type ConfirmCardActorInput } from './actors/confirmCa
 import { finalizeWinActor, type FinalizeWinActorInput } from './actors/finalizeWinActor'
 import { objectActor, type ObjectActorInput } from './actors/objectActor'
 import { exchangeCardActor, type ExchangeCardActorInput } from './actors/exchangeCardActor'
-
-type Player = Database['public']['Tables']['players']['Row']
 
 /**
  * Main context interface for the XState game machine.

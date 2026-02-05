@@ -1,6 +1,7 @@
 import { Database } from '@/supabase/types'
+import { Card } from '@/types/model'
 
-export type CardData = Database['public']['Tables']['cards']['Row']
+export type CardData = Card
 export type PartialCardData = Partial<CardData>
 
 /**
@@ -35,7 +36,7 @@ export interface PlayedCardData extends CardData {
 
 export function getLocalizedCardContent(card: PartialCardData, language: string) {
   if (card.translations) {
-    const translations = (card.translations || {}) as Record<string, { name?: string, description?: string, usage_examples?: string } | undefined>
+    const translations = card.translations
     const localized = translations[language]
 
     if (localized) {
@@ -54,4 +55,30 @@ export function getLocalizedCardContent(card: PartialCardData, language: string)
     usage_examples: card.usage_examples,
     type: card.category,
   }
+}
+
+export function normalizeTypeKey(raw?: string) {
+  const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+  const map: Record<string, string> = {
+    endings: 'ending',
+    ending: 'ending',
+    catalysts: 'catalyst',
+    catalyst: 'catalyst',
+    characters: 'character',
+    character: 'character',
+    protagonists: 'protagonist',
+    protagonist: 'protagonist',
+    antagonists: 'antagonist',
+    antagonist: 'antagonist',
+    settings: 'setting',
+    setting: 'setting',
+    objects: 'object',
+    object: 'object',
+    traits: 'trait',
+    trait: 'trait',
+    aspects: 'aspect',
+    aspect: 'aspect',
+    card: 'card',
+  }
+  return map[s] || 'card'
 }

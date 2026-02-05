@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import ImageUpload from './ImageUpload'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
@@ -15,25 +14,12 @@ import { generateCardFieldAction } from '@/app/actions/ai'
 import type { CardFieldType } from '@/lib/ai/prompts'
 import { toast } from 'sonner'
 
-type Card = Database['public']['Tables']['cards']['Row'] & {
-  type: 'story' | 'ending'
-  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null
-  translations?: {
-    [key: string]: {
-      name: string
-      description: string
-      usage_examples: string
-    }
-  }
-}
+import { Card, CardCategory, TranslationEntry, CardType } from '@/types/model'
 
 type LangCode = 'en' | 'ru' | 'ua'
-type TranslationEntry = {
-  name: string
-  description: string
-  usage_examples: string
-}
+// TranslationEntry imported from model
 type Translations = Record<Exclude<LangCode, 'en'>, TranslationEntry>
+// GeneratedCardData uses TranslationEntry
 type GeneratedCardData = Record<LangCode, TranslationEntry>
 type FormField = 'name' | 'description' | 'usage_examples'
 type FormData = {
@@ -41,8 +27,8 @@ type FormData = {
   description: string
   usage_examples: string
   image_url: string
-  type: 'story' | 'ending'
-  category: 'protagonist' | 'antagonist' | 'setting' | 'object' | 'catalyst' | 'trait' | null
+  type: CardType
+  category: CardCategory
   translations: Translations
 }
 
@@ -89,7 +75,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const [discardedNames, setDiscardedNames] = useState<string[]>([])
 
   // Define categories for filter checkboxes with color coding
-  const categoryColors: Record<string, { bg: string, text: string, border: string }> = {
+  const categoryColors: Record<Card['category'] | 'all', { bg: string, text: string, border: string }> = {
     all: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
     ending: { bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-600' },
     protagonist: { bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-600' },
@@ -100,15 +86,15 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     trait: { bg: 'bg-indigo-500', text: 'text-white', border: 'border-indigo-600' },
   }
 
-  const categories = [
-    { id: 'all', label: t('admin.deckEditor.filter_all') },
-    { id: 'ending', label: t('game.ending_card_label') },
-    { id: 'protagonist', label: t('admin.deckEditor.categories.protagonist') },
-    { id: 'antagonist', label: t('admin.deckEditor.categories.antagonist') },
-    { id: 'setting', label: t('admin.deckEditor.categories.setting') },
-    { id: 'object', label: t('admin.deckEditor.categories.object') },
-    { id: 'catalyst', label: t('admin.deckEditor.categories.catalyst') },
-    { id: 'trait', label: t('admin.deckEditor.categories.trait') },
+  const categories: { category: CardCategory | 'all', label: string }[] = [
+    { category: 'all', label: t('admin.deckEditor.filter_all') },
+    { category: 'ending', label: t('game.ending_card_label') },
+    { category: 'protagonist', label: t('admin.deckEditor.categories.protagonist') },
+    { category: 'antagonist', label: t('admin.deckEditor.categories.antagonist') },
+    { category: 'setting', label: t('admin.deckEditor.categories.setting') },
+    { category: 'object', label: t('admin.deckEditor.categories.object') },
+    { category: 'catalyst', label: t('admin.deckEditor.categories.catalyst') },
+    { category: 'trait', label: t('admin.deckEditor.categories.trait') },
   ]
 
   const fetchCards = useCallback(async () => {
@@ -161,8 +147,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       matchesCategory = true
     }
     else {
-      const cardCategory = card.category || 'protagonist'
-      matchesCategory = selectedCategories.has(cardCategory)
+      matchesCategory = selectedCategories.has(card.category)
     }
 
     return matchesSearch && matchesCategory
@@ -172,9 +157,6 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const getCategoryCount = (categoryId: string) => {
     if (categoryId === 'all') {
       return cards.length
-    }
-    if (categoryId === 'ending') {
-      return cards.filter(card => card.type === 'ending').length
     }
     return cards.filter(card => card.category === categoryId).length
   }
@@ -202,8 +184,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
         description: card.description || '',
         usage_examples: card.usage_examples || '',
         image_url: card.image_url || '',
-        type: card.type || 'story',
-        category: card.category || 'protagonist',
+        type: card.type,
+        category: card.category,
         translations: {
           ru: {
             name: card.translations?.ru?.name || '',
@@ -281,7 +263,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
       usage_examples: formData.usage_examples,
       image_url: formData.image_url || null, // Send null if empty
       type: formData.type,
-      category: formData.type === 'story' ? formData.category : 'ending',
+      category: formData.category,
       translations: translationsToSave,
     }
 
@@ -398,9 +380,8 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     const existingNames = cards
       .filter(c => c.id !== selectedCard?.id) // Don't exclude itself if editing
       .filter((c) => {
-        const cardCategory = c.category || 'ending'
         const formCategory = formData.type === 'story' ? formData.category : 'ending'
-        return c.type === formData.type && cardCategory === formCategory
+        return c.type === formData.type && c.category === formCategory
       })
       .map(c => c.name)
 
@@ -494,22 +475,21 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
           />
           <div className="flex flex-wrap gap-2 text-xs">
             {categories.map((cat) => {
-              const colors = categoryColors[cat.id]
-              const isSelected = selectedCategories.has(cat.id)
+              const colors = categoryColors[cat.category]
+              const isSelected = selectedCategories.has(cat.category)
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => toggleCategory(cat.id)}
-                  className={`px-2 py-1 rounded border transition-colors ${
-                    isSelected
-                      ? `${colors.bg} ${colors.text} ${colors.border} border-2`
-                      : `bg-card text-muted-foreground border-border hover:border-primary/50`
+                  key={cat.category}
+                  onClick={() => toggleCategory(cat.category)}
+                  className={`px-2 py-1 rounded border transition-colors ${isSelected
+                    ? `${colors.bg} ${colors.text} ${colors.border} border-2`
+                    : `bg-card text-muted-foreground border-border hover:border-primary/50`
                   }`}
                 >
                   {cat.label}
                   {' '}
                   (
-                  {getCategoryCount(cat.id)}
+                  {getCategoryCount(cat.category)}
                   )
                 </button>
               )
@@ -534,21 +514,17 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                   <TableCell className="px-4 py-3 text-sm text-foreground font-medium">
                     <div className="flex justify-between items-center">
                       <span>{card.name}</span>
-                      <span
-                        className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${
-                          card.type === 'ending'
-                            ? `${categoryColors.ending.bg} ${categoryColors.ending.text} border ${categoryColors.ending.border}`
-                            : categoryColors[card.category || 'protagonist']?.bg
-                              && categoryColors[card.category || 'protagonist']?.text
-                              && categoryColors[card.category || 'protagonist']?.border
-                              ? `${categoryColors[card.category || 'protagonist'].bg} ${categoryColors[card.category || 'protagonist'].text} border ${categoryColors[card.category || 'protagonist'].border}`
-                              : 'bg-gray-100 text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {card.type === 'ending'
-                          ? 'END'
-                          : (card.category || 'STY').substring(0, 3)}
-                      </span>
+                      {(() => {
+                        const cat = card.category
+                        const colors = categoryColors[cat]
+                        return (
+                          <span
+                            className={`text-[10px] uppercase px-1 rounded ml-2 font-medium ${colors.bg} ${colors.text} border ${colors.border}`}
+                          >
+                            {cat === 'ending' ? 'END' : cat.substring(0, 3)}
+                          </span>
+                        )
+                      })()}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -691,11 +667,15 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 <span className="text-muted-foreground text-sm font-medium block mb-1">{t('type')}</span>
                 <select
                   value={formData.type}
-                  onChange={e =>
+                  onChange={(e) => {
+                    const newType = e.target.value as 'story' | 'ending'
                     setFormData({
                       ...formData,
-                      type: (e.target.value === 'ending' ? 'ending' : 'story'),
-                    })}
+                      type: newType,
+                      // When switching to ending, automatically set category to ending
+                      category: newType === 'ending' ? 'ending' : (formData.category === 'ending' ? 'protagonist' : formData.category),
+                    })
+                  }}
                   className="w-full rounded-md bg-background border border-border p-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
                 >
                   <option value="story">{t('admin.deckEditor.type.story')}</option>
@@ -706,7 +686,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
                 <label className="block">
                   <span className="text-muted-foreground text-sm font-medium block mb-1">{t('category')}</span>
                   <select
-                    value={formData.category || 'protagonist'}
+                    value={formData.category}
                     onChange={e =>
                       setFormData({
                         ...formData,

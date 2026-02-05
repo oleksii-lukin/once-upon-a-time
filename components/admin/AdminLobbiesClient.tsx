@@ -3,13 +3,10 @@
 import { useState } from 'react'
 import { X as CrossIcon } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
-type Lobby = Database['public']['Tables']['lobbies']['Row'] & {
-  players: { count: number }[]
-}
+import { LobbyWithPlayerCount as Lobby } from '@/types/model'
 
 interface AdminLobbiesClientProps {
   lobbies: Lobby[]

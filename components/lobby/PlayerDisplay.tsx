@@ -1,9 +1,7 @@
 'use client'
 
 import { generateGuestIdentity } from '@/lib/auth/guestIdentity'
-import { Database } from '@/supabase/types'
-
-type Player = Database['public']['Tables']['players']['Row']
+import { type Player } from '@/types/model'
 
 interface PlayerAvatarProps {
   player: Player

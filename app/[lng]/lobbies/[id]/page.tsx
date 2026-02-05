@@ -3,6 +3,7 @@ import LobbyManager from '@/components/lobby/LobbyManager'
 import { notFound } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
 import { cookies } from 'next/headers'
+import { Lobby } from '@/types/model'
 
 export default async function LobbyDetailsPage({
   params,
@@ -46,7 +47,7 @@ export default async function LobbyDetailsPage({
   return (
     <div className="min-h-screen bg-background">
       <LobbyManager
-        initialLobby={lobby}
+        initialLobby={lobby as Lobby}
         initialPlayers={players || []}
         isHost={isHost}
         userId={userId}

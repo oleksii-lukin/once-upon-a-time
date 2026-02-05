@@ -10,8 +10,8 @@ def escape_sql(text):
     """Escape single quotes for SQL"""
     return text.replace("'", "''")
 
-def create_translation_json(name, description, usage_examples, ru_name=None, ru_desc=None, ru_usage=None, ua_name=None, ua_desc=None, ua_usage=None):
-    """Create the translations JSONB structure"""
+def create_translation_json(name, description, usage_examples, ru_name=None, ru_desc=None, ru_usage=None, ua_name=None, ua_desc=None, ua_usage=None, image_urls=None):
+    """Create the translations JSONB structure with locale-specific image support"""
     translations = {
         "en": {
             "name": name,
@@ -29,6 +29,23 @@ def create_translation_json(name, description, usage_examples, ru_name=None, ru_
             "usage_examples": ua_usage if ua_usage else f"[UA] {usage_examples}"
         }
     }
+    
+    # Add locale-specific image URLs if provided
+    if image_urls:
+        # image_urls structure: {'locale_images': {'en': 'url1', 'ru': 'url2'}, 'generic_image': 'url3'}
+        locale_images = image_urls.get('locale_images', {})
+        generic_image = image_urls.get('generic_image')
+        
+        # Add image URLs to each locale, with fallback logic
+        for locale in ['en', 'ru', 'ua']:
+            if locale in locale_images:
+                # Use locale-specific image
+                translations[locale]['image_url'] = locale_images[locale]
+            elif generic_image:
+                # Fall back to generic image
+                translations[locale]['image_url'] = generic_image
+            # If no image available, don't add image_url field
+    
     # Return as compact JSON string, escaping single quotes
     return escape_sql(json.dumps(translations, ensure_ascii=False, separators=(',', ':')))
 
@@ -701,16 +718,129 @@ VALUES (
 
 """
 
+import json
+import os
+import subprocess
+import sys
+import tempfile
 import uuid
 
-def generate_card_inserts(cards, card_type, category, label=None):
-    """Generate INSERT statements for a category of cards"""
+def upload_deck_images(deck_name: str = "default") -> dict:
+    """
+    Call upload_images.py subprocess to upload images and return URL mappings.
+    
+    Args:
+        deck_name: Name of the deck to process images for
+        
+    Returns:
+        Dictionary with deck_images and card_images URL mappings
+        Returns empty structure if upload fails
+    """
+    print(f"🖼️  Uploading images for deck: {deck_name}")
+    
+    # Create temporary file for JSON output
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+        temp_json_path = temp_file.name
+    
+    try:
+        # Build command to call upload_images.py
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        upload_script = os.path.join(script_dir, "upload_images.py")
+        
+        cmd = [
+            sys.executable,  # Use the same Python interpreter
+            upload_script,
+            "--deck", deck_name,
+            "--output-json", temp_json_path,
+            "--verbosity", "normal"  # Moderate verbosity for seed generation
+        ]
+        
+        print(f"📤 Running: {' '.join(cmd)}")
+        
+        # Execute upload_images.py
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout
+        )
+        
+        if result.returncode == 0:
+            print("✅ Image upload completed successfully")
+            
+            # Read and parse JSON output
+            try:
+                with open(temp_json_path, 'r', encoding='utf-8') as f:
+                    image_urls = json.load(f)
+                
+                # Log summary of what was uploaded
+                deck_images = image_urls.get('deck_images', {})
+                card_images = image_urls.get('card_images', {})
+                
+                total_deck_images = 0
+                total_card_images = 0
+                
+                for deck_data in deck_images.values():
+                    if 'card_back_image_url' in deck_data:
+                        total_deck_images += 1
+                    if 'bg_image_url' in deck_data:
+                        total_deck_images += 1
+                    if 'category_images' in deck_data:
+                        total_deck_images += len(deck_data['category_images'])
+                
+                for card_data in card_images.values():
+                    total_card_images += len(card_data)
+                
+                print(f"📊 Upload summary: {total_deck_images} deck images, {total_card_images} card images")
+                
+                return image_urls
+                
+            except (json.JSONDecodeError, FileNotFoundError) as e:
+                print(f"⚠️  Failed to read JSON output: {e}")
+                print("📝 Continuing without image URLs")
+                return {"deck_images": {}, "card_images": {}}
+        
+        else:
+            print(f"⚠️  Image upload failed with return code: {result.returncode}")
+            if result.stderr:
+                print(f"📝 Error output: {result.stderr}")
+            if result.stdout:
+                print(f"📝 Standard output: {result.stdout}")
+            print("📝 Continuing without image URLs")
+            return {"deck_images": {}, "card_images": {}}
+    
+    except subprocess.TimeoutExpired:
+        print("⚠️  Image upload timed out after 5 minutes")
+        print("📝 Continuing without image URLs")
+        return {"deck_images": {}, "card_images": {}}
+    
+    except Exception as e:
+        print(f"⚠️  Unexpected error during image upload: {e}")
+        print("📝 Continuing without image URLs")
+        return {"deck_images": {}, "card_images": {}}
+    
+    finally:
+        # Clean up temporary file
+        try:
+            if os.path.exists(temp_json_path):
+                os.unlink(temp_json_path)
+        except Exception:
+            pass  # Ignore cleanup errors
+
+def generate_card_inserts(cards, card_type, category, label=None, image_urls=None):
+    """Generate INSERT statements for a category of cards with locale-specific image support"""
     category_label = label if label else (category.title() if category else "Endings")
     result = f"-- Insert {category_label} ({len(cards)} cards)\n"
-    result += 'INSERT INTO "public"."cards" (id, deck_id, name, description, type, category, usage_examples, translations) VALUES\n'
+    result += 'INSERT INTO "public"."cards" (id, deck_id, name, description, type, category, usage_examples, translations, image_url) VALUES\n'
     
     card_values = []
     deck_id = '00000000-0000-0000-0000-000000000001'
+    
+    # Get card images for this deck
+    deck_card_images = {}
+    if image_urls and 'card_images' in image_urls:
+        for deck_name, cards_dict in image_urls['card_images'].items():
+            deck_card_images.update(cards_dict)
     
     for card_data in cards:
         if len(card_data) == 3:
@@ -725,10 +855,37 @@ def generate_card_inserts(cards, card_type, category, label=None):
         # This ensures the same card always gets the same ID, allowing for idempotent updates
         card_id = str(uuid.uuid5(uuid.UUID(deck_id), name))
 
-        translations_json = create_translation_json(name, description, usage_examples, ru_name, ru_desc, ru_usage, ua_name, ua_desc, ua_usage)
+        # Get image URLs for this card (locale-specific and generic)
+        card_image_urls = deck_card_images.get(name)
+        
+        # Create translations with locale-specific image URLs
+        translations_json = create_translation_json(
+            name, description, usage_examples, 
+            ru_name, ru_desc, ru_usage, 
+            ua_name, ua_desc, ua_usage,
+            image_urls=card_image_urls
+        )
+        
         cat_value = f"'{category}'" if category else "NULL"
         
-        card_sql = f"""('{card_id}', '{deck_id}', '{escape_sql(name)}', '{escape_sql(description)}', '{card_type}', {cat_value}, '{escape_sql(usage_examples)}', '{translations_json}')"""
+        # For backward compatibility, use generic image or first available locale image for image_url field
+        image_url = None
+        if card_image_urls:
+            if isinstance(card_image_urls, dict):
+                # New structure with locale-specific images
+                if 'generic_image' in card_image_urls:
+                    image_url = card_image_urls['generic_image']
+                elif 'locale_images' in card_image_urls and card_image_urls['locale_images']:
+                    # Use first available locale image as fallback
+                    first_locale = next(iter(card_image_urls['locale_images']))
+                    image_url = card_image_urls['locale_images'][first_locale]
+            else:
+                # Old structure (direct URL string)
+                image_url = card_image_urls
+        
+        image_url_sql = f"'{image_url}'" if image_url else "NULL"
+        
+        card_sql = f"""('{card_id}', '{deck_id}', '{escape_sql(name)}', '{escape_sql(description)}', '{card_type}', {cat_value}, '{escape_sql(usage_examples)}', '{translations_json}', {image_url_sql})"""
         card_values.append(card_sql)
     
     result += ',\n'.join(card_values)
@@ -738,17 +895,70 @@ def generate_card_inserts(cards, card_type, category, label=None):
     result += '  type = EXCLUDED.type,\n'
     result += '  category = EXCLUDED.category,\n'
     result += '  usage_examples = EXCLUDED.usage_examples,\n'
-    result += '  translations = EXCLUDED.translations;\n\n'
+    result += '  translations = EXCLUDED.translations,\n'
+    result += '  image_url = EXCLUDED.image_url;\n\n'
     return result
 
-# Generate all card inserts
-sql_output += generate_card_inserts(protagonists, 'story', 'protagonist')
-sql_output += generate_card_inserts(antagonists, 'story', 'antagonist')
-sql_output += generate_card_inserts(settings, 'story', 'setting')
-sql_output += generate_card_inserts(objects, 'story', 'object')
-sql_output += generate_card_inserts(catalysts, 'story', 'catalyst')
-sql_output += generate_card_inserts(traits, 'story', 'trait')
-sql_output += generate_card_inserts(endings, 'ending', None)
+def generate_deck_insert(deck_name: str = "default", image_urls: dict = None) -> str:
+    """Generate INSERT statement for deck with image URLs and layout configuration"""
+    deck_id = '00000000-0000-0000-0000-000000000001'
+    
+    # Get deck images for this deck
+    deck_images = {}
+    if image_urls and 'deck_images' in image_urls:
+        deck_images = image_urls['deck_images'].get(deck_name, {})
+    
+    # Extract image URLs
+    card_back_image_url = deck_images.get('card_back_image_url')
+    bg_image_url = deck_images.get('bg_image_url')
+    category_images = deck_images.get('category_images', {})
+    layout_config = deck_images.get('layout_config', {})
+    
+    # Format SQL values
+    card_back_sql = f"'{card_back_image_url}'" if card_back_image_url else "NULL"
+    bg_image_sql = f"'{bg_image_url}'" if bg_image_url else "NULL"
+    
+    # Format category_images as JSONB
+    category_images_sql = "NULL"
+    if category_images:
+        category_json = json.dumps(category_images, ensure_ascii=False, separators=(',', ':'))
+        category_images_sql = f"'{escape_sql(category_json)}'"
+    
+    # Format layout_config as JSONB
+    layout_config_sql = "NULL"
+    if layout_config:
+        layout_json = json.dumps(layout_config, ensure_ascii=False, separators=(',', ':'))
+        layout_config_sql = f"'{escape_sql(layout_json)}'"
+    
+    result = f"""-- Insert deck: {deck_name}
+INSERT INTO "public"."decks" (id, name, description, card_back_image_url, bg_image_url, category_images, card_layout) VALUES
+('{deck_id}', '{escape_sql(deck_name)}', 'Default story deck with protagonists, antagonists, settings, objects, catalysts, traits, and endings', {card_back_sql}, {bg_image_sql}, {category_images_sql}, {layout_config_sql})
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
+  card_back_image_url = EXCLUDED.card_back_image_url,
+  bg_image_url = EXCLUDED.bg_image_url,
+  category_images = EXCLUDED.category_images,
+  card_layout = EXCLUDED.card_layout;
+
+"""
+    return result
+
+# Upload images before generating SQL
+print("🚀 Starting seed generation with image upload...")
+image_urls = upload_deck_images(deck_name="default")
+
+# Generate deck insert with image URLs
+sql_output += generate_deck_insert(deck_name="default", image_urls=image_urls)
+
+# Generate all card inserts with image URLs
+sql_output += generate_card_inserts(protagonists, 'story', 'protagonist', image_urls=image_urls)
+sql_output += generate_card_inserts(antagonists, 'story', 'antagonist', image_urls=image_urls)
+sql_output += generate_card_inserts(settings, 'story', 'setting', image_urls=image_urls)
+sql_output += generate_card_inserts(objects, 'story', 'object', image_urls=image_urls)
+sql_output += generate_card_inserts(catalysts, 'story', 'catalyst', image_urls=image_urls)
+sql_output += generate_card_inserts(traits, 'story', 'trait', image_urls=image_urls)
+sql_output += generate_card_inserts(endings, 'ending', None, image_urls=image_urls)
 
 # Write to file
 import os
@@ -759,7 +969,8 @@ seed_path = os.path.join(project_root, 'supabase', 'seed.sql')
 with open(seed_path, 'w', encoding='utf-8') as f:
     f.write(sql_output)
 
-print("✅ Generated seed.sql with i18n support for 210 cards")
+print("✅ Generated seed.sql with i18n support and image URLs for 210 cards")
 print(f"📁 File location: {seed_path}")
 print("📝 Translations structure: EN (complete), RU and UA (placeholders with [RU]/[UA] prefix)")
+print("🖼️  Image URLs: Integrated from upload_images.py (if available)")
 print("🔄 Next step: Replace [RU] and [UA] placeholders with actual translations")

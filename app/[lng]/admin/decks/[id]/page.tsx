@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTranslation } from '@/app/i18n/server'
 import { ArrowLeft as ArrowLeftIcon } from 'lucide-react'
-import { Deck } from '@/types/deck'
+import { Deck } from '@/types/model'
 
 export default async function DeckDetailsPage({
   params,

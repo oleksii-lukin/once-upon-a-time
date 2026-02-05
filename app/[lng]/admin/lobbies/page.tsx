@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { getTranslation } from '@/app/i18n/server'
 import AdminLobbiesClient from '@/components/admin/AdminLobbiesClient'
+import { LobbyWithPlayerCount as Lobby } from '@/types/model'
 
 export default async function AdminLobbiesPage({ params }: { params: Promise<{ lng: string }> }) {
   const { lng } = await params
@@ -22,7 +23,7 @@ export default async function AdminLobbiesPage({ params }: { params: Promise<{ l
         </div>
       </div>
 
-      <AdminLobbiesClient lobbies={lobbies || []} lng={lng} />
+      <AdminLobbiesClient lobbies={lobbies as Lobby[]} lng={lng} />
     </div>
   )
 }

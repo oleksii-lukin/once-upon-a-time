@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { z } from 'zod'
-import { Database } from '@/supabase/types'
+import { type Lobby, type Player, type GameSession, type Deck, CardLayout, LobbySettingsSchema, defaultLobbySettings, type CardCategory, CardType } from '@/types/model'
 import { createClient } from '@/utils/supabase/client'
 import PlayerHand from './PlayerHand'
 import TableArea from './TableArea'
@@ -11,18 +11,11 @@ import TurnControls from './TurnControls'
 import GameCompletionOverlay from './GameCompletionOverlay'
 import CardDetailsOverlay from './CardDetailsOverlay'
 import { useGameEngine } from './useGameEngine'
-import { LobbySettingsSchema, defaultLobbySettings } from '@/types/lobby'
 import { useRouter, useParams } from 'next/navigation'
 import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
-import { CardLayout } from '@/types/card'
 
 // Default background image URL for game when no deck background is provided
 const DEFAULT_BACKGROUND_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys'
-
-type Lobby = Database['public']['Tables']['lobbies']['Row']
-type Player = Database['public']['Tables']['players']['Row']
-type GameSession = Database['public']['Tables']['game_sessions']['Row']
-type Deck = Database['public']['Tables']['decks']['Row']
 
 const GameSessionSchema = z.object({
   id: z.string(),
@@ -82,7 +75,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           .select('*')
           .eq('id', lobby.deck_id!)
           .single()
-        if (data) setDeck(data)
+        if (data) setDeck(data as unknown as Deck)
       }
       fetchDeck()
     }
@@ -108,14 +101,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
         .order('played_at', { ascending: true })
 
       if (playedData) {
-        const fetchedCards: PlayedCardData[] = playedData.map(item => ({
+        const fetchedCards = playedData.map(item => ({
           ...item.cards,
-          type: item.cards.category ?? 'card',
+          category: item.cards.category as CardCategory,
+          type: item.cards.type as CardType,
           played_by: item.player_id,
           status: item.status,
           played_card_id: item.id,
         }))
-        setPlayedCards(fetchedCards)
+        setPlayedCards(fetchedCards as PlayedCardData[])
       }
 
       // Fetch player's hand
@@ -128,13 +122,14 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           .order('position')
 
         if (handData) {
-          const cardsWithType: HandCardData[] = handData.map(item => ({
+          const cardsWithType = handData.map(item => ({
             ...item.cards,
-            type: item.cards.category ?? 'card',
+            category: item.cards.category as CardCategory,
+            type: item.cards.type as CardType,
             hand_id: item.id,
             position: item.position,
           }))
-          setHand(cardsWithType)
+          setHand(cardsWithType as HandCardData[])
         }
       }
 

@@ -1,39 +1,10 @@
 'use client'
 
-function normalizeTypeKey(raw?: string) {
-  const s = (raw || '').trim().toLowerCase().replace(/[\s-]+/g, '_')
-  const map: Record<string, string> = {
-    endings: 'ending',
-    ending: 'ending',
-    catalysts: 'catalyst',
-    catalyst: 'catalyst',
-    characters: 'character',
-    character: 'character',
-    protagonists: 'protagonist',
-    protagonist: 'protagonist',
-    antagonists: 'antagonist',
-    antagonist: 'antagonist',
-    settings: 'setting',
-    setting: 'setting',
-    objects: 'object',
-    object: 'object',
-    traits: 'trait',
-    trait: 'trait',
-    aspects: 'aspect',
-    aspect: 'aspect',
-    card: 'card',
-  }
-  return map[s] || 'card'
-}
-
-import { type CardData } from '@/utils/gameUtils'
+import { type CardData, getLocalizedCardContent, normalizeTypeKey } from '@/utils/gameUtils'
 import { useTranslation } from 'react-i18next'
-import { getLocalizedCardContent } from '@/utils/gameUtils'
 import Image from 'next/image'
-import { CardLayout, parseCardLayout } from '@/types/card'
+import { CardLayout, parseCardLayout } from '@/types/model'
 import { Info as InfoIcon } from 'lucide-react'
-
-// ... normalizeTypeKey stays at top ...
 
 interface CardProps {
   card: Partial<CardData> // Allow partial for now as we might mock data
@@ -63,8 +34,7 @@ const typeColorMap: Record<string, string> = {
 export default function Card({ card, isHoverable = false, onClick, className = '', cardBackImageUrl, categoryImages, layout, onShowDetails, showInfoButton }: CardProps) {
   const { t, i18n } = useTranslation()
   const localizedContent = getLocalizedCardContent(card, i18n.language)
-
-  const typeKey = normalizeTypeKey(localizedContent.type || '')
+  const typeKey = normalizeTypeKey(card.category)
   const localizedType = t(`card_types.${typeKey}`, { defaultValue: t('card_types.card') })
 
   const cardLayout = parseCardLayout(layout)

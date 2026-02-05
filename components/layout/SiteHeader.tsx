@@ -3,16 +3,20 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { ClerkLoaded, ClerkLoading, SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
 import { languages } from '@/app/i18n/settings'
 import { getTranslation } from '@/app/i18n/client'
-import CustomUserButton from '@/components/clerk/CustomUserButton'
 
 const ThemeToggle = dynamic(() => import('@/components/theme/ThemeToggle'), {
   ssr: false,
   loading: () => (
     <div className="h-9 w-9 rounded-md border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/10" />
   ),
+})
+
+const AuthSection = dynamic(() => import('./AuthSection'), {
+  ssr: false,
+  loading: () => <div className="w-8 h-8 bg-white/10 animate-pulse" />,
 })
 
 export default function SiteHeader({ lng }: { lng: string }) {
@@ -74,25 +78,7 @@ export default function SiteHeader({ lng }: { lng: string }) {
             ))}
           </div>
           <ThemeToggle />
-          <ClerkLoading>
-            <div className="w-8 h-8 bg-white/10 animate-pulse" />
-          </ClerkLoading>
-          <ClerkLoaded>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-black/10 dark:border-white/10 transition-all text-sm">
-                  {t('sign_in')}
-                </button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <div className="relative w-8 h-8">
-                <div className="relative w-8 h-8 overflow-hidden">
-                  <CustomUserButton />
-                </div>
-              </div>
-            </SignedIn>
-          </ClerkLoaded>
+          <AuthSection t={t} />
         </div>
       </div>
     </header>

@@ -3,14 +3,11 @@
 import { useState, useEffect } from 'react'
 import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
+import { type Lobby, type Player } from '@/types/model'
 import AdminLobbyView from './AdminLobbyView'
 import UserLobbyView from './UserLobbyView'
 import GameView from '../game/GameView'
 import usePlayerHeartbeat from '../game/usePlayerHeartbeat'
-
-type Lobby = Database['public']['Tables']['lobbies']['Row']
-type Player = Database['public']['Tables']['players']['Row']
 
 interface LobbyManagerProps {
   initialLobby: Lobby

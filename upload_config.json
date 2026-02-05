@@ -1,0 +1,42 @@
+{
+  "retry": {
+    "max_attempts": 3,
+    "timeout_seconds": 30,
+    "backoff_factor": 1.0,
+    "status_codes_to_retry": [
+      429,
+      500,
+      502,
+      503,
+      504
+    ]
+  },
+  "upload": {
+    "max_concurrent_uploads": 5,
+    "max_file_size_mb": 4,
+    "compression_threshold_mb": 2,
+    "compression_quality": 85,
+    "max_image_dimension": 10000
+  },
+  "files": {
+    "supported_extensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp"
+    ],
+    "supported_mime_types": [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp"
+    ],
+    "cache_file": "image_cache.json",
+    "resume_state_file": "upload_resume.json"
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S"
+  }
+}

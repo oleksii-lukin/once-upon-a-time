@@ -1,16 +1,16 @@
-export type Json
-  = | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '13.0.5'
+    PostgrestVersion: "13.0.5"
   }
   graphql_public: {
     Tables: {
@@ -68,7 +68,7 @@ export type Database = {
       }
       cards: {
         Row: {
-          category: string | null
+          category: string
           created_at: string
           deck_id: string
           description: string | null
@@ -81,7 +81,7 @@ export type Database = {
           usage_examples: string | null
         }
         Insert: {
-          category?: string | null
+          category: string
           created_at?: string
           deck_id: string
           description?: string | null
@@ -94,7 +94,7 @@ export type Database = {
           usage_examples?: string | null
         }
         Update: {
-          category?: string | null
+          category?: string
           created_at?: string
           deck_id?: string
           description?: string | null
@@ -108,11 +108,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cards_deck_id_fkey'
-            columns: ['deck_id']
+            foreignKeyName: "cards_deck_id_fkey"
+            columns: ["deck_id"]
             isOneToOne: false
-            referencedRelation: 'decks'
-            referencedColumns: ['id']
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -206,18 +206,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'draw_pile_card_id_fkey'
-            columns: ['card_id']
+            foreignKeyName: "draw_pile_card_id_fkey"
+            columns: ["card_id"]
             isOneToOne: false
-            referencedRelation: 'cards'
-            referencedColumns: ['id']
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'draw_pile_game_session_id_fkey'
-            columns: ['game_session_id']
+            foreignKeyName: "draw_pile_game_session_id_fkey"
+            columns: ["game_session_id"]
             isOneToOne: false
-            referencedRelation: 'game_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -233,6 +233,10 @@ export type Database = {
           lobby_id: string
           status: string
           storyteller_id: string | null
+          timer_duration: number
+          timer_enabled: boolean
+          timer_expires_at: string | null
+          timer_started_at: string | null
           updated_at: string
           winner_id: string | null
         }
@@ -247,6 +251,10 @@ export type Database = {
           lobby_id: string
           status?: string
           storyteller_id?: string | null
+          timer_duration?: number
+          timer_enabled?: boolean
+          timer_expires_at?: string | null
+          timer_started_at?: string | null
           updated_at?: string
           winner_id?: string | null
         }
@@ -261,44 +269,48 @@ export type Database = {
           lobby_id?: string
           status?: string
           storyteller_id?: string | null
+          timer_duration?: number
+          timer_enabled?: boolean
+          timer_expires_at?: string | null
+          timer_started_at?: string | null
           updated_at?: string
           winner_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'game_sessions_current_turn_player_id_fkey'
-            columns: ['current_turn_player_id']
+            foreignKeyName: "game_sessions_current_turn_player_id_fkey"
+            columns: ["current_turn_player_id"]
             isOneToOne: false
-            referencedRelation: 'players'
-            referencedColumns: ['id']
+            referencedRelation: "players"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'game_sessions_deck_id_fkey'
-            columns: ['deck_id']
+            foreignKeyName: "game_sessions_deck_id_fkey"
+            columns: ["deck_id"]
             isOneToOne: false
-            referencedRelation: 'decks'
-            referencedColumns: ['id']
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'game_sessions_lobby_id_fkey'
-            columns: ['lobby_id']
+            foreignKeyName: "game_sessions_lobby_id_fkey"
+            columns: ["lobby_id"]
             isOneToOne: false
-            referencedRelation: 'lobbies'
-            referencedColumns: ['id']
+            referencedRelation: "lobbies"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'game_sessions_storyteller_id_fkey'
-            columns: ['storyteller_id']
+            foreignKeyName: "game_sessions_storyteller_id_fkey"
+            columns: ["storyteller_id"]
             isOneToOne: false
-            referencedRelation: 'players'
-            referencedColumns: ['id']
+            referencedRelation: "players"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'game_sessions_winner_id_fkey'
-            columns: ['winner_id']
+            foreignKeyName: "game_sessions_winner_id_fkey"
+            columns: ["winner_id"]
             isOneToOne: false
-            referencedRelation: 'players'
-            referencedColumns: ['id']
+            referencedRelation: "players"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -344,11 +356,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'lobbies_deck_id_fkey'
-            columns: ['deck_id']
+            foreignKeyName: "lobbies_deck_id_fkey"
+            columns: ["deck_id"]
             isOneToOne: false
-            referencedRelation: 'decks'
-            referencedColumns: ['id']
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -360,7 +372,7 @@ export type Database = {
           played_at: string
           player_id: string
           position: number
-          status: Database['public']['Enums']['played_card_status'] | null
+          status: Database["public"]["Enums"]["played_card_status"] | null
         }
         Insert: {
           card_id: string
@@ -369,7 +381,7 @@ export type Database = {
           played_at?: string
           player_id: string
           position?: number
-          status?: Database['public']['Enums']['played_card_status'] | null
+          status?: Database["public"]["Enums"]["played_card_status"] | null
         }
         Update: {
           card_id?: string
@@ -378,29 +390,29 @@ export type Database = {
           played_at?: string
           player_id?: string
           position?: number
-          status?: Database['public']['Enums']['played_card_status'] | null
+          status?: Database["public"]["Enums"]["played_card_status"] | null
         }
         Relationships: [
           {
-            foreignKeyName: 'played_cards_card_id_fkey'
-            columns: ['card_id']
+            foreignKeyName: "played_cards_card_id_fkey"
+            columns: ["card_id"]
             isOneToOne: false
-            referencedRelation: 'cards'
-            referencedColumns: ['id']
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'played_cards_game_session_id_fkey'
-            columns: ['game_session_id']
+            foreignKeyName: "played_cards_game_session_id_fkey"
+            columns: ["game_session_id"]
             isOneToOne: false
-            referencedRelation: 'game_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'played_cards_player_id_fkey'
-            columns: ['player_id']
+            foreignKeyName: "played_cards_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
-            referencedRelation: 'players'
-            referencedColumns: ['id']
+            referencedRelation: "players"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -431,25 +443,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'player_hands_card_id_fkey'
-            columns: ['card_id']
+            foreignKeyName: "player_hands_card_id_fkey"
+            columns: ["card_id"]
             isOneToOne: false
-            referencedRelation: 'cards'
-            referencedColumns: ['id']
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'player_hands_game_session_id_fkey'
-            columns: ['game_session_id']
+            foreignKeyName: "player_hands_game_session_id_fkey"
+            columns: ["game_session_id"]
             isOneToOne: false
-            referencedRelation: 'game_sessions'
-            referencedColumns: ['id']
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'player_hands_player_id_fkey'
-            columns: ['player_id']
+            foreignKeyName: "player_hands_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
-            referencedRelation: 'players'
-            referencedColumns: ['id']
+            referencedRelation: "players"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -495,11 +507,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'players_lobby_id_fkey'
-            columns: ['lobby_id']
+            foreignKeyName: "players_lobby_id_fkey"
+            columns: ["lobby_id"]
             isOneToOne: false
-            referencedRelation: 'lobbies'
-            referencedColumns: ['id']
+            referencedRelation: "lobbies"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -544,13 +556,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      archive_finished_lobbies: { Args: never, Returns: undefined }
-      cleanup_abandoned_waiting_lobbies: { Args: never, Returns: undefined }
-      log_current_auth_state: { Args: never, Returns: undefined }
-      mark_inactive_lobbies_finished: { Args: never, Returns: undefined }
+      archive_finished_lobbies: { Args: never; Returns: undefined }
+      cleanup_abandoned_waiting_lobbies: { Args: never; Returns: undefined }
+      log_current_auth_state: { Args: never; Returns: undefined }
+      mark_inactive_lobbies_finished: { Args: never; Returns: undefined }
     }
     Enums: {
-      played_card_status: 'PENDING' | 'CONFIRMED' | 'REVERTED'
+      played_card_status: "PENDING" | "CONFIRMED" | "REVERTED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -558,121 +570,121 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-      & DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    & DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-      ? R
-      : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables']
-    & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables']
-      & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
-        ? R
-        : never
+      ? R
+      : never
     : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Insert: infer I
-  }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
       ? I
       : never
     : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema['Tables']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-    Update: infer U
-  }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
       ? U
       : never
     : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema['Enums']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema['CompositeTypes']
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
@@ -681,7 +693,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      played_card_status: ['PENDING', 'CONFIRMED', 'REVERTED'],
+      played_card_status: ["PENDING", "CONFIRMED", "REVERTED"],
     },
   },
 } as const

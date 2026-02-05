@@ -8,12 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { type UserProfile } from '@/types/model'
 import { useTranslation } from 'react-i18next'
 import Image from 'next/image'
-import { Tables } from '@/supabase/types'
 
 interface PlayersTableProps {
-  players: Tables<'user_profiles'>[]
+  players: UserProfile[]
 }
 
 export function PlayersTable({ players }: PlayersTableProps) {

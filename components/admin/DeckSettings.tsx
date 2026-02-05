@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
 import ImageUpload from './ImageUpload'
 import { Button } from '@/components/ui/button'
 import { getTranslation } from '@/app/i18n/client'
 import { Loader2 } from 'lucide-react'
 import SaveButton from '@/components/common/SaveButton'
 
-import { parseCardLayout } from '@/types/model'
+import { Card, parseCardLayout } from '@/types/model'
 import { Deck } from '@/types/model'
 import PositioningEditor from './PositioningEditor'
 import { LayoutIcon } from 'lucide-react'
@@ -37,7 +36,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
   const [isTogglingActive, setIsTogglingActive] = useState(false)
   const [isActive, setIsActive] = useState(deck.is_active)
   const [isPositioningOpen, setIsPositioningOpen] = useState(false)
-  const [cards, setCards] = useState<Database['public']['Tables']['cards']['Row'][]>([])
+  const [cards, setCards] = useState<Card[]>([])
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -49,7 +48,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
         .select('*')
         .eq('deck_id', deck.id)
         .order('name')
-      if (data) setCards(data)
+      if (data) setCards(data as unknown as Card[])
     }
     fetchCards()
   }, [deck.id, getToken])

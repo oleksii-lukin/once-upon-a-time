@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import type { Instance, SignalData } from 'simple-peer'
-import { Database } from '@/supabase/types'
-
-type Player = Database['public']['Tables']['players']['Row']
+import { type Player } from '@/types/model'
 
 interface WebRTCState {
   localStream: MediaStream | null

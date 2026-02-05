@@ -755,7 +755,7 @@ export default function ImageEditor({
                 : mode === 'magic'
                   ? 'cursor-crosshair'
                   : 'cursor-default'
-              }`}
+            }`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -836,7 +836,8 @@ export default function ImageEditor({
                 if (mode === 'crop') {
                   setMode('view')
                   setCropRect(null)
-                } else {
+                }
+                else {
                   setMode('crop')
                   setCropRect(null)
                 }
@@ -860,7 +861,8 @@ export default function ImageEditor({
                 if (mode === 'resize-canvas') {
                   setMode('view')
                   setCropRect(null)
-                } else {
+                }
+                else {
                   setMode('resize-canvas')
                   setCropRect({ x: 0, y: 0, w: canvasDimensions.width, h: canvasDimensions.height })
                   setCropStart(null)

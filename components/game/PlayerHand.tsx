@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { useTranslation } from 'react-i18next'
 
 import { CardLayout } from '@/types/model'
 import { type HandCardData } from '@/utils/gameUtils'

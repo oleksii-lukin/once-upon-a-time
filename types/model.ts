@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { Database } from '@/supabase/types'
+import { Database, type Tables, type TablesInsert, type TablesUpdate, type Enums } from '@/supabase/types'
+export type { Tables, TablesInsert, TablesUpdate, Enums }
 
 // --- Layout & Positioning ---
 
@@ -93,6 +94,8 @@ export type Deck = Omit<DbDeck, 'card_layout' | 'category_images'> & {
 
 // --- Lobby Extensions ---
 
+export type GameMode = 'main' | 'fast' | 'tutorial' | 'solo' | 'simple' | 'full'
+
 export const LobbySettingsSchema = z.object({
   allowHotJoin: z.boolean().default(true),
   publicGame: z.boolean().default(true),
@@ -132,3 +135,19 @@ export type PlayedCard = Database['public']['Tables']['played_cards']['Row']
 export type PlayedCardWithCard = PlayedCard & {
   cards: Card
 }
+
+// --- Player Extensions ---
+
+export type DbPlayer = Database['public']['Tables']['players']['Row']
+/**
+ * Strict Player type (currently matching DB row, but centralized for future overrides)
+ */
+export type Player = DbPlayer
+
+// --- Lobby Extensions ---
+// Lobby is already defined above with strict settings
+
+// --- Game Session Extensions ---
+export type GameSession = Database['public']['Tables']['game_sessions']['Row']
+// --- User Profile Extensions ---
+export type UserProfile = Database['public']['Tables']['user_profiles']['Row']

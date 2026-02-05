@@ -4,10 +4,8 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import confetti from 'canvas-confetti'
 import { Trophy, BarChart3, ArrowLeft } from 'lucide-react'
-import { Database } from '@/supabase/types'
+import { type Player } from '@/types/model'
 import { PlayerAvatar } from '../lobby/PlayerDisplay'
-
-type Player = Database['public']['Tables']['players']['Row']
 
 interface GameCompletionOverlayProps {
   winner: Player | undefined

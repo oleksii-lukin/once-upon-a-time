@@ -29,7 +29,7 @@ describe('Image Editor API Endpoints', () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('image/jpeg')
-      expect(response.headers.get('Cache-Control')).toBe('public, max-age=3600')
+      expect(response.headers.get('Cache-Control')).toBe('public, max-age=60')
       expect(response.headers.get('Content-Length')).toBeTruthy()
       expect(response.headers.get('Last-Modified')).toBeTruthy()
 
@@ -51,7 +51,7 @@ describe('Image Editor API Endpoints', () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('image/png')
-      expect(response.headers.get('Cache-Control')).toBe('public, max-age=3600')
+      expect(response.headers.get('Cache-Control')).toBe('public, max-age=60')
 
       // Verify image dimensions and file information headers (Requirement 7.4)
       // Note: Image dimensions may not be available if Sharp can't read the metadata
@@ -258,7 +258,7 @@ describe('Image Editor API Endpoints', () => {
       expect(data.error).toBe('File is not an image')
 
       // Clean up
-      await fs.unlink(testPath).catch(() => {})
+      await fs.unlink(testPath).catch(() => { })
     })
   })
 
@@ -336,7 +336,7 @@ describe('Image Editor API Endpoints', () => {
       const response = await serveHandler(request, context)
 
       if (response.status === 200) {
-        expect(response.headers.get('Cache-Control')).toBe('public, max-age=3600')
+        expect(response.headers.get('Cache-Control')).toBe('public, max-age=60')
         expect(response.headers.get('Last-Modified')).toBeTruthy()
       }
     })

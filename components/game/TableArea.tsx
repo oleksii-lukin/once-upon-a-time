@@ -1,13 +1,9 @@
 import { useTranslation } from 'react-i18next'
 
 import { type PlayedCardData } from '@/utils/gameUtils'
-import { CardLayout } from '@/types/model'
-import { Database } from '@/supabase/types'
+import { CardLayout, type Player } from '@/types/model'
 import { PlayerAvatar, getPlayerDisplayName } from '@/components/lobby/PlayerDisplay'
-
 import Card from './Card'
-
-type Player = Database['public']['Tables']['players']['Row']
 
 interface TableAreaProps {
   playedCards: PlayedCardData[] // Cards played in the current story line

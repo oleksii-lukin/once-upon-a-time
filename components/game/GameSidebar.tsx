@@ -8,13 +8,11 @@ import {
   VideoOff as VideoOffIcon,
   Settings as SettingsIcon,
 } from 'lucide-react'
-import { Database } from '@/supabase/types'
+import { type Player } from '@/types/model'
 import { PlayerAvatar, getPlayerDisplayName } from '../lobby/PlayerDisplay'
 import useWebRTC, { DeviceInfo } from './useWebRTC'
 import VideoPlayer from './VideoPlayer'
 import { useTranslation } from 'react-i18next'
-
-type Player = Database['public']['Tables']['players']['Row']
 
 interface ControlsProps {
   enableVideoChat: boolean

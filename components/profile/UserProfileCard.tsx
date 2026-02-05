@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react'
 import { User as UserIcon, Edit as EditIcon } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
-import { Database } from '@/supabase/types'
+import { type UserProfile } from '@/types/model'
 import { getTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-
-type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 
 interface UserProfileCardProps {
   compact?: boolean

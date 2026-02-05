@@ -22,15 +22,20 @@
 - After applying migrations, re-generate types from database and update all type instances used in the code for types that cannot be generated like JSONB fields
 
 ### Typing and Validation
-- Use Supabase-generated types from `@/supabase/types` for all DB interactions
-  - Use `Tables<'table'>` for read results
-  - Use `TablesInsert<'table'>` for inserts
+- **Centralized Types**: All core models, Zod schemas, and Supabase helper types are centralized in `@/types/model.ts`. **ALWAYS** import from here instead of `@/supabase/types` directly.
+- **Database Types**: Use the helper types re-exported from `@/types/model` for all DB interactions:
+  - `Tables<'table'>` for read results
+  - `TablesInsert<'table'>` for inserts
+  - `TablesUpdate<'table'>` for updates
+  - `Enums<'enum_name'>` for database enums
   - Avoid `any` for DB rows and payloads
-- For JSONB columns (e.g., `lobbies.settings`), define and use a Zod schema
-  - Schema: `LobbySettingsSchema` in `@/types/lobby`
-  - Defaults: `defaultLobbySettings`
-  - Always parse with `safeParse` and fall back to defaults on failure
-- For joined selects, type the composite, e.g. `Tables<'player_hands'> & { cards: Tables<'cards'> }`
+- **Strict JSON Typing**: The project uses `pg_jsonschema` to enforce JSON structure at the database level. This must be mirrored in TypeScript:
+  - Define strict types in `@/types/model.ts` by overriding generic database types using `Omit`, e.g.:
+    `export type Lobby = Omit<Tables<'lobbies'>, 'settings'> & { settings: LobbySettings }`
+  - Use Zod schemas (also in `@/types/model.ts`) to define these structures and provide `default` values.
+  - When reading from the DB, always parse JSON columns with `safeParse` and fall back to defaults on failure.
+- **Refined Data Models**: For complex application logic (like the Game Engine), use the refined types from `@/types/model.ts` (e.g., `Player`, `Card`, `GameSession`) which may include the strict JSON overrides above.
+- **Joined Selects**: For joined queries, type the composite result: `Tables<'player_hands'> & { cards: Card }` or use predefined joined types like `PlayedCardWithCard`.
 
 ## UI
 

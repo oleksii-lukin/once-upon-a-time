@@ -57,9 +57,8 @@ import { storytellingSetup } from './index'
  * @see {@link StorytellingEvent} for event type definitions
  */
 export const tutorialStorytellingMachine = storytellingSetup.createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuyD2AnAlgQwBsBlTLAT2TAIJwDsoA6WvLLPZOqAYgAUAZAIIBNAPoBhAQCUAIgG0ADAF1EoAA4ZYODhloqQAD0QBGAOwmGAJgBsAVitGLATmsBmGyccAaEGUQX5FgyORlZWACwmYS4WRvIuABxhAL5J3mik+MSkFFQ09EwsbBz0vAJERArKSCDqmtq61YYIpubWdg7OVm4e3r4Ibo4M9o4modZGRmH2KWno2Jkk2DnUnAwAxiwQPAR4ZLyCohIyIgJiANKVerVaODp6TWERDPJWFhFhRo6hNkbxVr3GUJBLo2CzxNzxRLyIwzEDpeaERbkSgrfIQMBrHDogByYH0yC4l2q13q90QZhcDF+kRs8UcoKsJjBAIQzgYYUcnPiozcLle8kcsPhuER2RReUY6MxOLxBNkRiqag0NzujUQEUpApcJkmj3B1nkJhZiXZIXCwRMAt+1hSqRAtAw6Pg1WFCzFuU4V2VpLVCAAtP8fIg-TYgpzwxGIy4hXMRVkluLVsxWOxPcTvbcGqAHhYWcFnh9wiYbDYwjEwjZBXbXaKEx78hssFsdn0lXVM2T+mDnq8IgLEmZKyz-JTC6EXC8vnY-jGMrXkfXJRisWBcfive3VdnECCgtqpr97B56Xn5AxIpzLTY4jF7PFZwj4wvUYwAGZ0HCwAAWkA3KqzBiII4hoMHS8i0jYLhGKCTg2MaRjsuG8RxBMkFmraSRAA */
   id: 'tutorialStorytelling',
-  initial: 'narrating',
+  type: 'parallel',
   context: ({ input }) => ({
     cardsPlayedThisTurn: 0,
     maxCardsPerTurn: 1,
@@ -69,43 +68,61 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
     pacingDelay: input.pacingDelay,
   }),
   states: {
-    narrating: {
+    logger: {
       on: {
-        PLAY_CARD: 'cardPlay',
-        PASS: { target: 'finished' },
-        EXCHANGE: { target: 'finished' },
-      },
-    },
-    cardPlay: {
-      on: {
-        PLAY_CARD_ACK: {
-          actions: assign({
-            lastPlayedCardId: ({ event }) => event.playedCardId,
-            cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
-          }),
-          target: 'waiting',
+        '*': {
+          actions: [
+            ({ event }) => console.log(`[TUTORIAL_EVENT] ${event.type}`, event),
+          ],
         },
       },
     },
-    waiting: {
-      always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
-      after: {
-        PACING_DELAY: { target: 'confirming' },
+    main: {
+      initial: 'narrating',
+      states: {
+        narrating: {
+          on: {
+            PLAY_CARD: 'cardPlay',
+            PASS: { target: 'finished' },
+            EXCHANGE: { target: 'finished' },
+          },
+        },
+        cardPlay: {
+          on: {
+            PLAY_CARD_ACK: {
+              actions: assign({
+                lastPlayedCardId: ({ event }) => event.playedCardId,
+                cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
+              }),
+              target: 'waiting',
+            },
+          },
+        },
+        waiting: {
+          always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+          after: {
+            PACING_DELAY: { target: 'confirming' },
+          },
+        },
+        confirming: {
+          entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
+          always: 'decideNext',
+        },
+        decideNext: {
+          always: [
+            { target: 'finished', guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1) },
+            { target: 'narrating' },
+          ],
+        },
+        finished: {
+          entry: sendParent({ type: 'RULES_DONE' }),
+          on: {
+            PLAY_CARD: 'cardPlay',
+            PASS: 'finished',
+            EXCHANGE: 'finished',
+          },
+        },
       },
-    },
-    confirming: {
-      entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
-      always: 'decideNext',
-    },
-    decideNext: {
-      always: [
-        { target: 'finished', guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1) },
-        { target: 'narrating' },
-      ],
-    },
-    finished: {
-      type: 'final',
-      entry: sendParent({ type: 'RULES_DONE' }),
     },
   },
 })

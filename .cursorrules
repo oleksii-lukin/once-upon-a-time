@@ -2,6 +2,10 @@
 
 ## Database
 
+## Agent work
+
+ONLY WORK IN SMALL STEPS, IF ANY ACTION REQUIRES MORE THAN SINGLE STEP FROM YOU - ASK USER FOR FEEDBACK AND PERMISSION TO PROCEED
+
 ### Database Configuration
 - **CRITICAL**: This project uses a **REMOTE Supabase database**, NOT a local one
 - The database is connected via `supabase connect`

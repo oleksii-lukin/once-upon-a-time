@@ -4,6 +4,7 @@ import { useMachine } from '@xstate/react'
 import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
 import { GameMode, GameSession, Player } from '@/types/model'
+import { getSortedPlayers } from './utils/playerUtils'
 
 const inspector
   = process.env.NODE_ENV === 'development'
@@ -18,6 +19,7 @@ export const useGameEngine = (
   players: Player[],
   fetchGameState: () => Promise<void>,
   pacingDelay: number = 0,
+  timerDuration: number = 0,
 ) => {
   const [state, send] = useMachine(gameMachine, {
     inspect: inspector?.inspect || undefined,
@@ -31,23 +33,32 @@ export const useGameEngine = (
         gameSessionId: gameSession.id,
         lobbyId: gameSession.lobby_id,
         mode: gameSession.game_mode as GameMode || 'full',
-        currentPlayerId: currentPlayer.id,
+        currentPlayerId: gameSession.current_turn_player_id || currentPlayer.id,
         players: players,
         pacingDelay: pacingDelay,
+        timerDuration: timerDuration,
       })
     }
-  }, [gameSession, currentPlayer, players, send, state.value, pacingDelay])
+  }, [gameSession, currentPlayer, players, send, state.value, pacingDelay, timerDuration])
+
+  // Sync currentPlayerId when database updates (for non-active players)
+  useEffect(() => {
+    if (gameSession?.current_turn_player_id && state.value !== 'idle'
+      && state.context.currentPlayerId !== gameSession.current_turn_player_id) {
+      console.log('[SYNC] Database current_turn_player_id changed:', {
+        machineValue: state.context.currentPlayerId,
+        databaseValue: gameSession.current_turn_player_id,
+      })
+      send({
+        type: 'SYNC_CURRENT_PLAYER',
+        currentPlayerId: gameSession.current_turn_player_id,
+      })
+    }
+  }, [gameSession?.current_turn_player_id, state.value, state.context.currentPlayerId, send])
 
   const nextPlayer = useMemo(() => {
     if (!currentPlayer || players.length === 0) return null
-    const sortedPlayers = players
-      .filter(p => p.role !== 'spectator')
-      .sort((a, b) => {
-        if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-          return a.turn_order - b.turn_order
-        }
-        return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-      })
+    const sortedPlayers = getSortedPlayers(players)
     const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id)
     if (currentIndex === -1) return null
 
@@ -108,6 +119,7 @@ export const useGameEngine = (
     finalizeWin,
     exchangeCard,
     gameMode: state.context.gameMode,
+    currentPlayerId: state.context.currentPlayerId,
     optimisticCard: state.context.optimisticCard,
     inFlightHandId: state.context.inFlightHandId,
     isDrawing: state.matches({ active: { persistence: 'passingTurn' } })

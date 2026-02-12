@@ -116,6 +116,7 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
           },
         },
         pending: {
+          always: { target: 'confirmed', guard: ({ context }) => context.pacingDelay <= 0 },
           on: {
             OBJECT: 'objecting',
             CONFIRM: 'confirmed',

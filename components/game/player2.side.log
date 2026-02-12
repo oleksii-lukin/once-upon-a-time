@@ -1,0 +1,18 @@
+[GAME_MACHINE_EVENT] SYNC_TIMER {type: 'SYNC_TIMER', isEnabled: false, duration: 0}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] START_TIMER {type: 'START_TIMER'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] xstate.done.actor.0.gameRoot.active.timer.syncing {type: 'xstate.done.actor.0.gameRoot.active.timer.syncing', output: {…}, actorId: '0.gameRoot.active.timer.syncing'}
+gameMachine.ts:227 [PLAY_CARD GUARD] {allowed: true, inFlightHandId: null, rulesFinished: false, currentPlayerId: 'f8f17796-95b1-44b6-8442-17fc93d216a3', gameMode: 'tutorial'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] PLAY_CARD {type: 'PLAY_CARD', card: {…}, playedCardsCount: 1}
+tutorialStorytelling.ts:75 [TUTORIAL_EVENT] PLAY_CARD {type: 'PLAY_CARD', cardId: '18e45bc1-18e9-4beb-b40f-5ff4bfbda587'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] xstate.done.actor.0.gameRoot.active.persistence.playingCard {type: 'xstate.done.actor.0.gameRoot.active.persistence.playingCard', output: {…}, actorId: '0.gameRoot.active.persistence.playingCard'}
+tutorialStorytelling.ts:75 [TUTORIAL_EVENT] PLAY_CARD_ACK {type: 'PLAY_CARD_ACK', playedCardId: '2afa3d3f-e76e-46a8-a9e9-e1225e716bf1'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] CONFIRM_CARD {type: 'CONFIRM_CARD', playedCardId: '2afa3d3f-e76e-46a8-a9e9-e1225e716bf1'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] RULES_DONE {type: 'RULES_DONE'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] PASS {type: 'PASS'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] START_TIMER {type: 'START_TIMER'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] xstate.done.actor.0.gameRoot.active.timer.syncing {type: 'xstate.done.actor.0.gameRoot.active.timer.syncing', output: {…}, actorId: '0.gameRoot.active.timer.syncing'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] xstate.done.actor.0.gameRoot.active.persistence.confirmingCard {type: 'xstate.done.actor.0.gameRoot.active.persistence.confirmingCard', output: true, actorId: '0.gameRoot.active.persistence.confirmingCard'}
+gameMachine.ts:204 [GAME_MACHINE_EVENT] xstate.done.actor.0.gameRoot.active.persistence.updateTurn {type: 'xstate.done.actor.0.gameRoot.active.persistence.updateTurn', output: true, actorId: '0.gameRoot.active.persistence.updateTurn'}
+gameMachine.ts:737 [updateTurn DONE] Resetting state {oldCurrentPlayerId: 'f8f17796-95b1-44b6-8442-17fc93d216a3', newCurrentPlayerId: '7e9d1729-46d0-4569-8dba-a6978e625e49', inFlightHandId: '2795d8d1-da5e-4496-9a0c-fe152d788ead', rulesFinished: true}
+gameMachine.ts:752 [updateTurn DONE] State reset complete
+gameMachine.ts:204 [GAME_MACHINE_EVENT] RESET_RULES {type: 'RESET_RULES'}

@@ -10,6 +10,7 @@ import GameSidebar from './GameSidebar'
 import TurnControls from './TurnControls'
 import GameCompletionOverlay from './GameCompletionOverlay'
 import CardDetailsOverlay from './CardDetailsOverlay'
+import TimerDisplay from './TimerDisplay'
 import { useGameEngine } from './useGameEngine'
 import { useRouter, useParams } from 'next/navigation'
 import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
@@ -67,6 +68,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const isSpectator = currentPlayer?.role === 'spectator'
   const [isAdmin, setIsAdmin] = useState(false)
 
+  // fetch deck
   useEffect(() => {
     if (lobby.deck_id) {
       const fetchDeck = async () => {
@@ -164,6 +166,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     fetchGameStateRef.current = fetchGameState
   }, [fetchGameState])
 
+  // fetch admin status
   useEffect(() => {
     if (currentUserId) {
       const fetchAdminStatus = async () => {
@@ -177,6 +180,40 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       fetchAdminStatus()
     }
   }, [currentUserId, supabase])
+
+  // Extract timer settings from lobby
+  const timerSettings = useMemo(() => {
+    if (lobby.settings && typeof lobby.settings === 'object') {
+      const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+      if (parsed.success) {
+        return {
+          isEnabled: parsed.data.timerPerTurn,
+          duration: parsed.data.timerPerTurn ? parsed.data.timerPerTurnDuration : 0,
+        }
+      }
+    }
+    return {
+      isEnabled: false,
+      duration: 0,
+    }
+  }, [lobby.settings])
+
+  // Extract pacing settings from lobby
+  const pacingSettings = useMemo(() => {
+    if (lobby.settings && typeof lobby.settings === 'object') {
+      const parsed = LobbySettingsSchema.safeParse(lobby.settings)
+      if (parsed.success) {
+        return {
+          isEnabled: parsed.data.enablePacingDelay,
+          duration: parsed.data.enablePacingDelay ? parsed.data.pacingDelayDuration : 0,
+        }
+      }
+    }
+    return {
+      isEnabled: false,
+      duration: 0,
+    }
+  }, [lobby.settings])
 
   // Initialize Game Engine Hook
   const {
@@ -196,15 +233,8 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     currentPlayer,
     players,
     fetchGameState,
-    useMemo(() => {
-      if (lobby.settings && typeof lobby.settings === 'object') {
-        const parsed = LobbySettingsSchema.safeParse(lobby.settings)
-        if (parsed.success && parsed.data.enablePacingDelay) {
-          return parsed.data.pacingDelayDuration
-        }
-      }
-      return 0
-    }, [lobby.settings]),
+    pacingSettings.duration,
+    timerSettings.duration,
   )
 
   // Subscriptions
@@ -261,13 +291,40 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   }, [playedCards, optimisticCard])
 
   const displayedHand = useMemo(() => {
-    return hand.filter(c => c.hand_id !== inFlightHandId)
-  }, [hand, inFlightHandId])
+    // Filter out cards whose hand_id is currently in flight
+    // AND cards whose ID is already present in the playedCards array (to prevent flickering)
+    return hand.filter(c =>
+      c.hand_id !== inFlightHandId
+      && !playedCards.some(pc => pc.id === c.id),
+    )
+  }, [hand, inFlightHandId, playedCards])
 
   const storyCards = displayedHand.filter(c => c.type !== 'ending')
   const endingCard = displayedHand.find(c => c.type === 'ending')
   const handSize = storyCards.length
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+
+  // Handle timer expiration - automatically pass turn
+  const handleTimerExpire = useCallback(() => {
+    if (isMyTurn && gameSession?.status !== 'COMPLETED') {
+      passTurn(handSize === 0)
+    }
+  }, [isMyTurn, gameSession?.status, passTurn, handSize])
+
+  // Create timer component
+  const timerComponent = timerSettings.isEnabled
+    ? (
+        <TimerDisplay
+          isEnabled={timerSettings.isEnabled}
+          duration={timerSettings.duration}
+          isMyTurn={!!isMyTurn}
+          isAnyonesTurn={!isSpectator && gameSession?.status !== 'COMPLETED'}
+          onTimeExpire={handleTimerExpire}
+          timerStartedAt={gameSession?.timer_started_at}
+          timerExpiresAt={gameSession?.timer_expires_at}
+        />
+      )
+    : null
 
   const onSelectCard = (card: CardData) => {
     setSelectedCardId(prev => prev === card.id ? null : card.id)
@@ -317,6 +374,13 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background-dark text-white font-display">
+      {/* Timer - fixed position at top center, above everything including card details */}
+      {timerComponent && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-150">
+          {timerComponent}
+        </div>
+      )}
+
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"

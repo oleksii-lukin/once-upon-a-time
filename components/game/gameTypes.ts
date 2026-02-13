@@ -52,8 +52,8 @@ export interface GameContext {
   inFlightHandId: string | null
   /** ID of the most recently played card - used for pacing and objections */
   lastPlayedCardId: string | null
-  /** Whether the rules explanation phase has been completed */
-  rulesFinished: boolean
+  /** Whether the current storyteller can still play cards this turn (Inverted rulesFinished) */
+  canPlayMoreCards: boolean
   /** Array of all players in the current game session */
   players: Player[]
   /** ID of the player who will take the next turn - null when not determined */

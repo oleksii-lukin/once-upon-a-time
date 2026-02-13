@@ -24,7 +24,7 @@ export const shouldAutoPassInTutorial = ({ context, event }: { context: GameCont
  * Checks if we are in tutorial mode and rules are finished
  */
 export const isTutorialRulesFinished = ({ context }: { context: GameContext }) =>
-  context.gameMode === 'tutorial' && context.rulesFinished
+  context.gameMode === 'tutorial' && !context.canPlayMoreCards
 
 /**
  * Checks if we are in tutorial mode and a card has been played

@@ -5,19 +5,20 @@ import { type GameContext } from '../gameTypes'
  */
 
 /**
- * Checks if the rules explanation phase is not yet finished
+ * Checks if the rules explanation phase is not yet finished (can still play cards)
  */
 export const isRulesNotFinished = ({ context }: { context: GameContext }) =>
-  !context.rulesFinished
+  context.canPlayMoreCards
 
 /**
- * Checks if a player can pass their turn (rules must be finished)
+ * Checks if a player can pass their turn (cannot play more cards)
  */
 export const canPassTurn = ({ context }: { context: GameContext }) =>
-  context.rulesFinished
+  !context.canPlayMoreCards
 
 /**
  * Checks if a player can play a card (alias for rules not finished check in some contexts)
  */
 export const isRulesPhaseActive = ({ context }: { context: GameContext }) =>
-  !context.rulesFinished
+  context.canPlayMoreCards
+

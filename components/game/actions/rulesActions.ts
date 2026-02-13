@@ -4,7 +4,7 @@ import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
 /**
  * XState actions for rules state management
  * 
- * These actions manage the rulesFinished flag which controls
+ * These actions manage the canPlayMoreCards flag which controls
  * whether players can continue playing cards in the current turn.
  */
 
@@ -13,7 +13,7 @@ import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
  * Used when turn is complete or card limit is reached
  */
 export const assignRulesFinished = assign<GameContext, GameEvent, any, any, GameActors>({
-  rulesFinished: true,
+  canPlayMoreCards: false,
 })
 
 /**
@@ -21,5 +21,5 @@ export const assignRulesFinished = assign<GameContext, GameEvent, any, any, Game
  * Allows players to play cards again
  */
 export const resetRulesFinished = assign<GameContext, GameEvent, any, any, GameActors>({
-  rulesFinished: false,
+  canPlayMoreCards: true,
 })

@@ -122,9 +122,10 @@ export const useGameEngine = (
     currentPlayerId: state.context.currentPlayerId,
     optimisticCard: state.context.optimisticCard,
     inFlightHandId: state.context.inFlightHandId,
-    isDrawing: state.matches({ active: { persistence: 'passingTurn' } })
-      || state.matches({ active: { persistence: 'exchangingCard' } })
-      || state.matches({ active: { persistence: 'challengingStutter' } })
-      || state.matches({ active: { persistence: 'penaltyForStoryteller' } }),
+    canPlayMoreCards: state.context.canPlayMoreCards,
+    isDrawing: state.matches({ active: { persistence: 'passingTurn' } } as any)
+      || state.matches({ active: { persistence: 'exchangingCard' } } as any)
+      || state.matches({ active: { persistence: 'challengingStutter' } } as any)
+      || state.matches({ active: { persistence: 'penaltyForStoryteller' } } as any),
   }
 }

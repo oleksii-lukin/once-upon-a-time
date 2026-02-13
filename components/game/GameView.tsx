@@ -228,6 +228,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     inFlightHandId,
     gameMode,
     exchangeCard,
+    canPlayMoreCards,
   } = useGameEngine(
     gameSession,
     currentPlayer,
@@ -314,16 +315,16 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   // Create timer component
   const timerComponent = timerSettings.isEnabled
     ? (
-        <TimerDisplay
-          isEnabled={timerSettings.isEnabled}
-          duration={timerSettings.duration}
-          isMyTurn={!!isMyTurn}
-          isAnyonesTurn={!isSpectator && gameSession?.status !== 'COMPLETED'}
-          onTimeExpire={handleTimerExpire}
-          timerStartedAt={gameSession?.timer_started_at}
-          timerExpiresAt={gameSession?.timer_expires_at}
-        />
-      )
+      <TimerDisplay
+        isEnabled={timerSettings.isEnabled}
+        duration={timerSettings.duration}
+        isMyTurn={!!isMyTurn}
+        isAnyonesTurn={!isSpectator && gameSession?.status !== 'COMPLETED'}
+        onTimeExpire={handleTimerExpire}
+        timerStartedAt={gameSession?.timer_started_at}
+        timerExpiresAt={gameSession?.timer_expires_at}
+      />
+    )
     : null
 
   const onSelectCard = (card: CardData) => {
@@ -401,10 +402,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as CardLayout,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />
@@ -417,10 +418,10 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
           deck={
             deck
               ? {
-                  card_back_image_url: deck.card_back_image_url,
-                  category_images: deck.category_images as Record<string, string> | null,
-                  card_layout: deck.card_layout as CardLayout,
-                }
+                card_back_image_url: deck.card_back_image_url,
+                category_images: deck.category_images as Record<string, string> | null,
+                card_layout: deck.card_layout as CardLayout,
+              }
               : undefined
           }
         />
@@ -442,7 +443,7 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
             onChallengeStutter={() => storytellerPlayer && challengeStutter(storytellerPlayer.id)}
             gameMode={gameMode}
             isPending={!!inFlightHandId}
-            rulesFinished={state.context.rulesFinished}
+            canPlayMoreCards={canPlayMoreCards}
             onExchange={cardId => exchangeCard(cardId, isEndingSelected)}
             hasRemainingEndingCards={remainingEndingCardsCount > 0}
           />

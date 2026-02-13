@@ -46,7 +46,7 @@ export const assignResetAfterTurnUpdate = assign<GameContext, GameEvent, any, an
   optimisticCard: null,
   inFlightHandId: null,
   lastPlayedCardId: null,
-  rulesFinished: false,
+  canPlayMoreCards: true,
   pendingConfirmCardId: null,
   pendingPassTurn: false,
 })

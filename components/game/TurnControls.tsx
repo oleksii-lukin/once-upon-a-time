@@ -18,7 +18,7 @@ interface TurnControlsProps {
   onChallengeStutter?: () => void | Promise<void>
   gameMode?: string
   isPending?: boolean
-  rulesFinished?: boolean
+  canPlayMoreCards?: boolean
   onExchange?: (cardId: string) => void | Promise<void>
   hasRemainingEndingCards?: boolean
 }
@@ -39,7 +39,7 @@ export default function TurnControls({
   onChallengeStutter,
   gameMode,
   isPending = false,
-  rulesFinished = false,
+  canPlayMoreCards = true,
   onExchange,
   hasRemainingEndingCards = false,
 }: TurnControlsProps) {
@@ -50,67 +50,67 @@ export default function TurnControls({
       {isMyTurn && (
         <div className="flex flex-col gap-2">
           {/* Hide play button block in tutorial mode after playing a card, unless only Ending is left */}
-          {!(gameMode === 'tutorial' && rulesFinished && handSize > 0) && (
+          {!(gameMode === 'tutorial' && !canPlayMoreCards && handSize > 0) && (
             <>
               {handSize > 0
                 ? (
-                    <button
-                      onClick={onPlaySelected}
-                      disabled={!selectedCardId || isEndingSelected || isPending || rulesFinished}
-                      className="bg-primary hover:bg-primary/80 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      <PlayIcon className="w-5 h-5" />
-                      {' '}
-                      {t('game.play_card_btn')}
-                    </button>
-                  )
+                  <button
+                    onClick={onPlaySelected}
+                    disabled={!selectedCardId || isEndingSelected || isPending || !canPlayMoreCards}
+                    className="bg-primary hover:bg-primary/80 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <PlayIcon className="w-5 h-5" />
+                    {' '}
+                    {t('game.play_card_btn')}
+                  </button>
+                )
                 : (
-                    <button
-                      onClick={onWin}
-                      disabled={!selectedCardId || !isEndingSelected || isPending || (gameMode === 'tutorial' ? false : rulesFinished)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 animate-pulse disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2"
-                    >
-                      <PlayIcon className="w-5 h-5" />
-                      {' '}
-                      {t('game.play_ending_win_btn')}
-                    </button>
-                  )}
+                  <button
+                    onClick={onWin}
+                    disabled={!selectedCardId || !isEndingSelected || isPending || (gameMode === 'tutorial' ? false : !canPlayMoreCards)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 animate-pulse disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2"
+                  >
+                    <PlayIcon className="w-5 h-5" />
+                    {' '}
+                    {t('game.play_ending_win_btn')}
+                  </button>
+                )}
             </>
           )}
 
           {gameMode === 'tutorial'
             ? (
-                <>
-                  {!rulesFinished
-                    ? (
-                        <button
-                          onClick={() => selectedCardId && onExchange?.(selectedCardId)}
-                          disabled={!selectedCardId || isPending || (isEndingSelected && !hasRemainingEndingCards)}
-                          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {t('game.exchange_card_btn')}
-                        </button>
-                      )
-                    : (
-                        <button
-                          onClick={onPass}
-                          disabled={isPending}
-                          className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {t('game.end_turn_btn')}
-                        </button>
-                      )}
-                </>
-              )
+              <>
+                {canPlayMoreCards
+                  ? (
+                    <button
+                      onClick={() => selectedCardId && onExchange?.(selectedCardId)}
+                      disabled={!selectedCardId || isPending || (isEndingSelected && !hasRemainingEndingCards)}
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('game.exchange_card_btn')}
+                    </button>
+                  )
+                  : (
+                    <button
+                      onClick={onPass}
+                      disabled={isPending}
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {t('game.end_turn_btn')}
+                    </button>
+                  )}
+              </>
+            )
             : (
-                <button
-                  onClick={onPass}
-                  disabled={isPending}
-                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {gameMode === 'solo' ? t('game.draw_card_btn') : t('game.pass_turn_btn')}
-                </button>
-              )}
+              <button
+                onClick={onPass}
+                disabled={isPending}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {gameMode === 'solo' ? t('game.draw_card_btn') : t('game.pass_turn_btn')}
+              </button>
+            )}
         </div>
       )}
 

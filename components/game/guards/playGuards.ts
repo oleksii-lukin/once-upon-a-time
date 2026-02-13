@@ -1,11 +1,11 @@
 import { type GameContext } from '../gameTypes'
 
 export const canPlayCard = ({ context }: { context: GameContext }) => {
-  const allowed = !context.inFlightHandId && !context.rulesFinished
+  const allowed = !context.inFlightHandId && context.canPlayMoreCards
   console.log('[PLAY_CARD GUARD]', {
     allowed,
     inFlightHandId: context.inFlightHandId,
-    rulesFinished: context.rulesFinished,
+    canPlayMoreCards: context.canPlayMoreCards,
     currentPlayerId: context.currentPlayerId,
     gameMode: context.gameMode,
   })
@@ -13,4 +13,5 @@ export const canPlayCard = ({ context }: { context: GameContext }) => {
 }
 
 export const isRulesFinished = ({ context }: { context: GameContext }) =>
-  context.rulesFinished
+  !context.canPlayMoreCards
+

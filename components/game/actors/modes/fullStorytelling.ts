@@ -1,5 +1,5 @@
 import { assign, sendParent } from 'xstate'
-import { storytellingSetup } from './index'
+import { storytellingSetup, type StorytellingEvent } from './index'
 
 /**
  * Full storytelling machine implementing the complete rule set with all game mechanics.
@@ -95,13 +95,24 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
     canObject: true,
     lastPlayedCardId: null,
     pacingDelay: input.pacingDelay,
+    turnCompleteReason: undefined,
   }),
   states: {
     narrating: {
       on: {
         PLAY_CARD: 'cardPlay',
-        PASS: 'finished',
-        INTERRUPT: 'interruption',
+        PASS: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'passed' as const }),
+        },
+        EXCHANGE: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'exchanged' as const }),
+        },
+        INTERRUPT: {
+          target: 'interruption',
+          actions: assign({ nextPlayerIdOverride: ({ event }) => (event as Extract<StorytellingEvent, { type: 'INTERRUPT' }>).player_id }),
+        },
       },
     },
     cardPlay: {
@@ -118,7 +129,10 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
         pending: {
           always: { target: 'confirmed', guard: ({ context }) => context.pacingDelay <= 0 },
           on: {
-            OBJECT: 'objecting',
+            OBJECT: {
+              target: 'objecting',
+              actions: assign({ nextPlayerIdOverride: ({ event }) => (event as Extract<StorytellingEvent, { type: 'OBJECT' }>).player_id }),
+            },
             CONFIRM: 'confirmed',
           },
           after: {
@@ -127,7 +141,10 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
         },
         objecting: {
           on: {
-            VALID: '#fullStorytelling.finished',
+            VALID: {
+              target: '#fullStorytelling.finished',
+              actions: assign({ turnCompleteReason: 'objected' as const }),
+            },
             INVALID: 'confirmed',
           },
         },
@@ -146,13 +163,20 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
     },
     interruption: {
       on: {
-        VALID: 'finished',
+        VALID: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'interrupted' as const }),
+        },
         INVALID: 'narrating',
       },
     },
     finished: {
       type: 'final',
-      entry: sendParent({ type: 'RULES_DONE' }),
+      output: ({ context }) => ({
+        type: 'TURN_COMPLETE' as const,
+        reason: context.turnCompleteReason || 'passed',
+        nextPlayerId: context.nextPlayerIdOverride,
+      }),
     },
   },
 })

@@ -58,7 +58,7 @@ import { storytellingSetup } from './index'
  */
 export const tutorialStorytellingMachine = storytellingSetup.createMachine({
   id: 'tutorialStorytelling',
-  type: 'parallel',
+  initial: 'narrating',
   context: ({ input }) => ({
     cardsPlayedThisTurn: 0,
     maxCardsPerTurn: 1,
@@ -66,63 +66,59 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
     canObject: false,
     lastPlayedCardId: null,
     pacingDelay: input.pacingDelay,
+    turnCompleteReason: undefined,
   }),
   states: {
-    logger: {
+    narrating: {
       on: {
-        '*': {
-          actions: [
-            ({ event }) => console.log(`[TUTORIAL_EVENT] ${event.type}`, event),
-          ],
+        PLAY_CARD: 'cardPlay',
+        PASS: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'passed' as const }),
+        },
+        EXCHANGE: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'exchanged' as const }),
         },
       },
     },
-    main: {
-      initial: 'narrating',
-      states: {
-        narrating: {
-          on: {
-            PLAY_CARD: 'cardPlay',
-            PASS: { target: 'finished' },
-            EXCHANGE: { target: 'finished' },
-          },
-        },
-        cardPlay: {
-          on: {
-            PLAY_CARD_ACK: {
-              actions: assign({
-                lastPlayedCardId: ({ event }) => event.playedCardId,
-                cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
-              }),
-              target: 'waiting',
-            },
-          },
-        },
-        waiting: {
-          always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
-          after: {
-            PACING_DELAY: { target: 'confirming' },
-          },
-        },
-        confirming: {
-          entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
-          always: 'decideNext',
-        },
-        decideNext: {
-          always: [
-            { target: 'finished', guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1) },
-            { target: 'narrating' },
-          ],
-        },
-        finished: {
-          entry: sendParent({ type: 'RULES_DONE' }),
-          on: {
-            PLAY_CARD: 'cardPlay',
-            PASS: 'finished',
-            EXCHANGE: 'finished',
-          },
+    cardPlay: {
+      on: {
+        PLAY_CARD_ACK: {
+          actions: assign({
+            lastPlayedCardId: ({ event }) => event.playedCardId,
+            cardsPlayedThisTurn: ({ context }) => context.cardsPlayedThisTurn + 1,
+          }),
+          target: 'waiting',
         },
       },
+    },
+    waiting: {
+      always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+      after: {
+        PACING_DELAY: { target: 'confirming' },
+      },
+    },
+    confirming: {
+      entry: sendParent(({ context }) => ({ type: 'CONFIRM_CARD', playedCardId: context.lastPlayedCardId! })),
+      always: 'decideNext',
+    },
+    decideNext: {
+      always: [
+        {
+          target: 'finished',
+          guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1),
+          actions: assign({ turnCompleteReason: 'card_limit_reached' as const }),
+        },
+        { target: 'narrating' },
+      ],
+    },
+    finished: {
+      type: 'final',
+      output: ({ context }) => ({
+        type: 'TURN_COMPLETE' as const,
+        reason: context.turnCompleteReason || 'passed',
+      }),
     },
   },
 })

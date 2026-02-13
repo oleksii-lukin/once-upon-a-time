@@ -11,7 +11,7 @@ import { getNextPlayerId } from '../utils/playerUtils'
  * Calculates and assigns the next player in turn order
  */
 export const assignNextPlayer = assign<GameContext, GameEvent, any, any, GameActors>({
-  nextPlayerId: ({ context }) => getNextPlayerId(context.players, context.currentPlayerId)
+  nextPlayerId: ({ context }) => getNextPlayerId(context.players, context.currentPlayerId!),
 })
 
 /**
@@ -27,5 +27,18 @@ export const assignSyncedCurrentPlayer = assign<GameContext, Extract<GameEvent, 
  */
 export const assignNextPlayerFromEvent = assign<GameContext, EventWithNextPlayerId, any, any, GameActors>({
   nextPlayerId: ({ event }) => event.nextPlayerId,
+})
+
+/**
+ * Assigns next player from child actor output
+ */
+export const assignNextPlayerFromActorOutput = assign<GameContext, any, any, any, GameActors>({
+  nextPlayerId: ({ context, event }) => {
+    const output = event.output
+    if (output && output.nextPlayerId) {
+      return output.nextPlayerId
+    }
+    return getNextPlayerId(context.players, context.currentPlayerId!)
+  },
 })
 

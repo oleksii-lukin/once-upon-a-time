@@ -39,7 +39,7 @@ import {
   hasPendingPassTurn,
   isPacingDisabled
 } from './guards/persistenceGuards'
-import { assignNextPlayer, assignNextPlayerFromEvent } from './actions/playerActions'
+import { assignNextPlayer, assignNextPlayerFromEvent, assignNextPlayerFromActorOutput } from './actions/playerActions'
 import { assignRulesFinished, resetRulesFinished } from './actions/rulesActions'
 import { assignOptimisticCard, clearOptimisticCard, assignLastPlayedCardFromEvent, assignPendingConfirmCard } from './actions/cardActions'
 import { assignTimerSyncInput, clearTimerSyncInput } from './actions/timerActions'
@@ -189,18 +189,7 @@ export const gameMachine = setup({
         rules: {
           initial: 'decideMode',
           on: {
-            RULES_DONE: [
-              {
-                guard: isTutorialMode,
-                actions: [
-                  assignRulesFinished,
-                  raise({ type: 'PASS' }),
-                ],
-              },
-              {
-                actions: assignRulesFinished,
-              },
-            ],
+
             PLAY_CARD: {
               guard: 'canPlayCard',
               actions: [
@@ -214,12 +203,7 @@ export const gameMachine = setup({
             PASS: [
               {
                 guard: isRulesNotFinished,
-                actions: [
-                  assignNextPlayer,
-                  sendTo('rulesActor', { type: 'PASS' }),
-                  // Start timer for next player
-                  raise(() => ({ type: 'START_TIMER' as const })),
-                ],
+                actions: sendTo('rulesActor', { type: 'PASS' }),
               },
               {
                 actions: [
@@ -239,13 +223,10 @@ export const gameMachine = setup({
             OBJECT: [
               {
                 guard: isRulesNotFinished,
-                actions: [
-                  assignNextPlayerFromEvent,
-                  sendTo('rulesActor', ({ event }) => {
-                    const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
-                    return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
-                  }),
-                ],
+                actions: sendTo('rulesActor', ({ event }) => {
+                  const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
+                  return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
+                }),
               },
               {
                 actions: assignNextPlayerFromEvent,
@@ -254,17 +235,14 @@ export const gameMachine = setup({
             EXCHANGE: [
               {
                 guard: isRulesNotFinished,
-                actions: [
-                  assignNextPlayer,
-                  sendTo('rulesActor', { type: 'PASS' }),
-                ],
+                actions: sendTo('rulesActor', { type: 'EXCHANGE' }),
               },
               {
                 actions: assignNextPlayer,
               },
             ],
             RESET_RULES: {
-              actions: resetRulesFinished,
+              actions: assign({ canPlayMoreCards: true }),
               target: '.decideMode',
             },
           },
@@ -282,6 +260,14 @@ export const gameMachine = setup({
                 id: 'rulesActor',
                 src: 'ruleTutorial',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '.decideMode',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'PASS' as const }),
+                  ],
+                },
               },
             },
             simple: {
@@ -289,6 +275,14 @@ export const gameMachine = setup({
                 id: 'rulesActor',
                 src: 'ruleSimple',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '.decideMode',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayer,
+                    raise({ type: 'START_TIMER' as const }),
+                  ],
+                },
               },
             },
             full: {
@@ -296,6 +290,14 @@ export const gameMachine = setup({
                 id: 'rulesActor',
                 src: 'ruleFull',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '.decideMode',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayer,
+                    raise({ type: 'START_TIMER' as const }),
+                  ],
+                },
               },
             },
             solo: {
@@ -303,6 +305,14 @@ export const gameMachine = setup({
                 id: 'rulesActor',
                 src: 'ruleSolo',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '.decideMode',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayer,
+                    raise({ type: 'START_TIMER' as const }),
+                  ],
+                },
               },
             },
           },

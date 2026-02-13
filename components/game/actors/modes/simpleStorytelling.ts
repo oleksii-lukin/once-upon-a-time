@@ -67,12 +67,20 @@ export const simpleStorytellingMachine = storytellingSetup.createMachine({
     canObject: false,
     lastPlayedCardId: null,
     pacingDelay: input.pacingDelay,
+    turnCompleteReason: undefined,
   }),
   states: {
     narrating: {
       on: {
         PLAY_CARD: 'cardPlay',
-        PASS: 'finished',
+        PASS: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'passed' as const }),
+        },
+        EXCHANGE: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'exchanged' as const }),
+        },
       },
     },
     cardPlay: {
@@ -95,7 +103,10 @@ export const simpleStorytellingMachine = storytellingSetup.createMachine({
     },
     finished: {
       type: 'final',
-      entry: sendParent({ type: 'RULES_DONE' }),
+      output: ({ context }) => ({
+        type: 'TURN_COMPLETE' as const,
+        reason: context.turnCompleteReason || 'passed',
+      }),
     },
   },
 })

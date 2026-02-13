@@ -28,9 +28,28 @@ import {
   type TimerExtensionOutput
 } from './gameTypes'
 import { canPlayCard, isRulesFinished } from './guards/playGuards'
-import { isTimerEnabled } from './guards/timerGuards'
-import { isSoloMode } from './guards/modesGuards'
-import { assignNextPlayer } from './actions/playerActions'
+import { isTimerEnabled, shouldSyncTimerForSolo, needsTimerExtension } from './guards/timerGuards'
+import { isSoloMode, isTutorialMode, isSimpleOrFastMode, isFullOrMainMode } from './guards/modesGuards'
+import { isRulesNotFinished } from './guards/rulesGuards'
+import {
+  isPendingCardConfirmed,
+  shouldAutoPassInTutorial,
+  isTutorialRulesFinished,
+  isTutorialWithPlayedCard,
+  hasPendingPassTurn,
+  isPacingDisabled
+} from './guards/persistenceGuards'
+import { assignNextPlayer, assignNextPlayerFromEvent } from './actions/playerActions'
+import { assignRulesFinished, resetRulesFinished } from './actions/rulesActions'
+import { assignOptimisticCard, clearOptimisticCard, assignLastPlayedCardFromEvent, assignPendingConfirmCard } from './actions/cardActions'
+import { assignTimerSyncInput, clearTimerSyncInput } from './actions/timerActions'
+import {
+  assignPendingPassTurn,
+  clearPendingStates,
+  assignLastPlayedCardAndClearPending,
+  assignPersistenceError,
+  assignResetAfterTurnUpdate
+} from './actions/persistenceActions'
 import { getNextPlayerId } from './utils/playerUtils'
 import { type GameContext, type GameEvent, type GameActors } from './gameTypes'
 import { type PlayedCardWithCard } from '@/types/model'
@@ -172,33 +191,20 @@ export const gameMachine = setup({
           on: {
             RULES_DONE: [
               {
-                guard: ({ context }) => context.gameMode === 'tutorial',
+                guard: isTutorialMode,
                 actions: [
-                  assign({ rulesFinished: true }),
+                  assignRulesFinished,
                   raise({ type: 'PASS' }),
                 ],
               },
               {
-                actions: assign({ rulesFinished: true }),
+                actions: assignRulesFinished,
               },
             ],
             PLAY_CARD: {
               guard: 'canPlayCard',
               actions: [
-                assign({
-                  optimisticCard: ({ context, event }) => {
-                    const playEvent = event as { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-                    return {
-                      ...playEvent.card,
-                      status: 'PENDING',
-                      played_by: context.currentPlayerId!,
-                    }
-                  },
-                  inFlightHandId: ({ event }) => {
-                    const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
-                    return (playCardEvent.card as any).hand_id || playCardEvent.card.id || null
-                  },
-                }),
+                assignOptimisticCard,
                 sendTo('rulesActor', ({ event }) => {
                   const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
                   return { type: 'PLAY_CARD', cardId: playCardEvent.card.id }
@@ -207,7 +213,7 @@ export const gameMachine = setup({
             },
             PASS: [
               {
-                guard: ({ context }) => !context.rulesFinished,
+                guard: isRulesNotFinished,
                 actions: [
                   assignNextPlayer,
                   sendTo('rulesActor', { type: 'PASS' }),
@@ -224,19 +230,17 @@ export const gameMachine = setup({
               },
             ],
             CHALLENGE_STUTTER: {
-              actions: [
-                assign({ nextPlayerId: ({ event }) => event.nextPlayerId }),
-              ],
+              actions: assignNextPlayerFromEvent,
             },
             INTERRUPT: {
-              guard: ({ context }) => !context.rulesFinished,
+              guard: isRulesNotFinished,
               actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
             },
             OBJECT: [
               {
-                guard: ({ context }) => !context.rulesFinished,
+                guard: isRulesNotFinished,
                 actions: [
-                  assign({ nextPlayerId: ({ event }) => (event as Extract<GameEvent, { type: 'OBJECT' }>).nextPlayerId }),
+                  assignNextPlayerFromEvent,
                   sendTo('rulesActor', ({ event }) => {
                     const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
                     return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
@@ -244,12 +248,12 @@ export const gameMachine = setup({
                 ],
               },
               {
-                actions: assign({ nextPlayerId: ({ event }) => (event as Extract<GameEvent, { type: 'OBJECT' }>).nextPlayerId }),
+                actions: assignNextPlayerFromEvent,
               },
             ],
             EXCHANGE: [
               {
-                guard: ({ context }) => !context.rulesFinished,
+                guard: isRulesNotFinished,
                 actions: [
                   assignNextPlayer,
                   sendTo('rulesActor', { type: 'PASS' }),
@@ -260,17 +264,17 @@ export const gameMachine = setup({
               },
             ],
             RESET_RULES: {
-              actions: assign({ rulesFinished: false }),
+              actions: resetRulesFinished,
               target: '.decideMode',
             },
           },
           states: {
             decideMode: {
               always: [
-                { target: 'tutorial', guard: ({ context }) => context.gameMode === 'tutorial' },
-                { target: 'simple', guard: ({ context }) => context.gameMode === 'simple' || context.gameMode === 'fast' },
-                { target: 'full', guard: ({ context }) => context.gameMode === 'full' || context.gameMode === 'main' },
-                { target: 'solo', guard: ({ context }) => context.gameMode === 'solo' },
+                { target: 'tutorial', guard: isTutorialMode },
+                { target: 'simple', guard: isSimpleOrFastMode },
+                { target: 'full', guard: isFullOrMainMode },
+                { target: 'solo', guard: isSoloMode },
               ],
             },
             tutorial: {
@@ -311,7 +315,7 @@ export const gameMachine = setup({
               target: '.checkingExtension',
             },
             CONFIRM_CARD: {
-              guard: ({ context }) => context.timerDuration > 0 && context.gameMode === 'solo',
+              guard: shouldSyncTimerForSolo,
               target: '.syncing',
               actions: assign(({ context }) => ({
                 timerSyncInput: {
@@ -393,21 +397,8 @@ export const gameMachine = setup({
                 onDone: [
                   {
                     target: 'syncing',
-                    guard: ({ event }) => (event as DoneActorEvent<{ needsExtension: boolean }>).output.needsExtension,
-                    actions: assign({
-                      timerSyncInput: ({ context, event }) => {
-                        const output = (event as DoneActorEvent<TimerExtensionOutput>).output
-                        return {
-                          gameSessionId: context.gameSessionId!,
-                          isEnabled: true,
-                          duration: context.timerDuration,
-                          currentPlayerId: context.currentPlayerId,
-                          action: 'extend' as const,
-                          pacingDelay: context.pacingDelay,
-                          newExpiresAt: output.newExpiresAt,
-                        }
-                      },
-                    }),
+                    guard: needsTimerExtension,
+                    actions: assignTimerSyncInput,
                   },
                   { target: 'idle' },
                 ],
@@ -420,11 +411,11 @@ export const gameMachine = setup({
                 input: ({ context }) => context.timerSyncInput!,
                 onDone: {
                   target: 'idle',
-                  actions: assign({ timerSyncInput: undefined }),
+                  actions: clearTimerSyncInput,
                 },
                 onError: {
                   target: 'idle',
-                  actions: assign({ timerSyncInput: undefined }),
+                  actions: clearTimerSyncInput,
                 },
               },
             },
@@ -434,10 +425,10 @@ export const gameMachine = setup({
           initial: 'idle',
           on: {
             CONFIRM_CARD: {
-              actions: assign({ pendingConfirmCardId: ({ event }) => (event as Extract<GameEvent, { type: 'CONFIRM_CARD' }>).playedCardId }),
+              actions: assignPendingConfirmCard,
             },
             PASS: {
-              actions: assign({ pendingPassTurn: true }),
+              actions: assignPendingPassTurn,
             },
           },
           states: {
@@ -450,7 +441,7 @@ export const gameMachine = setup({
                 CHALLENGE_STUTTER: 'challengingStutter',
                 CONFIRM_CARD: 'confirmingCard',
                 INTERRUPT: {
-                  guard: ({ context }) => !context.rulesFinished,
+                  guard: isRulesNotFinished,
                   actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
                 },
               },
@@ -474,12 +465,9 @@ export const gameMachine = setup({
                 onDone: [
                   {
                     target: 'confirmingCard',
-                    guard: ({ context, event }: { context: GameContext, event: any }) => context.pendingConfirmCardId === event.output.id,
+                    guard: isPendingCardConfirmed,
                     actions: [
-                      assign({
-                        lastPlayedCardId: ({ event }: { event: any }) => event.output.id,
-                        pendingConfirmCardId: null,
-                      }),
+                      assignLastPlayedCardAndClearPending,
                       sendTo('rulesActor', ({ event }: { event: any }) => ({
                         type: 'PLAY_CARD_ACK',
                         playedCardId: event.output.id,
@@ -488,9 +476,9 @@ export const gameMachine = setup({
                   },
                   {
                     target: 'idle',
-                    guard: ({ context }: { context: GameContext }) => !context.rulesFinished,
+                    guard: isRulesNotFinished,
                     actions: [
-                      assign({ lastPlayedCardId: ({ event }: { event: any }) => event.output.id }),
+                      assignLastPlayedCardFromEvent,
                       sendTo('rulesActor', ({ event }: { event: any }) => ({
                         type: 'PLAY_CARD_ACK',
                         playedCardId: event.output.id,
@@ -499,16 +487,12 @@ export const gameMachine = setup({
                   },
                   {
                     target: 'idle',
-                    actions: assign({ lastPlayedCardId: ({ event }: { event: any }) => event.output.id }),
+                    actions: assignLastPlayedCardFromEvent,
                   },
                 ],
                 onError: {
                   target: 'idle',
-                  actions: assign({
-                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
-                    inFlightHandId: null, // Clear the lock explicitly on error
-                    optimisticCard: null, // Rollback optimistic update
-                  }),
+                  actions: assignPersistenceError,
                 },
               },
             },
@@ -532,12 +516,7 @@ export const gameMachine = setup({
               always: [
                 {
                   target: 'updateTurn',
-                  guard: ({ context, event }) => {
-                    const passEvent = event as Extract<GameEvent, { type: 'PASS' }>
-                    return context.gameMode === 'tutorial'
-                      && context.lastPlayedCardId !== null
-                      && !passEvent.isHandEmpty
-                  },
+                  guard: shouldAutoPassInTutorial,
                 },
               ],
             },
@@ -560,9 +539,7 @@ export const gameMachine = setup({
                 onDone: 'updateTurn',
                 onError: {
                   target: 'idle',
-                  actions: assign({
-                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
-                  }),
+                  actions: assignPersistenceError,
                 },
               },
             },
@@ -588,15 +565,7 @@ export const gameMachine = setup({
                       inFlightHandId: context.inFlightHandId,
                       rulesFinished: context.rulesFinished,
                     }),
-                    assign({
-                      currentPlayerId: ({ context }) => context.nextPlayerId,
-                      optimisticCard: null,
-                      inFlightHandId: null,
-                      lastPlayedCardId: null,
-                      rulesFinished: false,
-                      pendingConfirmCardId: null,
-                      pendingPassTurn: false,
-                    }),
+                    assignResetAfterTurnUpdate,
                     () => console.log('[updateTurn DONE] State reset complete'),
                     raise({ type: 'RESET_RULES' }),
                   ],
@@ -657,15 +626,7 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
-                    assign({
-                      currentPlayerId: ({ context }) => context.nextPlayerId,
-                      optimisticCard: null,
-                      inFlightHandId: null,
-                      lastPlayedCardId: null,
-                      rulesFinished: false,
-                      pendingConfirmCardId: null,
-                      pendingPassTurn: false,
-                    }),
+                    assignResetAfterTurnUpdate,
                     raise({ type: 'RESET_RULES' }),
                   ],
                 },
@@ -704,15 +665,7 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
-                    assign({
-                      currentPlayerId: ({ context }) => context.nextPlayerId,
-                      optimisticCard: null,
-                      inFlightHandId: null,
-                      lastPlayedCardId: null,
-                      rulesFinished: false,
-                      pendingConfirmCardId: null,
-                      pendingPassTurn: false,
-                    }),
+                    assignResetAfterTurnUpdate,
                     raise({ type: 'RESET_RULES' }),
                   ],
                 },
@@ -730,23 +683,19 @@ export const gameMachine = setup({
                 onDone: [
                   {
                     target: 'passingTurn',
-                    guard: ({ context }: { context: GameContext }) => context.pendingPassTurn,
+                    guard: hasPendingPassTurn,
                   },
                   {
-                    guard: ({ context }: { context: GameContext }) => context.gameMode === 'tutorial' && context.rulesFinished,
+                    guard: isTutorialRulesFinished,
                     target: 'passingTurn',
                   },
                   {
-                    guard: ({ context }: { context: GameContext }) => context.gameMode === 'tutorial' && context.lastPlayedCardId !== null,
+                    guard: isTutorialWithPlayedCard,
                     target: 'passingTurn',
                   },
                   {
                     target: 'idle',
-                    actions: assign({
-                      optimisticCard: null,
-                      inFlightHandId: ({ context }) =>
-                        context.gameMode === 'tutorial' ? context.inFlightHandId : null,
-                    }),
+                    actions: clearOptimisticCard,
                   },
                 ],
               },
@@ -776,14 +725,12 @@ export const gameMachine = setup({
             },
             onDone: {
               target: 'waiting',
-              actions: assign({
-                lastPlayedCardId: ({ event }) => ((event as unknown) as DoneActorEvent<PlayCardActorOutput>).output.id,
-              }),
+              actions: assignLastPlayedCardFromEvent,
             },
           },
         },
         waiting: {
-          always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+          always: { target: 'confirming', guard: isPacingDisabled },
           on: {
             OBJECT: 'objecting',
           },
@@ -844,12 +791,7 @@ export const gameMachine = setup({
               target: '#gameRoot.active',
               actions: [
                 raise({ type: 'RESET_RULES' }),
-                assign({
-                  currentPlayerId: ({ context }) => context.nextPlayerId,
-                  optimisticCard: null,
-                  inFlightHandId: null,
-                  lastPlayedCardId: null,
-                }),
+                assignResetAfterTurnUpdate,
               ],
             },
           },

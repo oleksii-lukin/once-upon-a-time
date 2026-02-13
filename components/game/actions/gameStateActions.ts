@@ -1,23 +1,20 @@
 import { assign } from 'xstate'
+import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
 
 /**
  * XState actions for game state management
  */
 
-export const assignGameStart = assign(({ event }: { event: { gameSessionId: string, lobbyId: string, mode: string, currentPlayerId: string, players?: any[], pacingDelay?: number, timerDuration?: number } }) => ({
-  gameSessionId: event.gameSessionId,
-  lobbyId: event.lobbyId,
-  gameMode: event.mode,
-  currentPlayerId: event.currentPlayerId,
-  players: event.players || [],
-  pacingDelay: event.pacingDelay || 0,
-  timerDuration: event.timerDuration || 0,
-}))
-
-export const assignRulesFinished = assign({
-  rulesFinished: true,
+/**
+ * Initializes the game context from the START_GAME event
+ */
+export const assignGameStart = assign<GameContext, Extract<GameEvent, { type: 'START_GAME' }>, any, any, GameActors>({
+  gameSessionId: ({ event }) => event.gameSessionId,
+  lobbyId: ({ event }) => event.lobbyId,
+  gameMode: ({ event }) => event.mode,
+  currentPlayerId: ({ event }) => event.currentPlayerId,
+  players: ({ event }) => event.players || [],
+  pacingDelay: ({ event }) => event.pacingDelay || 0,
+  timerDuration: ({ event }) => event.timerDuration || 0,
 })
 
-export const resetRulesState = assign({
-  rulesFinished: false,
-})

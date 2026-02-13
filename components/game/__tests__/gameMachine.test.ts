@@ -26,6 +26,10 @@ import { gameMachine } from '../gameMachine'
 // Mock actors
 const mockRuleMachine = createMachine({
   id: 'mockRule',
+  types: {} as {
+    context: any,
+    events: any, // Use any to bypass strict StorytellingEvent mismatch for now
+  },
   initial: 'idle',
   states: {
     idle: {},
@@ -36,17 +40,17 @@ const mockPromiseActor = fromPromise(async () => ({ id: 'mock-id' }))
 
 const testMachine = gameMachine.provide({
   actors: {
-    ruleTutorial: mockRuleMachine,
-    ruleSimple: mockRuleMachine,
-    ruleFull: mockRuleMachine,
-    ruleSolo: mockRuleMachine,
-    playCardActor: mockPromiseActor,
-    drawCardsActor: mockPromiseActor,
-    passTurnActor: mockPromiseActor,
-    confirmCardActor: mockPromiseActor,
-    finalizeWinActor: mockPromiseActor,
-    objectActor: mockPromiseActor,
-    exchangeCardActor: mockPromiseActor,
+    ruleTutorial: mockRuleMachine as any,
+    ruleSimple: mockRuleMachine as any,
+    ruleFull: mockRuleMachine as any,
+    ruleSolo: mockRuleMachine as any,
+    playCardActor: mockPromiseActor as any,
+    drawCardsActor: mockPromiseActor as any,
+    passTurnActor: mockPromiseActor as any,
+    confirmCardActor: mockPromiseActor as any,
+    finalizeWinActor: mockPromiseActor as any,
+    objectActor: mockPromiseActor as any,
+    exchangeCardActor: mockPromiseActor as any,
   },
 })
 

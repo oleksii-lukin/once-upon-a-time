@@ -11,3 +11,16 @@ export const isTimerExpired = ({ context }: { context: GameContext }) =>
 
 export const isTimerExtensionNeeded = ({ context }: { context: GameContext }) =>
   context.timerSyncInput?.action === 'extend'
+
+/**
+ * Checks if timer should be synced (Solo mode only)
+ */
+export const shouldSyncTimerForSolo = ({ context }: { context: GameContext }) =>
+  context.timerDuration > 0 && context.gameMode === 'solo'
+
+/**
+ * Checks if timer extension is needed from actor output
+ */
+export const needsTimerExtension = ({ event }: { event: any }) =>
+  event.output?.needsExtension
+

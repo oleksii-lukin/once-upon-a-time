@@ -104,6 +104,13 @@ export type GameEvent
   | { type: 'STOP_TIMER' }
   | { type: 'EXTEND_TIMER' }
 
+/**
+ * Shared event type helpers for common event patterns
+ */
+
+/** Events that contain nextPlayerId property */
+export type EventWithNextPlayerId = Extract<GameEvent, { nextPlayerId: string }>
+
 export type GameActors =
   | { src: 'ruleTutorial', logic: typeof tutorialStorytellingMachine, id: string }
   | { src: 'ruleSimple', logic: typeof simpleStorytellingMachine, id: string }

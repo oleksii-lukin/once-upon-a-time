@@ -80,8 +80,9 @@ export const useGameEngine = (
   }, [send])
 
   const interrupt = useCallback(async () => {
-    send({ type: 'INTERRUPT' })
-  }, [send])
+    if (!nextPlayer) return
+    send({ type: 'INTERRUPT', nextPlayerId: nextPlayer.id })
+  }, [send, nextPlayer])
 
   const objectToCard = useCallback(async (playedCardId: string, storytellerId: string) => {
     if (!nextPlayer) return

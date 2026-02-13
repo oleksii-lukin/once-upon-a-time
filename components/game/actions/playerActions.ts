@@ -35,10 +35,16 @@ export const assignNextPlayerFromEvent = assign<GameContext, EventWithNextPlayer
 export const assignNextPlayerFromActorOutput = assign<GameContext, any, any, any, GameActors>({
   nextPlayerId: ({ context, event }) => {
     const output = event.output
+
     if (output && output.nextPlayerId) {
       return output.nextPlayerId
     }
+
+    // If nextPlayerId was already set by a directed event (INTERRUPT/OBJECT), respect it
+    if (context.nextPlayerId && context.nextPlayerId !== context.currentPlayerId) {
+      return context.nextPlayerId
+    }
+
     return getNextPlayerId(context.players, context.currentPlayerId!)
   },
 })
-

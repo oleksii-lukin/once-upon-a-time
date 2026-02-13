@@ -214,19 +214,45 @@ export const gameMachine = setup({
               },
             ],
             CHALLENGE_STUTTER: {
-              actions: assignNextPlayerFromEvent,
+              actions: [
+                assignNextPlayerFromEvent,
+                sendTo('rulesActor', ({ event }) => event),
+              ],
+            },
+            VALID: {
+              actions: sendTo('rulesActor', { type: 'VALID' as const }),
+            },
+            INVALID: {
+              actions: sendTo('rulesActor', { type: 'INVALID' as const }),
             },
             INTERRUPT: {
               guard: isRulesNotFinished,
-              actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
+              actions: [
+                assignNextPlayerFromEvent,
+                sendTo('rulesActor', ({ context, event }) => {
+                  const intEvent = event as Extract<GameEvent, { type: 'INTERRUPT' }>
+                  return {
+                    type: 'INTERRUPT',
+                    player_id: intEvent.nextPlayerId,
+                    card_id: context.lastPlayedCardId || ''
+                  }
+                }),
+              ],
             },
             OBJECT: [
               {
                 guard: isRulesNotFinished,
-                actions: sendTo('rulesActor', ({ event }) => {
-                  const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
-                  return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
-                }),
+                actions: [
+                  assignNextPlayerFromEvent,
+                  sendTo('rulesActor', ({ context, event }) => {
+                    const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
+                    return {
+                      type: 'OBJECT',
+                      played_card_id: objectEvent.playedCardId,
+                      player_id: objectEvent.nextPlayerId
+                    }
+                  }),
+                ],
               },
               {
                 actions: assignNextPlayerFromEvent,
@@ -243,11 +269,12 @@ export const gameMachine = setup({
             ],
             RESET_RULES: {
               actions: assign({ canPlayMoreCards: true }),
-              target: '.decideMode',
+              target: '#rules_decide',
             },
           },
           states: {
             decideMode: {
+              id: 'rules_decide',
               always: [
                 { target: 'tutorial', guard: isTutorialMode },
                 { target: 'simple', guard: isSimpleOrFastMode },
@@ -256,61 +283,65 @@ export const gameMachine = setup({
               ],
             },
             tutorial: {
+              id: 'rules_tutorial',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleTutorial',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
                 onDone: {
-                  target: '.decideMode',
+                  target: '#rules_decide',
                   actions: [
                     assign({ canPlayMoreCards: true }),
                     assignNextPlayerFromActorOutput,
-                    raise({ type: 'PASS' as const }),
+                    raise({ type: 'SYNC_TURN' as const }),
                   ],
                 },
               },
             },
             simple: {
+              id: 'rules_simple',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleSimple',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
                 onDone: {
-                  target: '.decideMode',
+                  target: '#rules_decide',
                   actions: [
                     assign({ canPlayMoreCards: true }),
-                    assignNextPlayer,
-                    raise({ type: 'START_TIMER' as const }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'SYNC_TURN' as const }),
                   ],
                 },
               },
             },
             full: {
+              id: 'rules_full',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleFull',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
                 onDone: {
-                  target: '.decideMode',
+                  target: '#rules_decide',
                   actions: [
                     assign({ canPlayMoreCards: true }),
-                    assignNextPlayer,
-                    raise({ type: 'START_TIMER' as const }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'SYNC_TURN' as const }),
                   ],
                 },
               },
             },
             solo: {
+              id: 'rules_solo',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleSolo',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
                 onDone: {
-                  target: '.decideMode',
+                  target: '#rules_decide',
                   actions: [
                     assign({ canPlayMoreCards: true }),
                     assignNextPlayer,
-                    raise({ type: 'START_TIMER' as const }),
+                    raise({ type: 'SYNC_TURN' as const }),
                   ],
                 },
               },
@@ -440,13 +471,21 @@ export const gameMachine = setup({
             PASS: {
               actions: assignPendingPassTurn,
             },
+            AUTO_PASS: {
+              actions: [
+                assignPendingPassTurn,
+                assign({ canPlayMoreCards: false }), // Force rules-finished state for auto-pass
+              ],
+            },
           },
           states: {
             idle: {
               on: {
                 PLAY_CARD: 'playingCard',
                 PASS: 'passingTurn',
+                AUTO_PASS: 'passingTurn',
                 EXCHANGE: 'exchangingCard',
+                SYNC_TURN: 'updateTurn',
                 OBJECT: 'objecting',
                 CHALLENGE_STUTTER: 'challengingStutter',
                 CONFIRM_CARD: 'confirmingCard',

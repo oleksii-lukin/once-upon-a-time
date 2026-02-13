@@ -83,26 +83,60 @@ export interface GameContext {
  * Union type of all possible events that can be sent to the game machine.
  */
 export type GameEvent
-  = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number, timerDuration?: number }
+  = /** System trigger to start a new game session */
+  | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number, timerDuration?: number }
+  /** Standard player action: play a card from hand */
   | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
+  /** Manual player action: end turn voluntarily (optionally due to empty hand) */
   | { type: 'PASS', isHandEmpty?: boolean }
-  | { type: 'INTERRUPT' }
+  /** Full mode: Directed turn change when a player interrupts another */
+  | { type: 'INTERRUPT', nextPlayerId: string }
+  /** Full mode: Directed turn change when a player objects to a card */
   | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
+  /** Simple/Full mode: Directed turn change when a player challenges a stutter */
   | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
+  /** Acknowledgment that a card play has been processed and is ready for rules check */
   | { type: 'CONFIRM_CARD', playedCardId: string }
+  /** System/Player action: exchange a card from hand */
   | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
+  /** Triggered when a player meets victory conditions by playing their final card */
   | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
+  /** Handled by persistence to finalize the win in the database */
   | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
+  /** Internal: rules child machine has completed its logic */
   | { type: 'RULES_DONE' }
+  /** Internal: persistence layer successfully updated the database */
   | { type: 'SYNC_COMPLETE' }
+  /** Internal: persistence layer failed to update the database */
   | { type: 'SYNC_ERROR', error: string }
+  /** Internal: updates local machine state with new current player from DB */
   | { type: 'SYNC_CURRENT_PLAYER', currentPlayerId: string }
+  /** Internal: resets rules state for the next turn */
   | { type: 'RESET_RULES' }
+  /** Triggered by timer parallel state when turn time is up */
   | { type: 'TIMER_EXPIRED' }
+  /** Syncs timer configuration (enabled/duration) between parallel states */
   | { type: 'SYNC_TIMER', isEnabled: boolean, duration: number }
+  /** Internal command to start/restart the turn timer */
   | { type: 'START_TIMER' }
+  /** Internal command to stop the turn timer */
   | { type: 'STOP_TIMER' }
+  /** Internal command to extend the current turn timer */
   | { type: 'EXTEND_TIMER' }
+  /** 
+   * System-triggered pass (e.g., in Tutorial mode after 1 card is played).
+   * Distinct from PASS because it bypasses manual confirmation logic.
+   */
+  | { type: 'AUTO_PASS' }
+  /** signals that a pending action (interrupt/objection) is valid */
+  | { type: 'VALID' }
+  /** signals that a pending action (interrupt/objection) is invalid */
+  | { type: 'INVALID' }
+  /** 
+   * Unified internal event to trigger the persistence layer's turn update sequence.
+   * Used after rules complete or when turn changes due to interruptions/objections.
+   */
+  | { type: 'SYNC_TURN' }
 
 /**
  * Shared event type helpers for common event patterns

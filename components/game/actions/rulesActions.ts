@@ -3,7 +3,7 @@ import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
 
 /**
  * XState actions for rules state management
- * 
+ *
  * These actions manage the canPlayMoreCards flag which controls
  * whether players can continue playing cards in the current turn.
  */

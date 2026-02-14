@@ -27,14 +27,14 @@ export interface StorytellingContext {
  */
 export type StorytellingEvent
   = | { type: 'PLAY_CARD', cardId: string }
-  | { type: 'PLAY_CARD_ACK', playedCardId: string }
-  | { type: 'PASS' }
-  | { type: 'EXCHANGE' }
-  | { type: 'INTERRUPT', player_id: string, card_id: string }
-  | { type: 'OBJECT', player_id: string, played_card_id: string }
-  | { type: 'CONFIRM' }
-  | { type: 'VALID' }
-  | { type: 'INVALID' }
+    | { type: 'PLAY_CARD_ACK', playedCardId: string }
+    | { type: 'PASS' }
+    | { type: 'EXCHANGE' }
+    | { type: 'INTERRUPT', player_id: string, card_id: string }
+    | { type: 'OBJECT', player_id: string, played_card_id: string }
+    | { type: 'CONFIRM' }
+    | { type: 'VALID' }
+    | { type: 'INVALID' }
 
 /**
  * Shared XState setup configuration for all storytelling machines.

@@ -10,7 +10,7 @@ import { type GameContext, type GameEvent, type GameActors } from './gameTypes'
 
 /**
  * Minimal Game Machine Snapshot
- * 
+ *
  * This is a simplified version of the game machine with:
  * - 1 actor (playCardActor)
  * - 1 guard (canPlayCard)

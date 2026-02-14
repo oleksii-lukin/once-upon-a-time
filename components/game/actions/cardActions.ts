@@ -4,7 +4,7 @@ import { type CardData } from '@/utils/gameUtils'
 
 /**
  * XState actions for card management
- * 
+ *
  * These actions handle optimistic UI updates, card state tracking,
  * and pending card confirmations during gameplay.
  */
@@ -54,4 +54,3 @@ export const assignPendingConfirmCard = assign<GameContext, Extract<GameEvent, {
 export const clearPendingConfirmCard = assign<GameContext, GameEvent, any, any, GameActors>({
   pendingConfirmCardId: null,
 })
-

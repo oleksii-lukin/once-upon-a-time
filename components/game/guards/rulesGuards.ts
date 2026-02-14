@@ -21,4 +21,3 @@ export const canPassTurn = ({ context }: { context: GameContext }) =>
  */
 export const isRulesPhaseActive = ({ context }: { context: GameContext }) =>
   context.canPlayMoreCards
-

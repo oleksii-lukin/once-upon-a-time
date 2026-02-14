@@ -14,4 +14,3 @@ export const canPlayCard = ({ context }: { context: GameContext }) => {
 
 export const isRulesFinished = ({ context }: { context: GameContext }) =>
   !context.canPlayMoreCards
-

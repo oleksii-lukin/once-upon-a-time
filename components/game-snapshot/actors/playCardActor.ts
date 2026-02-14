@@ -1,6 +1,6 @@
 /**
  * Play Card Actor - Simplified snapshot version
- * 
+ *
  * Handles playing a card from a player's hand to the game table.
  */
 
@@ -32,7 +32,7 @@ export interface PlayCardActorOutput {
 
 /**
  * Actor that handles playing a card from a player's hand to the game table.
- * 
+ *
  * This is a simplified version that just simulates the database operation.
  */
 export const playCardActor = fromPromise(async ({ input }: { input: PlayCardActorInput }) => {

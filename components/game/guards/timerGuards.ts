@@ -23,4 +23,3 @@ export const shouldSyncTimerForSolo = ({ context }: { context: GameContext }) =>
  */
 export const needsTimerExtension = ({ event }: { event: any }) =>
   event.output?.needsExtension
-

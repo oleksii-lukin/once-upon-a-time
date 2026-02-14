@@ -17,4 +17,3 @@ export const assignGameStart = assign<GameContext, Extract<GameEvent, { type: 'S
   pacingDelay: ({ event }) => event.pacingDelay || 0,
   timerDuration: ({ event }) => event.timerDuration || 0,
 })
-

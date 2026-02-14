@@ -25,7 +25,7 @@ import {
   type ExchangeCardActorInput,
   type TimerSyncInput,
   type TimerExtensionInput,
-  type TimerExtensionOutput
+  type TimerExtensionOutput,
 } from './gameTypes'
 import { canPlayCard, isRulesFinished } from './guards/playGuards'
 import { isTimerEnabled, shouldSyncTimerForSolo, needsTimerExtension } from './guards/timerGuards'
@@ -37,7 +37,7 @@ import {
   isTutorialRulesFinished,
   isTutorialWithPlayedCard,
   hasPendingPassTurn,
-  isPacingDisabled
+  isPacingDisabled,
 } from './guards/persistenceGuards'
 import { assignNextPlayer, assignNextPlayerFromEvent, assignNextPlayerFromActorOutput } from './actions/playerActions'
 import { assignRulesFinished, resetRulesFinished } from './actions/rulesActions'
@@ -48,14 +48,12 @@ import {
   clearPendingStates,
   assignLastPlayedCardAndClearPending,
   assignPersistenceError,
-  assignResetAfterTurnUpdate
+  assignResetAfterTurnUpdate,
 } from './actions/persistenceActions'
 import { getNextPlayerId } from './utils/playerUtils'
 import { type GameContext, type GameEvent, type GameActors } from './gameTypes'
 import { type PlayedCardWithCard } from '@/types/model'
 import { type CardData } from '@/utils/gameUtils'
-
-
 
 export const gameMachine = setup({
   types: {
@@ -234,7 +232,7 @@ export const gameMachine = setup({
                   return {
                     type: 'INTERRUPT',
                     player_id: intEvent.nextPlayerId,
-                    card_id: context.lastPlayedCardId || ''
+                    card_id: context.lastPlayedCardId || '',
                   }
                 }),
               ],
@@ -249,7 +247,7 @@ export const gameMachine = setup({
                     return {
                       type: 'OBJECT',
                       played_card_id: objectEvent.playedCardId,
-                      player_id: objectEvent.nextPlayerId
+                      player_id: objectEvent.nextPlayerId,
                     }
                   }),
                 ],

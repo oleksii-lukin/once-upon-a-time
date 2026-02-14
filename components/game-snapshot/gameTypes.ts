@@ -20,8 +20,8 @@ export interface GameContext {
  */
 export type GameEvent
   = | { type: 'START_GAME', gameSessionId: string, currentPlayerId: string }
-  | { type: 'PLAY_CARD', cardId: string, position: number }
-  | { type: 'CARD_PLAYED', playedCardId: string }
+    | { type: 'PLAY_CARD', cardId: string, position: number }
+    | { type: 'CARD_PLAYED', playedCardId: string }
 
-export type GameActors =
-  | { src: 'playCardActor', logic: typeof playCardActor, id: string }
+export type GameActors
+  = | { src: 'playCardActor', logic: typeof playCardActor, id: string }

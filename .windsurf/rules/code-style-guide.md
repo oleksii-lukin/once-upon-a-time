@@ -4,6 +4,10 @@ trigger: always_on
 
 # Project Rules for Once Upon a Time
 
+## Agent work
+
+ONLY WORK IN SMALL STEPS, IF ANY ACTION REQUIRES MORE THAN SINGLE STEP FROM YOU - ASK USER FOR FEEDBACK AND PERMISSION TO PROCEED
+
 ## Database
 
 ### Database Configuration

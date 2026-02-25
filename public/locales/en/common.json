@@ -131,6 +131,7 @@
     "no_active_lobbies": "No active lobbies found. Create one to start!",
     "spectate": "Spectate",
     "waiting": "Waiting",
+    "their_turn": "Their turn",
     "playing": "Playing",
     "finished": "Finished",
     "lobby_not_found": "Lobby not found",
@@ -139,6 +140,15 @@
     "unexpected_error": "An unexpected error occurred",
     "error": "Error",
     "back_to_home": "Back to Home",
+    "404_title": "Page not found",
+    "404_description": "Sorry, we couldn't find the page you're looking for.",
+    "go_home": "Go Home",
+    "choose_language": "Choose your language:",
+    "error_boundary_title": "Something went wrong",
+    "error_boundary_description": "We encountered an error loading the lobby details.",
+    "try_again": "Try Again",
+    "back_to_lobbies": "Back to Lobbies",
+    "error_details": "Error Details",
     "access_denied": "Access Denied",
     "access_denied_message": "You do not have the required permissions to access this area.",
     "joining_lobby": "Joining lobby...",
@@ -488,7 +498,8 @@
             "allow_connect_description": "Do you want to allow the USB accessory to connect to this device?",
             "dont_allow": "Don't allow",
             "allow": "Allow",
-            "warning": "Warning"
+            "warning": "Warning",
+            "photo_by_mymind": "Photo by mymind on Unsplash"
         },
         "form": {
             "title": "Form",

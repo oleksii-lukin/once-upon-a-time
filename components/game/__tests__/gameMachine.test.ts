@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // Mock Supabase client before importing anything else
 vi.mock('@/utils/supabase/client', () => ({
@@ -47,6 +47,8 @@ const testMachine = gameMachine.provide({
     finalizeWinActor: mockPromiseActor as any,
     objectActor: mockPromiseActor as any,
     exchangeCardActor: mockPromiseActor as any,
+    timerSyncActor: mockPromiseActor as any,
+    timerExtensionActor: mockPromiseActor as any,
   },
 })
 
@@ -69,7 +71,8 @@ describe('gameMachine', () => {
       ],
     })
 
-    expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'full', persistence: 'idle' } })
+    const snapshot = actor.getSnapshot()
+    expect(snapshot.value).toMatchObject({ active: { rules: 'full' } })
   })
 
   it('should handle PLAY_CARD with optimistic update', async () => {

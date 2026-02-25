@@ -9,6 +9,8 @@ import { executeConfirmCard } from './actors/confirmCardActor'
 import { executeFinalizeWin } from './actors/finalizeWinActor'
 import { executeObject } from './actors/objectActor'
 import { executeExchangeCard } from './actors/exchangeCardActor'
+import { executeTimerSync } from './actors/timerSyncActor'
+import { executeTimerExtension } from './actors/timerExtensionActor'
 
 export type MainState = 'idle' | 'active' | 'winning' | 'gameOver'
 export type RulesState = 'narrating' | 'awaitingAck' | 'pending' | 'objecting' | 'interruption' | 'finished' | 'decideMode'
@@ -25,10 +27,22 @@ export interface GameStoreState {
   optimisticCard: (CardData & { status?: string; played_by?: string }) | null
   inFlightHandId: string | null
   lastPlayedCardId: string | null
-  rulesFinished: boolean
+  canPlayMoreCards: boolean
   players: Player[]
   nextPlayerId: string | null
   pacingDelay: number
+  timerDuration: number
+  pendingConfirmCardId: string | null
+  pendingPassTurn: boolean
+  timerSyncInput?: {
+    gameSessionId: string
+    isEnabled: boolean
+    duration: number
+    currentPlayerId: string | null
+    action: 'start' | 'stop' | 'sync' | 'extend'
+    pacingDelay: number
+    newExpiresAt?: string
+  }
 
   // Rules Context (from StorytellingContext)
   cardsPlayedThisTurn: number
@@ -54,6 +68,7 @@ export interface GameStoreActions {
     currentPlayerId: string
     players: Player[]
     pacingDelay: number
+    timerDuration: number
   }) => void
 
   resetRules: () => void
@@ -71,11 +86,19 @@ export interface GameStoreActions {
   // Internal Logic / Rules Events
   playCardAck: (playedCardId: string) => void
   handleRulesDone: () => void
-  interrupt: () => void
-  object: (playedCardId: string, storytellerId: string) => void
+  interrupt: (nextPlayerId?: string) => void
+  object: (playedCardId: string, storytellerId: string, nextPlayerId?: string) => void
   confirm: () => void
   valid: () => void
   invalid: () => void
+  syncCurrentPlayer: (currentPlayerId: string) => void
+  autoPass: () => Promise<void>
+
+  // Timer Actions
+  syncTimer: (isEnabled: boolean, duration: number) => Promise<void>
+  startTimer: () => Promise<void>
+  stopTimer: () => Promise<void>
+  extendTimer: () => Promise<void>
 
   // Helper
   calculateNextPlayerId: () => string | null
@@ -94,10 +117,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   optimisticCard: null,
   inFlightHandId: null,
   lastPlayedCardId: null,
-  rulesFinished: false,
+  canPlayMoreCards: true,
   players: [],
   nextPlayerId: null,
   pacingDelay: 0,
+  timerDuration: 0,
+  pendingConfirmCardId: null,
+  pendingPassTurn: false,
 
   cardsPlayedThisTurn: 0,
   maxCardsPerTurn: null,
@@ -136,7 +162,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // Actions
-  startGame: ({ gameSessionId, lobbyId, mode, currentPlayerId, players, pacingDelay }) => {
+  startGame: async ({ gameSessionId, lobbyId, mode, currentPlayerId, players, pacingDelay, timerDuration }) => {
     set({
       gameSessionId,
       lobbyId,
@@ -144,10 +170,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentPlayerId,
       players,
       pacingDelay,
+      timerDuration,
       mainState: 'active',
       rulesState: 'decideMode',
     })
     get().resetRules()
+
+    // Start timer if enabled
+    if (timerDuration > 0) {
+      await get().startTimer()
+    }
   },
 
   resetRules: () => {
@@ -183,7 +215,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     set({
-      rulesFinished: false,
+      canPlayMoreCards: true,
       cardsPlayedThisTurn: 0,
       maxCardsPerTurn,
       canInterrupt,
@@ -199,7 +231,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   playCard: async (card, playedCardsCount) => {
     const state = get()
-    if (state.inFlightHandId || state.rulesFinished) return
+    if (state.persistenceState !== 'idle' || !state.canPlayMoreCards) return
+
+    // Timer logic from machine: checkingExtension on PLAY_CARD
+    if (state.timerDuration > 0 && state.pacingDelay > 0) {
+      get().extendTimer()
+    }
 
     set({
       optimisticCard: {
@@ -222,8 +259,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({
         lastPlayedCardId: result.id,
-        persistenceState: 'idle',
       })
+
+      // Check for pending actions
+      const updatedState = get()
+      if (updatedState.pendingConfirmCardId) {
+        set({
+          pendingConfirmCardId: null,
+          persistenceState: 'confirmingCard',
+        })
+        await get().confirmCard(result.id)
+      } else {
+        set({ persistenceState: 'idle' })
+      }
+
       get().playCardAck(result.id)
     } catch (e: any) {
       set({
@@ -238,6 +287,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   passTurn: async (isHandEmpty) => {
     const state = get()
+    if (state.persistenceState !== 'idle') {
+      set({ pendingPassTurn: true })
+      return
+    }
     set({ persistenceState: 'passingTurn' })
 
     try {
@@ -269,6 +322,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         mainState: 'active',
       })
       get().resetRules()
+      if (get().timerDuration > 0) {
+        await get().startTimer()
+      }
     } catch (e: any) {
       set({
         lastPersistenceError: e.message || 'Unknown error',
@@ -299,6 +355,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ persistenceState: 'idle' })
       get().resetRules()
+      if (get().timerDuration > 0) {
+        await get().startTimer()
+      }
     } catch (e: any) {
       set({
         lastPersistenceError: e.message || 'Unknown error',
@@ -334,6 +393,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ persistenceState: 'idle' })
       get().resetRules()
+      if (get().timerDuration > 0) {
+        await get().startTimer()
+      }
     } catch (e: any) {
       set({
         lastPersistenceError: e.message || 'Unknown error',
@@ -361,6 +423,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({ persistenceState: 'idle' })
       get().resetRules()
+      if (get().timerDuration > 0) {
+        await get().startTimer()
+      }
     } catch (e: any) {
       set({
         lastPersistenceError: e.message || 'Unknown error',
@@ -371,6 +436,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   confirmCard: async (playedCardId) => {
     const state = get()
+    if (state.persistenceState !== 'idle' && state.persistenceState !== 'playingCard') {
+      set({ pendingConfirmCardId: playedCardId })
+      return
+    }
+
     set({ persistenceState: 'confirmingCard' })
 
     try {
@@ -380,6 +450,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
         optimisticCard: null,
         inFlightHandId: null,
       })
+
+      // Check for pending pass turn
+      if (get().pendingPassTurn) {
+        set({ pendingPassTurn: false })
+        await get().passTurn()
+        return
+      }
+
+      // Restart timer in solo mode after confirmation
+      const updatedState = get()
+      if (updatedState.timerDuration > 0 && updatedState.gameMode === 'solo') {
+        await get().startTimer()
+      }
     } catch (e: any) {
       set({
         lastPersistenceError: e.message || 'Unknown error',
@@ -477,22 +560,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   handleRulesDone: () => {
-    set({ rulesFinished: true, rulesState: 'finished' })
+    set({ canPlayMoreCards: false, rulesState: 'finished' })
   },
 
-  interrupt: () => {
+  interrupt: (nextPlayerId) => {
     const { canInterrupt } = get()
     if (!canInterrupt) return
 
+    if (nextPlayerId) set({ nextPlayerId })
     set({ rulesState: 'interruption' })
-    // In current implementation, interrupt validity is handled via external VALID/INVALID events
-    // but in Zustand we might just assume valid for now or wait for valid() call.
   },
 
-  object: (playedCardId, storytellerId) => {
+  object: (playedCardId, storytellerId, nextPlayerId) => {
     const { canObject } = get()
     if (!canObject) return
 
+    if (nextPlayerId) set({ nextPlayerId })
     // Clear pacing timeout if any
     const state = get()
     if (state.pacingTimeoutId) {
@@ -540,6 +623,86 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({ rulesState: 'narrating' })
     } else if (rulesState === 'objecting') {
       get().confirm()
+    }
+  },
+
+  syncCurrentPlayer: (currentPlayerId) => {
+    set({ currentPlayerId })
+    // If the turn changed, we should probably reset rules
+    get().resetRules()
+  },
+
+  autoPass: async () => {
+    set({ canPlayMoreCards: false, pendingPassTurn: true })
+    if (get().persistenceState === 'idle') {
+      set({ pendingPassTurn: false })
+      await get().passTurn()
+    }
+  },
+
+  syncTimer: async (isEnabled, duration) => {
+    const state = get()
+    if (!state.gameSessionId) return
+
+    await executeTimerSync({
+      gameSessionId: state.gameSessionId,
+      isEnabled,
+      duration,
+      currentPlayerId: state.currentPlayerId,
+      action: 'sync',
+      pacingDelay: state.pacingDelay,
+    })
+    set({ timerDuration: duration })
+  },
+
+  startTimer: async () => {
+    const state = get()
+    if (!state.gameSessionId || state.timerDuration <= 0) return
+
+    await executeTimerSync({
+      gameSessionId: state.gameSessionId,
+      isEnabled: true,
+      duration: state.timerDuration,
+      currentPlayerId: state.currentPlayerId,
+      action: 'start',
+      pacingDelay: state.pacingDelay,
+    })
+  },
+
+  stopTimer: async () => {
+    const state = get()
+    if (!state.gameSessionId) return
+
+    await executeTimerSync({
+      gameSessionId: state.gameSessionId,
+      isEnabled: true,
+      duration: state.timerDuration,
+      currentPlayerId: state.currentPlayerId,
+      action: 'stop',
+      pacingDelay: state.pacingDelay,
+    })
+  },
+
+  extendTimer: async () => {
+    const state = get()
+    if (!state.gameSessionId || state.timerDuration <= 0) return
+
+    const { needsExtension, newExpiresAt } = await executeTimerExtension({
+      gameSessionId: state.gameSessionId,
+      timerDuration: state.timerDuration,
+      pacingDelay: state.pacingDelay,
+    })
+
+    if (needsExtension) {
+      await executeTimerSync({
+        gameSessionId: state.gameSessionId,
+        isEnabled: true,
+        duration: state.timerDuration,
+        currentPlayerId: state.currentPlayerId,
+        action: 'extend',
+        pacingDelay: state.pacingDelay,
+        newExpiresAt,
+      })
     }
   },
 }))

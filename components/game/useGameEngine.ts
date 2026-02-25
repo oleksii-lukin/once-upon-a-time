@@ -2,6 +2,7 @@ import { useCallback, useMemo, useEffect } from 'react'
 import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { GameMode, GameSession, Player } from '@/types/model'
 import { useGameStore } from './gameStore'
+import { getSortedPlayers } from './utils/playerUtils'
 
 export const useGameEngine = (
   gameSession: GameSession | null,
@@ -9,6 +10,7 @@ export const useGameEngine = (
   players: Player[],
   fetchGameState: () => Promise<void>,
   pacingDelay: number = 0,
+  timerDuration: number = 0,
 ) => {
   const store = useGameStore()
 
@@ -30,10 +32,11 @@ export const useGameEngine = (
         optimisticCard: store.optimisticCard,
         inFlightHandId: store.inFlightHandId,
         lastPlayedCardId: store.lastPlayedCardId,
-        rulesFinished: store.rulesFinished,
+        canPlayMoreCards: store.canPlayMoreCards,
         players: store.players,
         nextPlayerId: store.nextPlayerId,
         pacingDelay: store.pacingDelay,
+        timerDuration: store.timerDuration,
       },
       matches: (path: any): boolean => {
         if (typeof path === 'string') {
@@ -59,12 +62,25 @@ export const useGameEngine = (
         gameSessionId: gameSession.id,
         lobbyId: gameSession.lobby_id,
         mode: gameSession.game_mode as GameMode || 'full',
-        currentPlayerId: currentPlayer.id,
+        currentPlayerId: gameSession.current_turn_player_id || currentPlayer.id,
         players: players,
         pacingDelay: pacingDelay,
+        timerDuration: timerDuration,
       })
     }
-  }, [gameSession, currentPlayer, players, store, pacingDelay])
+  }, [gameSession, currentPlayer, players, store, pacingDelay, timerDuration])
+
+  // Sync currentPlayerId when database updates (for non-active players)
+  useEffect(() => {
+    if (gameSession?.current_turn_player_id && store.mainState !== 'idle'
+      && store.currentPlayerId !== gameSession.current_turn_player_id) {
+      console.log('[SYNC] Database current_turn_player_id changed:', {
+        storeValue: store.currentPlayerId,
+        databaseValue: gameSession.current_turn_player_id,
+      })
+      store.syncCurrentPlayer(gameSession.current_turn_player_id)
+    }
+  }, [gameSession?.current_turn_player_id, store])
 
   const nextPlayerId = useMemo(() => store.calculateNextPlayerId(), [store])
 
@@ -82,7 +98,10 @@ export const useGameEngine = (
   }, [store])
 
   const interrupt = useCallback(async () => {
-    store.interrupt()
+    const nextId = store.calculateNextPlayerId()
+    if (!nextId) return
+    // In new machine, INTERRUPT takes nextPlayerId
+    store.interrupt(nextId)
   }, [store])
 
   const objectToCard = useCallback(async (playedCardId: string, storytellerId: string) => {
@@ -120,6 +139,7 @@ export const useGameEngine = (
           currentPlayerId: event.currentPlayerId,
           players: event.players || [],
           pacingDelay: event.pacingDelay || 0,
+          timerDuration: event.timerDuration || 0,
         })
         break
       case 'PLAY_CARD':
@@ -155,6 +175,24 @@ export const useGameEngine = (
       case 'RESET_RULES':
         store.resetRules()
         break
+      case 'SYNC_CURRENT_PLAYER':
+        store.syncCurrentPlayer(event.currentPlayerId)
+        break
+      case 'AUTO_PASS':
+        await store.autoPass()
+        break
+      case 'START_TIMER':
+        await store.startTimer()
+        break
+      case 'STOP_TIMER':
+        await store.stopTimer()
+        break
+      case 'EXTEND_TIMER':
+        await store.extendTimer()
+        break
+      case 'SYNC_TIMER':
+        await store.syncTimer(event.isEnabled, event.duration)
+        break
       default:
         console.warn('useGameEngine: unhandled event type:', event.type)
     }
@@ -173,8 +211,10 @@ export const useGameEngine = (
     finalizeWin,
     exchangeCard,
     gameMode: store.gameMode,
+    currentPlayerId: store.currentPlayerId,
     optimisticCard: store.optimisticCard,
     inFlightHandId: store.inFlightHandId,
+    canPlayMoreCards: store.canPlayMoreCards,
     isDrawing: store.persistenceState === 'passingTurn'
       || store.persistenceState === 'exchangingCard'
       || store.persistenceState === 'challengingStutter'

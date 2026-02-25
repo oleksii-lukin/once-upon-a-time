@@ -151,7 +151,10 @@ export function validateConfirmCardActorInput(input: unknown): asserts input is 
  * @see {@link ConfirmCardActorInput} for input interface details
  * @see {@link validateConfirmCardActorInput} for validation logic
  */
-export const confirmCardActor = fromPromise(async ({ input }: { input: ConfirmCardActorInput }) => {
+/**
+ * Core logic for confirming a card - separated from XState for reuse
+ */
+export async function executeConfirmCard(input: ConfirmCardActorInput): Promise<boolean> {
   // Validate input parameters
   validateConfirmCardActorInput(input)
 
@@ -163,4 +166,8 @@ export const confirmCardActor = fromPromise(async ({ input }: { input: ConfirmCa
   if (error) throw error
 
   return true
+}
+
+export const confirmCardActor = fromPromise(async ({ input }: { input: ConfirmCardActorInput }) => {
+  return executeConfirmCard(input)
 })

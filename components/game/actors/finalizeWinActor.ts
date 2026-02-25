@@ -179,7 +179,10 @@ export function validateFinalizeWinActorInput(input: unknown): asserts input is 
  * @see {@link FinalizeWinActorInput} for input interface details
  * @see {@link validateFinalizeWinActorInput} for validation logic
  */
-export const finalizeWinActor = fromPromise(async ({ input }: { input: FinalizeWinActorInput }) => {
+/**
+ * Core logic for finalizing win - separated from XState for reuse
+ */
+export async function executeFinalizeWin(input: FinalizeWinActorInput): Promise<boolean> {
   // Validate input parameters
   validateFinalizeWinActorInput(input)
 
@@ -201,4 +204,8 @@ export const finalizeWinActor = fromPromise(async ({ input }: { input: FinalizeW
     .eq('id', input.lobbyId)
 
   return true
+}
+
+export const finalizeWinActor = fromPromise(async ({ input }: { input: FinalizeWinActorInput }) => {
+  return executeFinalizeWin(input)
 })

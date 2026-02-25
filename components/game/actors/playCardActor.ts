@@ -130,7 +130,10 @@ export function validatePlayCardActorInput(input: unknown): asserts input is Pla
  * @see {@link PlayCardActorInput} for input interface details
  * @see {@link validatePlayCardActorInput} for validation logic
  */
-export const playCardActor = fromPromise(async ({ input }: { input: PlayCardActorInput }) => {
+/**
+ * Core logic for playing a card - separated from XState for reuse
+ */
+export async function executePlayCard(input: PlayCardActorInput): Promise<PlayCardActorOutput> {
   // Validate input parameters
   validatePlayCardActorInput(input)
 
@@ -158,4 +161,8 @@ export const playCardActor = fromPromise(async ({ input }: { input: PlayCardActo
     .eq('card_id', input.cardId)
 
   return data as PlayCardActorOutput
+}
+
+export const playCardActor = fromPromise(async ({ input }: { input: PlayCardActorInput }) => {
+  return executePlayCard(input)
 })

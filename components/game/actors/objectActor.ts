@@ -79,7 +79,10 @@ export function validateObjectActorInput(input: unknown): asserts input is Objec
  * }
  * ```
  */
-export const objectActor = fromPromise(async ({ input }: { input: ObjectActorInput }) => {
+/**
+ * Core logic for objecting to a card - separated from XState for reuse
+ */
+export async function executeObject(input: ObjectActorInput): Promise<ObjectActorInput> {
   // Validate input parameters
   validateObjectActorInput(input)
 
@@ -111,4 +114,8 @@ export const objectActor = fromPromise(async ({ input }: { input: ObjectActorInp
     .eq('id', input.playedCardId)
 
   return input
+}
+
+export const objectActor = fromPromise(async ({ input }: { input: ObjectActorInput }) => {
+  return executeObject(input)
 })

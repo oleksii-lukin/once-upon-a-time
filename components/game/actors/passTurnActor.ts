@@ -119,7 +119,10 @@ export function validatePassTurnActorInput(input: unknown): asserts input is Pas
  * @see {@link PassTurnActorInput} for input interface details
  * @see {@link validatePassTurnActorInput} for validation logic
  */
-export const passTurnActor = fromPromise(async ({ input }: { input: PassTurnActorInput }) => {
+/**
+ * Core logic for passing turn - separated from XState for reuse
+ */
+export async function executePassTurn(input: PassTurnActorInput): Promise<boolean> {
   // Validate input parameters
   validatePassTurnActorInput(input)
 
@@ -134,4 +137,8 @@ export const passTurnActor = fromPromise(async ({ input }: { input: PassTurnActo
   if (error) throw error
 
   return true
+}
+
+export const passTurnActor = fromPromise(async ({ input }: { input: PassTurnActorInput }) => {
+  return executePassTurn(input)
 })

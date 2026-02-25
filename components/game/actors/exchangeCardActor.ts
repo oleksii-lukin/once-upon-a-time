@@ -29,7 +29,10 @@ export function validateExchangeCardActorInput(input: unknown): asserts input is
   validateUUID(typedInput.cardId, 'cardId')
 }
 
-export const exchangeCardActor = fromPromise(async ({ input }: { input: ExchangeCardActorInput }) => {
+/**
+ * Core logic for exchanging a card - separated from XState for reuse
+ */
+export async function executeExchangeCard(input: ExchangeCardActorInput): Promise<boolean> {
   validateExchangeCardActorInput(input)
 
   // 1. Get one matching card from draw pile
@@ -84,4 +87,8 @@ export const exchangeCardActor = fromPromise(async ({ input }: { input: Exchange
     .eq('id', newCard.id)
 
   return true
+}
+
+export const exchangeCardActor = fromPromise(async ({ input }: { input: ExchangeCardActorInput }) => {
+  return executeExchangeCard(input)
 })

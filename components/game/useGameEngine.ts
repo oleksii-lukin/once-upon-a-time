@@ -1,16 +1,7 @@
 import { useCallback, useMemo, useEffect } from 'react'
 import { type CardData, type HandCardData } from '@/utils/gameUtils'
-import { useMachine } from '@xstate/react'
-import { createBrowserInspector } from '@statelyai/inspect'
-import { gameMachine } from './gameMachine'
 import { GameMode, GameSession, Player } from '@/types/model'
-
-const inspector
-  = process.env.NODE_ENV === 'development'
-    && typeof window !== 'undefined'
-    && localStorage.getItem('xstate-inspector') === 'enabled'
-    ? createBrowserInspector()
-    : null
+import { useGameStore } from './gameStore'
 
 export const useGameEngine = (
   gameSession: GameSession | null,
@@ -19,15 +10,52 @@ export const useGameEngine = (
   fetchGameState: () => Promise<void>,
   pacingDelay: number = 0,
 ) => {
-  const [state, send] = useMachine(gameMachine, {
-    inspect: inspector?.inspect || undefined,
-  })
+  const store = useGameStore()
 
-  // Initialize machine if session is loaded
+  // Compatibility layer for XState-like state object
+  const state = useMemo(() => {
+    const value = store.mainState === 'active'
+      ? { active: { rules: store.rulesState, persistence: store.persistenceState } }
+      : store.mainState
+
+    return {
+      value,
+      context: {
+        gameSessionId: store.gameSessionId,
+        lobbyId: store.lobbyId,
+        gameMode: store.gameMode,
+        error: store.error,
+        lastPersistenceError: store.lastPersistenceError,
+        currentPlayerId: store.currentPlayerId,
+        optimisticCard: store.optimisticCard,
+        inFlightHandId: store.inFlightHandId,
+        lastPlayedCardId: store.lastPlayedCardId,
+        rulesFinished: store.rulesFinished,
+        players: store.players,
+        nextPlayerId: store.nextPlayerId,
+        pacingDelay: store.pacingDelay,
+      },
+      matches: (path: any): boolean => {
+        if (typeof path === 'string') {
+          return store.mainState === path
+        }
+        if (typeof path === 'object') {
+          if (path.active) {
+            if (store.mainState !== 'active') return false
+            if (path.active.rules) return store.rulesState === path.active.rules
+            if (path.active.persistence) return store.persistenceState === path.active.persistence
+            return true
+          }
+        }
+        return false
+      },
+    }
+  }, [store])
+
+  // Initialize store if session is loaded
   useEffect(() => {
-    if (gameSession && currentPlayer && state.value === 'idle') {
-      send({
-        type: 'START_GAME',
+    if (gameSession && currentPlayer && store.mainState === 'idle') {
+      store.startGame({
         gameSessionId: gameSession.id,
         lobbyId: gameSession.lobby_id,
         mode: gameSession.game_mode as GameMode || 'full',
@@ -36,64 +64,101 @@ export const useGameEngine = (
         pacingDelay: pacingDelay,
       })
     }
-  }, [gameSession, currentPlayer, players, send, state.value, pacingDelay])
+  }, [gameSession, currentPlayer, players, store, pacingDelay])
 
-  const nextPlayer = useMemo(() => {
-    if (!currentPlayer || players.length === 0) return null
-    const sortedPlayers = players
-      .filter(p => p.role !== 'spectator')
-      .sort((a, b) => {
-        if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-          return a.turn_order - b.turn_order
-        }
-        return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-      })
-    const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id)
-    if (currentIndex === -1) return null
-
-    const nextIndex = (currentIndex + 1) % sortedPlayers.length
-    return sortedPlayers[nextIndex]
-  }, [currentPlayer, players])
+  const nextPlayerId = useMemo(() => store.calculateNextPlayerId(), [store])
 
   const playCard = useCallback(async (card: HandCardData, playedCardsCount: number) => {
     if (card.type === 'ending') return
-    send({ type: 'PLAY_CARD', card, playedCardsCount })
-  }, [send])
+    await store.playCard(card, playedCardsCount)
+  }, [store])
 
   const passTurn = useCallback(async (isHandEmpty?: boolean) => {
-    send({ type: 'PASS', isHandEmpty })
-  }, [send])
+    await store.passTurn(isHandEmpty)
+  }, [store])
 
   const exchangeCard = useCallback(async (cardId: string, isEnding?: boolean) => {
-    send({ type: 'EXCHANGE', cardId, isEnding })
-  }, [send])
+    await store.exchangeCard(cardId, isEnding)
+  }, [store])
 
   const interrupt = useCallback(async () => {
-    send({ type: 'INTERRUPT' })
-  }, [send])
+    store.interrupt()
+  }, [store])
 
   const objectToCard = useCallback(async (playedCardId: string, storytellerId: string) => {
-    if (!nextPlayer) return
-    send({ type: 'OBJECT', playedCardId, storytellerId, nextPlayerId: nextPlayer.id })
-  }, [send, nextPlayer])
+    const nextId = store.calculateNextPlayerId()
+    if (!nextId) return
+    await store.objectToCard(playedCardId, storytellerId, nextId)
+  }, [store])
 
   const challengeStutter = useCallback(async (storytellerId: string) => {
-    if (!nextPlayer) return
-    send({ type: 'CHALLENGE_STUTTER', storytellerId, nextPlayerId: nextPlayer.id })
-  }, [send, nextPlayer])
+    const nextId = store.calculateNextPlayerId()
+    if (!nextId) return
+    await store.challengeStutter(storytellerId, nextId)
+  }, [store])
 
   const confirmCard = useCallback(async (playedCardId: string) => {
-    send({ type: 'CONFIRM_CARD', playedCardId })
-  }, [send])
+    await store.confirmCard(playedCardId)
+  }, [store])
 
   const winGame = useCallback(async (card: CardData, playedCardsCount: number) => {
-    send({ type: 'WIN_GAME', card, playedCardsCount })
-  }, [send])
+    await store.winGame(card, playedCardsCount)
+  }, [store])
 
   const finalizeWin = useCallback(async (winnerId: string) => {
     if (!gameSession) return
-    send({ type: 'FINALIZE_WIN', winnerId, lobbyId: gameSession.lobby_id })
-  }, [send, gameSession])
+    await store.finalizeWin(winnerId, gameSession.lobby_id)
+  }, [store, gameSession])
+
+  const send = useCallback(async (event: any) => {
+    switch (event.type) {
+      case 'START_GAME':
+        store.startGame({
+          gameSessionId: event.gameSessionId,
+          lobbyId: event.lobbyId,
+          mode: event.mode,
+          currentPlayerId: event.currentPlayerId,
+          players: event.players || [],
+          pacingDelay: event.pacingDelay || 0,
+        })
+        break
+      case 'PLAY_CARD':
+        await store.playCard(event.card, event.playedCardsCount)
+        break
+      case 'PASS':
+        await store.passTurn(event.isHandEmpty)
+        break
+      case 'INTERRUPT':
+        store.interrupt()
+        break
+      case 'OBJECT':
+        await store.objectToCard(event.playedCardId, event.storytellerId, event.nextPlayerId)
+        break
+      case 'CHALLENGE_STUTTER':
+        await store.challengeStutter(event.storytellerId, event.nextPlayerId)
+        break
+      case 'CONFIRM_CARD':
+        await store.confirmCard(event.playedCardId)
+        break
+      case 'EXCHANGE':
+        await store.exchangeCard(event.cardId, event.isEnding)
+        break
+      case 'WIN_GAME':
+        await store.winGame(event.card, event.playedCardsCount)
+        break
+      case 'FINALIZE_WIN':
+        await store.finalizeWin(event.winnerId, event.lobbyId)
+        break
+      case 'RULES_DONE':
+        store.handleRulesDone()
+        break
+      case 'RESET_RULES':
+        store.resetRules()
+        break
+      default:
+        console.warn('useGameEngine: unhandled event type:', event.type)
+    }
+  }, [store])
 
   return {
     state,
@@ -107,12 +172,12 @@ export const useGameEngine = (
     winGame,
     finalizeWin,
     exchangeCard,
-    gameMode: state.context.gameMode,
-    optimisticCard: state.context.optimisticCard,
-    inFlightHandId: state.context.inFlightHandId,
-    isDrawing: state.matches({ active: { persistence: 'passingTurn' } })
-      || state.matches({ active: { persistence: 'exchangingCard' } })
-      || state.matches({ active: { persistence: 'challengingStutter' } })
-      || state.matches({ active: { persistence: 'penaltyForStoryteller' } }),
+    gameMode: store.gameMode,
+    optimisticCard: store.optimisticCard,
+    inFlightHandId: store.inFlightHandId,
+    isDrawing: store.persistenceState === 'passingTurn'
+      || store.persistenceState === 'exchangingCard'
+      || store.persistenceState === 'challengingStutter'
+      || store.persistenceState === 'penaltyForStoryteller',
   }
 }

@@ -130,7 +130,10 @@ export function validateDrawCardsActorInput(input: unknown): asserts input is Dr
  * @see {@link DrawCardsActorInput} for input interface details
  * @see {@link validateDrawCardsActorInput} for validation logic
  */
-export const drawCardsActor = fromPromise(async ({ input }: { input: DrawCardsActorInput }) => {
+/**
+ * Core logic for drawing cards - separated from XState for reuse
+ */
+export async function executeDrawCards(input: DrawCardsActorInput): Promise<boolean> {
   // Validate input parameters
   validateDrawCardsActorInput(input)
 
@@ -168,4 +171,8 @@ export const drawCardsActor = fromPromise(async ({ input }: { input: DrawCardsAc
     .in('id', drawCards.map(dc => dc.id))
 
   return true
+}
+
+export const drawCardsActor = fromPromise(async ({ input }: { input: DrawCardsActorInput }) => {
+  return executeDrawCards(input)
 })

@@ -1,13 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderHook, waitFor, act } from '@testing-library/react'
-import { useGameEngine } from '../useGameEngine'
+import { render, waitFor, act } from '@testing-library/react'
+import {
+  GameEngineProvider,
+  useGameSelector,
+  useGameActions,
+} from '../useGameEngine'
 import { type GameSession, type Player } from '@/types/model'
 import { type CardData } from '@/utils/gameUtils'
 
 /**
- * Wiring test for the turn-reconciliation effect: verifies that the pure
- * rule from utils/reconcile.ts is actually applied by useGameEngine when
- * the DB's current_turn_player_id changes.
+ * Wiring test for the engine provider: verifies the lifecycle effects
+ * (START_GAME + the turn-reconciliation rule from utils/reconcile.ts) and
+ * that selectors/actions observe the machine correctly.
  */
 
 const { mockActions } = vi.hoisted(() => ({
@@ -33,7 +37,7 @@ const { mockActions } = vi.hoisted(() => ({
 vi.mock('@/app/actions/game', () => mockActions)
 
 // Valid UUIDs so actor input validation passes and real actors run against
-// the mock client.
+// the mocked actions.
 const SESSION_ID = '11111111-1111-4111-8111-111111111111'
 const P1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const P2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -59,54 +63,94 @@ const currentPlayer = players[0]
 
 const winCard = { id: WIN_CARD_ID, type: 'ending' } as unknown as CardData
 
-describe('useGameEngine - turn reconciliation wiring', () => {
-  it('adopts the remote turn when no local action is in flight', async () => {
-    const { result, rerender } = renderHook(
-      ({ session }: { session: GameSession }) =>
-        useGameEngine(session, currentPlayer, players, 0, 0),
-      { initialProps: { session: makeSession(P1) } },
+interface EngineApi {
+  currentPlayerId: string | null
+  inFlightHandId: string | null
+  isWinning: boolean
+  actions: ReturnType<typeof useGameActions>
+}
+
+function Probe({ api }: { api: { current: EngineApi | null } }) {
+  api.current = {
+    currentPlayerId: useGameSelector(snapshot => snapshot.context.currentPlayerId),
+    inFlightHandId: useGameSelector(snapshot => snapshot.context.inFlightHandId),
+    isWinning: useGameSelector(snapshot => snapshot.matches('winning')),
+    actions: useGameActions(currentPlayer, players),
+  }
+  return null
+}
+
+function renderEngine(session: GameSession) {
+  const api: { current: EngineApi | null } = { current: null }
+  const view = render(
+    <GameEngineProvider
+      gameSession={session}
+      currentPlayer={currentPlayer}
+      players={players}
+      pacingDelay={0}
+      timerDuration={0}
+    >
+      <Probe api={api} />
+    </GameEngineProvider>,
+  )
+
+  const rerenderWithSession = (next: GameSession) => {
+    view.rerender(
+      <GameEngineProvider
+        gameSession={next}
+        currentPlayer={currentPlayer}
+        players={players}
+        pacingDelay={0}
+        timerDuration={0}
+      >
+        <Probe api={api} />
+      </GameEngineProvider>,
     )
+  }
+
+  return { api, rerenderWithSession }
+}
+
+describe('GameEngineProvider - turn reconciliation wiring', () => {
+  it('adopts the remote turn when no local action is in flight', async () => {
+    const { api, rerenderWithSession } = renderEngine(makeSession(P1))
 
     // machine started with the initial (matching) remote value
     await waitFor(() => {
-      expect(result.current.currentPlayerId).toBe(P1)
+      expect(api.current!.currentPlayerId).toBe(P1)
     })
 
     // remote turn changes while the local player is idle → machine follows
-    rerender({ session: makeSession(P2) })
+    rerenderWithSession(makeSession(P2))
 
     await waitFor(() => {
-      expect(result.current.currentPlayerId).toBe(P2)
+      expect(api.current!.currentPlayerId).toBe(P2)
     })
   })
 
   it('keeps local state while a local action is in flight', async () => {
-    const { result, rerender } = renderHook(
-      ({ session }: { session: GameSession }) =>
-        useGameEngine(session, currentPlayer, players, 0, 0),
-      { initialProps: { session: makeSession(P1) } },
-    )
+    const { api, rerenderWithSession } = renderEngine(makeSession(P1))
 
     await waitFor(() => {
-      expect(result.current.currentPlayerId).toBe(P1)
+      expect(api.current!.currentPlayerId).toBe(P1)
     })
 
-    // enter the win flow: playCardActor's DB insert never resolves, so the
-    // machine stays in the in-flight `winning` state
+    // enter the win flow: playCard hangs (mocked), so the machine stays in
+    // the in-flight `winning` state
     act(() => {
-      result.current.winGame(winCard, 0)
+      api.current!.actions.winGame(winCard, 0)
     })
     await waitFor(() => {
-      expect(result.current.inFlightHandId).toBe(WIN_CARD_ID)
+      expect(api.current!.inFlightHandId).toBe(WIN_CARD_ID)
     })
 
     // remote turn changes mid-action → local state wins
-    rerender({ session: makeSession(P2) })
+    rerenderWithSession(makeSession(P2))
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 30))
     })
 
-    expect(result.current.currentPlayerId).toBe(P1)
-    expect(result.current.state.matches('winning')).toBe(true)
+    expect(api.current!.currentPlayerId).toBe(P1)
+    expect(api.current!.isWinning).toBe(true)
   })
 })

@@ -20,7 +20,7 @@ interface PlayerHandProps {
   onShowDetails?: (card: HandCardData) => void
 }
 
-export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck, onShowDetails }: PlayerHandProps) {
+function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck, onShowDetails }: PlayerHandProps) {
   // Sort cards: Story cards first, Ending cards last
   // We use useMemo to prevent re-sorting on every render if cards dependencies don't change
   const sortedCards = React.useMemo(() => {
@@ -82,3 +82,5 @@ export default function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTu
     </div>
   )
 }
+
+export default React.memo(PlayerHand)

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { type PlayedCardData } from '@/utils/gameUtils'
@@ -17,7 +18,7 @@ interface TableAreaProps {
   onShowDetails?: (card: PlayedCardData) => void
 }
 
-export default function TableArea({ playedCards, storytellerPlayer, players, deck, onShowDetails }: TableAreaProps) {
+function TableArea({ playedCards, storytellerPlayer, players, deck, onShowDetails }: TableAreaProps) {
   const { t } = useTranslation()
   return (
     <div className="grow flex items-start justify-center p-6 overflow-auto relative">
@@ -90,3 +91,5 @@ export default function TableArea({ playedCards, storytellerPlayer, players, dec
     </div>
   )
 }
+
+export default memo(TableArea)

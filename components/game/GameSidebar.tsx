@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   Mic as MicOnIcon,
   MicOff as MicOffIcon,
@@ -105,7 +105,7 @@ interface GameSidebarProps {
   playerHandCounts?: Record<string, number>
 }
 
-export default function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true, isSpectator = false, isAdmin = false, playerHandCounts = {} }: GameSidebarProps) {
+function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, enableVideoChat = true, isSpectator = false, isAdmin = false, playerHandCounts = {} }: GameSidebarProps) {
   const { t } = useTranslation()
   const {
     localStream,
@@ -259,3 +259,5 @@ export default function GameSidebar({ players, currentPlayerId, currentTurnPlaye
     </aside>
   )
 }
+
+export default memo(GameSidebar)

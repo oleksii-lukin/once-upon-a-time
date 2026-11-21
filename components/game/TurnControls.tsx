@@ -23,7 +23,7 @@ interface TurnControlsProps {
   hasRemainingEndingCards?: boolean
 }
 
-export default function TurnControls({
+function TurnControls({
   isMyTurn,
   canInterrupt,
   handSize,
@@ -148,3 +148,5 @@ export default function TurnControls({
     </div>
   )
 }
+
+export default React.memo(TurnControls)

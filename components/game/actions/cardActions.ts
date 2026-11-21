@@ -47,10 +47,3 @@ export const assignLastPlayedCardFromEvent = assign<GameContext, any, any, any, 
 export const assignPendingConfirmCard = assign<GameContext, Extract<GameEvent, { type: 'CONFIRM_CARD' }>, any, any, GameActors>({
   pendingConfirmCardId: ({ event }) => event.playedCardId,
 })
-
-/**
- * Clears pending confirm card ID after confirmation complete
- */
-export const clearPendingConfirmCard = assign<GameContext, GameEvent, any, any, GameActors>({
-  pendingConfirmCardId: null,
-})

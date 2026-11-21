@@ -17,7 +17,6 @@ export const useGameEngine = (
   gameSession: GameSession | null,
   currentPlayer: Player | undefined,
   players: Player[],
-  fetchGameState: () => Promise<void>,
   pacingDelay: number = 0,
   timerDuration: number = 0,
 ) => {
@@ -45,10 +44,6 @@ export const useGameEngine = (
   useEffect(() => {
     if (gameSession?.current_turn_player_id && state.value !== 'idle'
       && state.context.currentPlayerId !== gameSession.current_turn_player_id) {
-      console.log('[SYNC] Database current_turn_player_id changed:', {
-        machineValue: state.context.currentPlayerId,
-        databaseValue: gameSession.current_turn_player_id,
-      })
       send({
         type: 'SYNC_CURRENT_PLAYER',
         currentPlayerId: gameSession.current_turn_player_id,
@@ -94,18 +89,9 @@ export const useGameEngine = (
     send({ type: 'CHALLENGE_STUTTER', storytellerId, nextPlayerId: nextPlayer.id })
   }, [send, nextPlayer])
 
-  const confirmCard = useCallback(async (playedCardId: string) => {
-    send({ type: 'CONFIRM_CARD', playedCardId })
-  }, [send])
-
   const winGame = useCallback(async (card: CardData, playedCardsCount: number) => {
     send({ type: 'WIN_GAME', card, playedCardsCount })
   }, [send])
-
-  const finalizeWin = useCallback(async (winnerId: string) => {
-    if (!gameSession) return
-    send({ type: 'FINALIZE_WIN', winnerId, lobbyId: gameSession.lobby_id })
-  }, [send, gameSession])
 
   return {
     state,
@@ -115,18 +101,12 @@ export const useGameEngine = (
     interrupt,
     objectToCard,
     challengeStutter,
-    confirmCard,
     winGame,
-    finalizeWin,
     exchangeCard,
     gameMode: state.context.gameMode,
     currentPlayerId: state.context.currentPlayerId,
     optimisticCard: state.context.optimisticCard,
     inFlightHandId: state.context.inFlightHandId,
     canPlayMoreCards: state.context.canPlayMoreCards,
-    isDrawing: state.matches({ active: { persistence: 'passingTurn' } } as any)
-      || state.matches({ active: { persistence: 'exchangingCard' } } as any)
-      || state.matches({ active: { persistence: 'challengingStutter' } } as any)
-      || state.matches({ active: { persistence: 'penaltyForStoryteller' } } as any),
   }
 }

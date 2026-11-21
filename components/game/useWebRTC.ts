@@ -235,7 +235,6 @@ export default function useWebRTC(roomId: string, currentPlayerId: string | null
         // Decide who initiates: simpler ID initiates
         // Using localized UUID comparison for consistent behavior
         if (myPlayerId < playerId) {
-          console.log(`Initiating connection to ${playerId}`)
           await createPeer(playerId, true, localStream || undefined)
         }
       }

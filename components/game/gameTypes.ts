@@ -66,16 +66,6 @@ export interface GameContext {
   pendingConfirmCardId: string | null
   /** Queue: Whether a turn pass is awaiting database idle */
   pendingPassTurn: boolean
-  /** Temporary timer sync input for actor invocation */
-  timerSyncInput?: {
-    gameSessionId: string
-    isEnabled: boolean
-    duration: number
-    currentPlayerId: string | null
-    action: 'start' | 'stop' | 'sync' | 'extend'
-    pacingDelay: number
-    newExpiresAt?: string
-  }
 }
 
 /**
@@ -100,15 +90,7 @@ export type GameEvent
     | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
   /** Triggered when a player meets victory conditions by playing their final card */
     | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
-  /** Handled by persistence to finalize the win in the database */
-    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
   /** Internal: rules child machine has completed its logic */
-    | { type: 'RULES_DONE' }
-  /** Internal: persistence layer successfully updated the database */
-    | { type: 'SYNC_COMPLETE' }
-  /** Internal: persistence layer failed to update the database */
-    | { type: 'SYNC_ERROR', error: string }
-  /** Internal: updates local machine state with new current player from DB */
     | { type: 'SYNC_CURRENT_PLAYER', currentPlayerId: string }
   /** Internal: resets rules state for the next turn */
     | { type: 'RESET_RULES' }
@@ -120,8 +102,6 @@ export type GameEvent
     | { type: 'START_TIMER' }
   /** Internal command to stop the turn timer */
     | { type: 'STOP_TIMER' }
-  /** Internal command to extend the current turn timer */
-    | { type: 'EXTEND_TIMER' }
   /**
    * System-triggered pass (e.g., in Tutorial mode after 1 card is played).
    * Distinct from PASS because it bypasses manual confirmation logic.

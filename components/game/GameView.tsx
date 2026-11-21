@@ -217,7 +217,6 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
 
   // Initialize Game Engine Hook
   const {
-    state,
     playCard,
     passTurn,
     interrupt,
@@ -233,7 +232,6 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     gameSession,
     currentPlayer,
     players,
-    fetchGameState,
     pacingSettings.duration,
     timerSettings.duration,
   )

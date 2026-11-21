@@ -38,8 +38,6 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
         const supabase = createClient(token || undefined)
         const guestId = getGuestId()
 
-        console.log('Joining lobby - userId:', userId, 'user:', user?.fullName)
-
         // 1. Find lobby by code (case-insensitive)
         const { data: lobby, error: lobbyError } = await supabase
           .from('lobbies')
@@ -77,14 +75,12 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
           // Logged-in user - use Clerk info
           displayName = user.fullName || user.username || 'Player'
           avatarUrl = user.imageUrl || null
-          console.log('Using Clerk user info:', displayName, avatarUrl)
         }
         else {
           // Guest - generate fun identity
           const identity = getGuestIdentity(guestId)
           displayName = identity.name
           avatarUrl = `emoji:${identity.emoji}:${identity.color}`
-          console.log('Using guest identity:', displayName)
         }
 
         // 3. Join lobby

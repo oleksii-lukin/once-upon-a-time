@@ -6,12 +6,6 @@ export const isSoloMode = ({ context }: { context: GameContext }) =>
 export const isTutorialMode = ({ context }: { context: GameContext }) =>
   context.gameMode === 'tutorial'
 
-export const isSimpleMode = ({ context }: { context: GameContext }) =>
-  context.gameMode === 'simple'
-
-export const isFullMode = ({ context }: { context: GameContext }) =>
-  context.gameMode === 'full'
-
 /**
  * Checks if game is in simple or fast mode
  */

@@ -13,14 +13,6 @@ export const assignPendingPassTurn = assign<GameContext, GameEvent, any, any, Ga
 })
 
 /**
- * Clears flags for pending pass and card confirmation
- */
-export const clearPendingStates = assign<GameContext, GameEvent, any, any, GameActors>({
-  pendingConfirmCardId: null,
-  pendingPassTurn: false,
-})
-
-/**
  * Assigns the last played card ID and clears pending confirmation
  */
 export const assignLastPlayedCardAndClearPending = assign<GameContext, any, any, any, GameActors>({

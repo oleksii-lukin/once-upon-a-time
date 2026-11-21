@@ -1,4 +1,4 @@
-import { assign, setup, sendTo, raise, assertEvent, type DoneActorEvent, type ErrorActorEvent } from 'xstate'
+import { assign, setup, sendTo, raise, assertEvent, type DoneActorEvent } from 'xstate'
 import {
   tutorialStorytellingMachine,
   simpleStorytellingMachine,
@@ -16,7 +16,6 @@ import { timerSyncActor } from './actors/timerSyncActor'
 import { timerExtensionActor } from './actors/timerExtensionActor'
 import {
   type PlayCardActorInput,
-  type PlayCardActorOutput,
   type DrawCardsActorInput,
   type PassTurnActorInput,
   type ConfirmCardActorInput,
@@ -24,10 +23,9 @@ import {
   type ObjectActorInput,
   type ExchangeCardActorInput,
   type TimerSyncInput,
-  type TimerExtensionInput,
   type TimerExtensionOutput,
 } from './gameTypes'
-import { canPlayCard, isRulesFinished } from './guards/playGuards'
+import { canPlayCard } from './guards/playGuards'
 import { isTimerEnabled, shouldSyncTimerForSolo, needsTimerExtension } from './guards/timerGuards'
 import { isSoloMode, isTutorialMode, isSimpleOrFastMode, isFullOrMainMode } from './guards/modesGuards'
 import { isRulesNotFinished } from './guards/rulesGuards'
@@ -40,20 +38,56 @@ import {
   isPacingDisabled,
 } from './guards/persistenceGuards'
 import { assignNextPlayer, assignNextPlayerFromEvent, assignNextPlayerFromActorOutput } from './actions/playerActions'
-import { assignRulesFinished, resetRulesFinished } from './actions/rulesActions'
 import { assignOptimisticCard, clearOptimisticCard, assignLastPlayedCardFromEvent, assignPendingConfirmCard } from './actions/cardActions'
-import { assignTimerSyncInput, clearTimerSyncInput } from './actions/timerActions'
 import {
   assignPendingPassTurn,
-  clearPendingStates,
   assignLastPlayedCardAndClearPending,
   assignPersistenceError,
   assignResetAfterTurnUpdate,
 } from './actions/persistenceActions'
-import { getNextPlayerId } from './utils/playerUtils'
-import { type GameContext, type GameEvent, type GameActors } from './gameTypes'
-import { type PlayedCardWithCard } from '@/types/model'
+import { type GameContext, type GameEvent } from './gameTypes'
 import { type CardData } from '@/utils/gameUtils'
+
+type TimerSyncTrigger = GameEvent | DoneActorEvent<TimerExtensionOutput>
+
+/**
+ * Builds timerSyncActor input from the event that triggered the sync.
+ *
+ * The triggering event is available to `invoke.input`, so no temporary
+ * context field is needed — keeping the machine context serializable.
+ */
+const buildTimerSyncInput = (context: GameContext, event: TimerSyncTrigger): TimerSyncInput => {
+  const base: TimerSyncInput = {
+    gameSessionId: context.gameSessionId!,
+    duration: context.timerDuration,
+    currentPlayerId: context.currentPlayerId,
+    pacingDelay: context.pacingDelay,
+    isEnabled: false,
+    action: 'start',
+  }
+
+  // timerExtensionActor completed: its output says whether/how to extend
+  if ('output' in event) {
+    return {
+      ...base,
+      isEnabled: context.timerDuration > 0,
+      action: 'extend',
+      newExpiresAt: event.output.newExpiresAt,
+    }
+  }
+
+  switch (event.type) {
+    case 'SYNC_TIMER':
+      return { ...base, isEnabled: event.isEnabled, duration: event.duration, action: 'sync' }
+    case 'STOP_TIMER':
+      return { ...base, isEnabled: false, action: 'stop' }
+    case 'CONFIRM_CARD':
+      return { ...base, isEnabled: true, action: 'start' }
+    case 'START_TIMER':
+    default:
+      return { ...base, isEnabled: context.timerDuration > 0, action: 'start' }
+  }
+}
 
 export const gameMachine = setup({
   types: {
@@ -80,9 +114,6 @@ export const gameMachine = setup({
   },
   guards: {
     canPlayCard,
-    isRulesFinished: ({ context }) => !context.canPlayMoreCards,
-    isTimerEnabled,
-    isSoloMode,
   },
   actions: {
     assignNextPlayer,
@@ -162,15 +193,9 @@ export const gameMachine = setup({
           }),
         },
         SYNC_CURRENT_PLAYER: {
-          actions: [
-            ({ event, context }) => console.log('[SYNC_CURRENT_PLAYER]', {
-              old: context.currentPlayerId,
-              new: (event as { currentPlayerId: string }).currentPlayerId,
-            }),
-            assign({
-              currentPlayerId: ({ event }) => (event as { currentPlayerId: string }).currentPlayerId,
-            }),
-          ],
+          actions: assign({
+            currentPlayerId: ({ event }) => (event as { currentPlayerId: string }).currentPlayerId,
+          }),
         },
       },
       type: 'parallel',
@@ -341,76 +366,21 @@ export const gameMachine = setup({
           initial: 'idle',
           on: {
             PLAY_CARD: {
-              guard: ({ context }) => context.timerDuration > 0 && context.pacingDelay > 0,
+              guard: isTimerEnabled,
               target: '.checkingExtension',
             },
             CONFIRM_CARD: {
               guard: shouldSyncTimerForSolo,
               target: '.syncing',
-              actions: assign(({ context }) => ({
-                timerSyncInput: {
-                  gameSessionId: context.gameSessionId!,
-                  isEnabled: true,
-                  duration: context.timerDuration,
-                  currentPlayerId: context.currentPlayerId,
-                  action: 'start' as const,
-                  pacingDelay: context.pacingDelay,
-                },
-              })),
             },
             SYNC_TIMER: {
               target: '.syncing',
-              actions: assign(({ context, event }) => ({
-                timerSyncInput: {
-                  gameSessionId: context.gameSessionId!,
-                  isEnabled: event.isEnabled,
-                  duration: event.duration,
-                  currentPlayerId: context.currentPlayerId,
-                  action: 'sync' as const,
-                  pacingDelay: context.pacingDelay,
-                },
-              })),
             },
             START_TIMER: {
               target: '.syncing',
-              actions: assign(({ context }) => ({
-                timerSyncInput: {
-                  gameSessionId: context.gameSessionId!,
-                  isEnabled: context.timerDuration > 0,
-                  duration: context.timerDuration,
-                  currentPlayerId: context.currentPlayerId,
-                  action: 'start' as const,
-                  pacingDelay: context.pacingDelay,
-                },
-              })),
             },
             STOP_TIMER: {
               target: '.syncing',
-              actions: assign(({ context }) => ({
-                timerSyncInput: {
-                  gameSessionId: context.gameSessionId!,
-                  isEnabled: false,
-                  duration: context.timerDuration,
-                  currentPlayerId: context.currentPlayerId,
-                  action: 'stop' as const,
-                  pacingDelay: context.pacingDelay,
-                },
-              })),
-            },
-            EXTEND_TIMER: {
-              target: '.syncing',
-              actions: assign(({ context }) => ({
-                timerSyncInput: {
-                  gameSessionId: context.gameSessionId!,
-                  isEnabled: context.timerDuration > 0,
-                  duration: context.timerDuration,
-                  currentPlayerId: context.currentPlayerId,
-                  action: 'extend' as const,
-                  pacingDelay: context.pacingDelay,
-                  // We don't have a specific timestamp here, but extend should handle it
-                  // Actually, let's just make extend fallback to now + pacingDelay + 5 if newExpiresAt is missing
-                },
-              })),
             },
           },
           states: {
@@ -428,7 +398,6 @@ export const gameMachine = setup({
                   {
                     target: 'syncing',
                     guard: needsTimerExtension,
-                    actions: assignTimerSyncInput,
                   },
                   { target: 'idle' },
                 ],
@@ -438,15 +407,10 @@ export const gameMachine = setup({
               invoke: {
                 src: 'timerSyncActor',
                 id: 'timerSyncActor',
-                input: ({ context }) => context.timerSyncInput!,
-                onDone: {
-                  target: 'idle',
-                  actions: clearTimerSyncInput,
-                },
-                onError: {
-                  target: 'idle',
-                  actions: clearTimerSyncInput,
-                },
+                input: ({ context, event }) =>
+                  buildTimerSyncInput(context, event as TimerSyncTrigger),
+                onDone: 'idle',
+                onError: 'idle',
               },
             },
           },
@@ -597,14 +561,7 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
-                    ({ context }) => console.log('[updateTurn DONE] Resetting state', {
-                      oldCurrentPlayerId: context.currentPlayerId,
-                      newCurrentPlayerId: context.nextPlayerId,
-                      inFlightHandId: context.inFlightHandId,
-                      canPlayMoreCards: context.canPlayMoreCards,
-                    }),
                     assignResetAfterTurnUpdate,
-                    () => console.log('[updateTurn DONE] State reset complete'),
                     raise({ type: 'RESET_RULES' }),
                   ],
                 },

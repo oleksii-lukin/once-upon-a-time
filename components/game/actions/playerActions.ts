@@ -15,13 +15,6 @@ export const assignNextPlayer = assign<GameContext, GameEvent, any, any, GameAct
 })
 
 /**
- * Syncs current player from database event
- */
-export const assignSyncedCurrentPlayer = assign<GameContext, Extract<GameEvent, { type: 'SYNC_CURRENT_PLAYER' }>, any, any, GameActors>({
-  currentPlayerId: ({ event }) => event.currentPlayerId,
-})
-
-/**
  * Assigns next player from events that contain nextPlayerId
  * Used for INTERRUPT, OBJECT, and CHALLENGE_STUTTER events
  */

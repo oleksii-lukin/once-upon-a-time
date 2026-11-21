@@ -29,6 +29,10 @@ vi.mock('@/utils/supabase/client', () => ({
 // Mock common actors with any casting to bypass strict types in tests
 const mockPromiseActor = fromPromise(async () => ({ success: true }))
 
+// Captures inputs delivered to timerSyncActor (observable behavior of the
+// timer flow — the machine context itself is intentionally free of it)
+const timerSyncInputs: any[] = []
+
 const testMachine = gameMachine.provide({
   actors: {
     playCardActor: fromPromise(async ({ input }: any) => {
@@ -40,7 +44,10 @@ const testMachine = gameMachine.provide({
     finalizeWinActor: mockPromiseActor as any,
     objectActor: mockPromiseActor as any,
     exchangeCardActor: mockPromiseActor as any,
-    timerSyncActor: mockPromiseActor as any,
+    timerSyncActor: fromPromise(async ({ input }: any) => {
+      timerSyncInputs.push(input)
+      return { success: true }
+    }) as any,
     timerExtensionActor: fromPromise(async () => ({ needsExtension: false })) as any,
   },
 })
@@ -66,6 +73,7 @@ describe('gameMachine - Solo Mode Integration', () => {
 
   beforeEach(() => {
     vi.useFakeTimers()
+    timerSyncInputs.length = 0
   })
 
   it('should play multiple cards and track count', async () => {
@@ -150,15 +158,13 @@ describe('gameMachine - Solo Mode Integration', () => {
 
     // START_GAME triggers START_TIMER (via initial transition or explicitly)
     // In gameMachine, START_GAME -> active.rules.decideMode -> .solo
-    // Persistence.idle handles START_GAME by doing nothing specially? 
-    // Wait, timer state handles it?
 
     await vi.waitFor(() => {
-      const context = actor.getSnapshot().context
-      expect(context.timerSyncInput).toMatchObject({
+      const startInput = timerSyncInputs.find(input => input.action === 'start')
+      expect(startInput).toMatchObject({
         action: 'start',
         isEnabled: true,
-        duration: 30
+        duration: 30,
       })
     })
   })
@@ -186,9 +192,9 @@ describe('gameMachine - Solo Mode Integration', () => {
     actor.send({ ...startGameEvent, timerDuration: 0 })
 
     await vi.waitFor(() => {
-      const context = actor.getSnapshot().context
-      expect(context.timerSyncInput).toMatchObject({
-        isEnabled: false
+      const startInput = timerSyncInputs.find(input => input.action === 'start')
+      expect(startInput).toMatchObject({
+        isEnabled: false,
       })
     })
   })

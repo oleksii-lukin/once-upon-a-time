@@ -1,4 +1,4 @@
-import { assign } from 'xstate'
+import { assign, type DoneActorEvent } from 'xstate'
 import { type GameContext, type GameEvent, type GameActors, type EventWithNextPlayerId } from '../gameTypes'
 
 import { getNextPlayerId } from '../utils/playerUtils'
@@ -10,7 +10,7 @@ import { getNextPlayerId } from '../utils/playerUtils'
 /**
  * Calculates and assigns the next player in turn order
  */
-export const assignNextPlayer = assign<GameContext, GameEvent, any, any, GameActors>({
+export const assignNextPlayer = assign<GameContext, GameEvent, undefined, GameEvent, GameActors>({
   nextPlayerId: ({ context }) => getNextPlayerId(context.players, context.currentPlayerId!),
 })
 
@@ -18,14 +18,14 @@ export const assignNextPlayer = assign<GameContext, GameEvent, any, any, GameAct
  * Assigns next player from events that contain nextPlayerId
  * Used for INTERRUPT, OBJECT, and CHALLENGE_STUTTER events
  */
-export const assignNextPlayerFromEvent = assign<GameContext, EventWithNextPlayerId, any, any, GameActors>({
+export const assignNextPlayerFromEvent = assign<GameContext, EventWithNextPlayerId, undefined, GameEvent, GameActors>({
   nextPlayerId: ({ event }) => event.nextPlayerId,
 })
 
 /**
  * Assigns next player from child actor output
  */
-export const assignNextPlayerFromActorOutput = assign<GameContext, any, any, any, GameActors>({
+export const assignNextPlayerFromActorOutput = assign<GameContext, DoneActorEvent<{ nextPlayerId?: string }>, undefined, GameEvent, GameActors>({
   nextPlayerId: ({ context, event }) => {
     const output = event.output
 

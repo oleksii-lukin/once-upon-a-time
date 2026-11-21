@@ -1,4 +1,5 @@
-import { type GameContext } from '../gameTypes'
+import { type DoneActorEvent } from 'xstate'
+import { type GameContext, type TimerExtensionOutput } from '../gameTypes'
 
 export const isTimerEnabled = ({ context }: { context: GameContext }) =>
   context.timerDuration > 0 && context.pacingDelay > 0
@@ -12,5 +13,5 @@ export const shouldSyncTimerForSolo = ({ context }: { context: GameContext }) =>
 /**
  * Checks if timer extension is needed from actor output
  */
-export const needsTimerExtension = ({ event }: { event: any }) =>
-  event.output?.needsExtension
+export const needsTimerExtension = ({ event }: { event: DoneActorEvent<TimerExtensionOutput> }) =>
+  event.output.needsExtension

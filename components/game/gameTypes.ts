@@ -1,11 +1,6 @@
 import { type GameMode, type Player, type PlayedCardWithCard } from '@/types/model'
 import { type CardData } from '@/utils/gameUtils'
-import {
-  tutorialStorytellingMachine,
-  simpleStorytellingMachine,
-  fullStorytellingMachine,
-  soloStorytellingMachine,
-} from './ruleVariants'
+import { storytellingMachine } from './actors/modes/storytelling'
 import { playCardActor } from './actors/playCardActor'
 import { drawCardsActor } from './actors/drawCardsActor'
 import { passTurnActor } from './actors/passTurnActor'
@@ -125,10 +120,7 @@ export type GameEvent
 export type EventWithNextPlayerId = Extract<GameEvent, { nextPlayerId: string }>
 
 export type GameActors
-  = | { src: 'ruleTutorial', logic: typeof tutorialStorytellingMachine, id: string }
-    | { src: 'ruleSimple', logic: typeof simpleStorytellingMachine, id: string }
-    | { src: 'ruleFull', logic: typeof fullStorytellingMachine, id: string }
-    | { src: 'ruleSolo', logic: typeof soloStorytellingMachine, id: string }
+  = | { src: 'storytelling', logic: typeof storytellingMachine, id: string }
     | { src: 'playCardActor', logic: typeof playCardActor, id: string }
     | { src: 'drawCardsActor', logic: typeof drawCardsActor, id: string }
     | { src: 'passTurnActor', logic: typeof passTurnActor, id: string }

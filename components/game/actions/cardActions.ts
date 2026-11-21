@@ -1,4 +1,4 @@
-import { assign } from 'xstate'
+import { assign, type DoneActorEvent } from 'xstate'
 import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
 import { type CardData } from '@/utils/gameUtils'
 
@@ -13,20 +13,21 @@ import { type CardData } from '@/utils/gameUtils'
  * Sets optimistic card for immediate UI feedback when playing a card
  * Also sets inFlightHandId to track the card being played
  */
-export const assignOptimisticCard = assign<GameContext, Extract<GameEvent, { type: 'PLAY_CARD' }>, any, any, GameActors>({
+export const assignOptimisticCard = assign<GameContext, Extract<GameEvent, { type: 'PLAY_CARD' }>, undefined, GameEvent, GameActors>({
   optimisticCard: ({ context, event }) => ({
     ...event.card,
     status: 'PENDING' as const,
     played_by: context.currentPlayerId!,
   }),
-  inFlightHandId: ({ event }) => (event.card as any).hand_id || event.card.id || null,
+  inFlightHandId: ({ event }) =>
+    (event.card as unknown as { hand_id?: string }).hand_id || event.card.id || null,
 })
 
 /**
  * Clears optimistic card after database confirmation
  * In tutorial mode, keeps inFlightHandId to prevent duplicate plays
  */
-export const clearOptimisticCard = assign<GameContext, GameEvent, any, any, GameActors>({
+export const clearOptimisticCard = assign<GameContext, GameEvent, undefined, GameEvent, GameActors>({
   optimisticCard: null,
   inFlightHandId: ({ context }) =>
     context.gameMode === 'tutorial' ? context.inFlightHandId : null,
@@ -36,14 +37,14 @@ export const clearOptimisticCard = assign<GameContext, GameEvent, any, any, Game
  * Assigns the last played card ID from actor output
  * Used after successful card play to track for pacing/objections
  */
-export const assignLastPlayedCardFromEvent = assign<GameContext, any, any, any, GameActors>({
-  lastPlayedCardId: ({ event }: { event: any }) => event.output.id,
+export const assignLastPlayedCardFromEvent = assign<GameContext, DoneActorEvent<{ id: string }>, undefined, GameEvent, GameActors>({
+  lastPlayedCardId: ({ event }) => event.output.id,
 })
 
 /**
  * Assigns pending confirm card ID for queued confirmation
  * Used when a card needs to be confirmed after pacing delay
  */
-export const assignPendingConfirmCard = assign<GameContext, Extract<GameEvent, { type: 'CONFIRM_CARD' }>, any, any, GameActors>({
+export const assignPendingConfirmCard = assign<GameContext, Extract<GameEvent, { type: 'CONFIRM_CARD' }>, undefined, GameEvent, GameActors>({
   pendingConfirmCardId: ({ event }) => event.playedCardId,
 })

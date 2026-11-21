@@ -1,3 +1,4 @@
+import { type DoneActorEvent } from 'xstate'
 import { type GameContext, type GameEvent } from '../gameTypes'
 
 /**
@@ -7,18 +8,17 @@ import { type GameContext, type GameEvent } from '../gameTypes'
 /**
  * Checks if the card that was just saved is the one we are waiting for
  */
-export const isPendingCardConfirmed = ({ context, event }: { context: GameContext, event: any }) =>
+export const isPendingCardConfirmed = ({ context, event }: { context: GameContext, event: DoneActorEvent<{ id: string }> }) =>
   context.pendingConfirmCardId === event.output.id
 
 /**
- * Checks if turn should auto-pass in tutorial mode after a card is played
+ * Checks if turn should auto-pass in tutorial mode after a card is played.
+ * Accepts any event: a non-PASS trigger (AUTO_PASS) counts as a real pass.
  */
-export const shouldAutoPassInTutorial = ({ context, event }: { context: GameContext, event: any }) => {
-  const passEvent = event as Extract<GameEvent, { type: 'PASS' }>
-  return context.gameMode === 'tutorial'
-    && context.lastPlayedCardId !== null
-    && !passEvent?.isHandEmpty
-}
+export const shouldAutoPassInTutorial = ({ context, event }: { context: GameContext, event: GameEvent }) =>
+  context.gameMode === 'tutorial'
+  && context.lastPlayedCardId !== null
+  && (event.type !== 'PASS' || !event.isHandEmpty)
 
 /**
  * Checks if we are in tutorial mode and rules are finished

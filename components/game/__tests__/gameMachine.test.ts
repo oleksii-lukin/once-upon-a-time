@@ -22,10 +22,8 @@ const mockPromiseActor = fromPromise(async () => ({ success: true }))
 
 const testMachine = gameMachine.provide({
   actors: {
-    ruleTutorial: mockRuleMachine as any,
-    ruleSimple: mockRuleMachine as any,
-    ruleFull: mockRuleMachine as any,
-    ruleSolo: mockRuleMachine as any,
+    // All four mode states invoke the same storytelling machine now
+    storytelling: mockRuleMachine as any,
     playCardActor: mockPromiseActor as any,
     drawCardsActor: mockPromiseActor as any,
     passTurnActor: mockPromiseActor as any,

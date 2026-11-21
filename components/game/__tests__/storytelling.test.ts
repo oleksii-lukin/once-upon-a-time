@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createActor, createMachine, assign } from 'xstate'
-import { storytellingMachine } from '../actors/modes/storytelling'
 
 /**
  * Unit tests for the unified storytelling machine: mode behavior is
@@ -13,46 +11,7 @@ import { storytellingMachine } from '../actors/modes/storytelling'
  * invoke's onDone — exactly how the real game machine consumes it.
  */
 
-interface Harness {
-  /** Sends an event to the child machine */
-  send: (event: any) => void
-  /** Snapshot of the live child (undefined once the child has finished) */
-  child: () => any
-  /** Snapshot of the parent harness */
-  parent: () => any
-}
-
-function startChild(mode: 'tutorial' | 'simple' | 'full' | 'solo', pacingDelay = 0): Harness {
-  const parentMachine = createMachine(
-    {
-      id: 'testParent',
-      context: { result: null as any },
-      initial: 'run',
-      states: {
-        run: {
-          invoke: {
-            id: 'child',
-            src: 'child',
-            input: { pacingDelay, mode },
-            onDone: {
-              target: 'done',
-              actions: assign({ result: ({ event }: any) => event.output }),
-            },
-          },
-        },
-        done: { type: 'final' },
-      },
-    },
-    { actors: { child: storytellingMachine } },
-  )
-
-  const actor = createActor(parentMachine).start()
-  return {
-    send: event => actor.getSnapshot().children!.child!.send(event),
-    child: () => actor.getSnapshot().children!.child?.getSnapshot(),
-    parent: () => actor.getSnapshot(),
-  }
-}
+import { startChild } from './storytellingHarness'
 
 beforeEach(() => {
   vi.useRealTimers()

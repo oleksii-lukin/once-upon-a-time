@@ -105,7 +105,13 @@ export const storytellingMachine = storytellingSetup.createMachine({
               target: '#storytelling.finished',
               actions: assign({ turnCompleteReason: 'objected' as const }),
             },
-            INVALID: 'confirmed',
+            INVALID: {
+              target: 'confirmed',
+              // A rejected objection must not leave its next-player
+              // override behind: it would leak into a later
+              // finished output and corrupt the turn order.
+              actions: assign({ nextPlayerIdOverride: undefined }),
+            },
           },
         },
         confirmed: {
@@ -141,7 +147,11 @@ export const storytellingMachine = storytellingSetup.createMachine({
           target: 'finished',
           actions: assign({ turnCompleteReason: 'interrupted' as const }),
         },
-        INVALID: 'narrating',
+        INVALID: {
+          target: 'narrating',
+          // Same leak as a rejected objection: clear the override.
+          actions: assign({ nextPlayerIdOverride: undefined }),
+        },
       },
     },
     finished: {

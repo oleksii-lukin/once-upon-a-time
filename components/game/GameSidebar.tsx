@@ -253,7 +253,9 @@ function GameSidebar({ players, currentPlayerId, currentTurnPlayerId, lobbyId, e
       <div className="mt-auto text-center p-4 bg-white/5 rounded-lg shrink-0">
         <p className="text-sm text-white/70">{t('game.current_storyteller')}</p>
         <p className="text-lg font-bold text-white">
-          {getPlayerDisplayName(players.find(p => p.id === currentTurnPlayerId) || players[0])}
+          {players.length > 0
+            ? getPlayerDisplayName(players.find(p => p.id === currentTurnPlayerId) || players[0])
+            : '—'}
         </p>
       </div>
     </aside>

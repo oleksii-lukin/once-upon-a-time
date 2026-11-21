@@ -175,15 +175,6 @@ export const gameMachine = setup({
       },
       type: 'parallel',
       states: {
-        logger: {
-          on: {
-            '*': {
-              actions: [
-                ({ event }) => console.log(`[GAME_MACHINE_EVENT] ${event.type}`, event),
-              ],
-            },
-          },
-        },
         rules: {
           initial: 'decideMode',
           on: {

@@ -5,10 +5,11 @@ import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
 import { GameMode, GameSession, Player } from '@/types/model'
 import { getSortedPlayers } from './utils/playerUtils'
+import { shouldApplyRemoteTurnUpdate, selectLocalActionInFlight } from './utils/reconcile'
 
 const inspector
   = process.env.NODE_ENV === 'development'
-    && typeof window !== 'undefined'
+    && typeof localStorage !== 'undefined'
     && localStorage.getItem('xstate-inspector') === 'enabled'
     ? createBrowserInspector()
     : null
@@ -40,16 +41,31 @@ export const useGameEngine = (
     }
   }, [gameSession, currentPlayer, players, send, state.value, pacingDelay, timerDuration])
 
-  // Sync currentPlayerId when database updates (for non-active players)
+  // Turn reconciliation — single explicit rule (see utils/reconcile.ts):
+  // the DB is authoritative for currentPlayerId, except while a local
+  // action is in flight, in which case local state wins until it settles
+  // (the effect re-runs on the next snapshot, so the update is not lost).
   useEffect(() => {
-    if (gameSession?.current_turn_player_id && state.value !== 'idle'
-      && state.context.currentPlayerId !== gameSession.current_turn_player_id) {
-      send({
-        type: 'SYNC_CURRENT_PLAYER',
-        currentPlayerId: gameSession.current_turn_player_id,
+    const hasLocalActionInFlight = selectLocalActionInFlight({
+      inFlightHandId: state.context.inFlightHandId,
+      pendingPassTurn: state.context.pendingPassTurn,
+      pendingConfirmCardId: state.context.pendingConfirmCardId,
+      persistenceIdle: state.matches({ active: { persistence: 'idle' } }),
+      isWinning: state.matches('winning'),
+    })
+
+    const remoteTurnPlayerId = gameSession?.current_turn_player_id ?? null
+    if (
+      remoteTurnPlayerId !== null
+      && shouldApplyRemoteTurnUpdate({
+        remoteTurnPlayerId,
+        machineTurnPlayerId: state.context.currentPlayerId,
+        hasLocalActionInFlight,
       })
+    ) {
+      send({ type: 'SYNC_CURRENT_PLAYER', currentPlayerId: remoteTurnPlayerId })
     }
-  }, [gameSession?.current_turn_player_id, state.value, state.context.currentPlayerId, send])
+  }, [gameSession?.current_turn_player_id, state, send])
 
   const nextPlayer = useMemo(() => {
     if (!currentPlayer || players.length === 0) return null

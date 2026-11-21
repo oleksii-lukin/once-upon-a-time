@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { z } from 'zod'
-import { type Lobby, type Player, type GameSession, type Deck, CardLayout, LobbySettingsSchema, defaultLobbySettings, type CardCategory, CardType } from '@/types/model'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { type Lobby, type Player, Deck, CardLayout, LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 import { createClient } from '@/utils/supabase/client'
 import PlayerHand from './PlayerHand'
 import TableArea from './TableArea'
@@ -12,30 +11,13 @@ import GameCompletionOverlay from './GameCompletionOverlay'
 import CardDetailsOverlay from './CardDetailsOverlay'
 import TimerDisplay from './TimerDisplay'
 import { useGameEngine } from './useGameEngine'
+import { useGameState } from './useGameState'
+import { mergeRemoteWithOptimistic, splitHand, computeCardsPlayedCount, findPendingCard } from './utils/viewState'
 import { useRouter, useParams } from 'next/navigation'
-import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
+import { type CardData, type HandCardData } from '@/utils/gameUtils'
 
 // Default background image URL for game when no deck background is provided
 const DEFAULT_BACKGROUND_IMAGE = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAcH00pKK2AxXMqHsTx4miiahShYfItJyRTa5n9HZSy_NfBIUIjJskQWLoLdEPNWqahz6STV7TNRURrekmNyEm86n7xfYHlDTcC4e5sDy-NKJdLWGPSA_o27Aw5uQDhye24irWMHFdDf9DJ4AdmG7AgkYGu2zx1j0NN0Dsu_IpKvv3WeMqZX2Sq0SNUF1qwp-BQtUXNsNd5AKKuAvvy9Uuu2b_45DkEiAUlVWy-97XvQ6sr8zYxK25Wts7TpJ4ulmvq-9Ag9XAhfys'
-
-const GameSessionSchema = z.object({
-  id: z.string(),
-  created_at: z.string(),
-  current_turn_player_id: z.string().nullable(),
-  deck_id: z.string(),
-  game_mode: z.string().nullable(),
-  is_turn_pending_confirmation: z.boolean().nullable(),
-  last_card_played_at: z.string().nullable(),
-  lobby_id: z.string(),
-  status: z.string(),
-  storyteller_id: z.string().nullable(),
-  updated_at: z.string(),
-  winner_id: z.string().nullable(),
-})
-
-const isValidGameSession = (obj: unknown): obj is GameSession => {
-  return GameSessionSchema.safeParse(obj).success
-}
 
 interface GameViewProps {
   lobby: Lobby
@@ -45,18 +27,12 @@ interface GameViewProps {
 }
 
 export default function GameView({ lobby, players, currentUserId, currentGuestId }: GameViewProps) {
-  const [gameSession, setGameSession] = useState<GameSession | null>(null)
-  const [hand, setHand] = useState<HandCardData[]>([])
-  const [playedCards, setPlayedCards] = useState<PlayedCardData[]>([])
-  const [playerHandCounts, setPlayerHandCounts] = useState<Record<string, number>>({})
-  const [remainingEndingCardsCount, setRemainingEndingCardsCount] = useState<number>(0)
   const [deck, setDeck] = useState<Deck | null>(null)
   const [detailsCard, setDetailsCard] = useState<CardData | null>(null)
   const supabase = createClient()
   const router = useRouter()
   const params = useParams()
   const lng = params.lng as string
-  const fetchGameStateRef = useRef<() => Promise<void>>(null)
 
   // Determine if current player
   const currentPlayer = useMemo(() => players.find(p =>
@@ -67,6 +43,15 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
   const currentPlayerId = currentUserId || currentGuestId || null
   const isSpectator = currentPlayer?.role === 'spectator'
   const [isAdmin, setIsAdmin] = useState(false)
+
+  // Single game-state data pipeline (fetch + realtime subscriptions)
+  const {
+    gameSession,
+    playedCards,
+    hand,
+    playerHandCounts,
+    remainingEndingCardsCount,
+  } = useGameState({ lobbyId: lobby.id, playerId: currentPlayer?.id })
 
   // fetch deck
   useEffect(() => {
@@ -82,89 +67,6 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
       fetchDeck()
     }
   }, [lobby.deck_id, supabase])
-
-  const fetchGameState = useCallback(async () => {
-    // Get game session for this lobby
-    const { data: session } = await supabase
-      .from('game_sessions')
-      .select('*')
-      .eq('lobby_id', lobby.id)
-      .single()
-
-    if (session) {
-      setGameSession(session)
-
-      // Fetch played cards
-      const { data: playedData } = await supabase
-        .from('played_cards')
-        .select(`*, cards (*)`)
-        .eq('game_session_id', session.id)
-        .order('position', { ascending: true })
-        .order('played_at', { ascending: true })
-
-      if (playedData) {
-        const fetchedCards = playedData.map(item => ({
-          ...item.cards,
-          category: item.cards.category as CardCategory,
-          type: item.cards.type as CardType,
-          played_by: item.player_id,
-          status: item.status,
-          played_card_id: item.id,
-        }))
-        setPlayedCards(fetchedCards as PlayedCardData[])
-      }
-
-      // Fetch player's hand
-      if (currentPlayer) {
-        const { data: handData } = await supabase
-          .from('player_hands')
-          .select(`*, cards (*)`)
-          .eq('game_session_id', session.id)
-          .eq('player_id', currentPlayer.id)
-          .order('position')
-
-        if (handData) {
-          const cardsWithType = handData.map(item => ({
-            ...item.cards,
-            category: item.cards.category as CardCategory,
-            type: item.cards.type as CardType,
-            hand_id: item.id,
-            position: item.position,
-          }))
-          setHand(cardsWithType as HandCardData[])
-        }
-      }
-
-      // Fetch all hand counts
-      const { data: allHandsData } = await supabase
-        .from('player_hands')
-        .select(`player_id, cards (type)`)
-        .eq('game_session_id', session.id)
-
-      if (allHandsData) {
-        const counts: Record<string, number> = {}
-        allHandsData.forEach((item) => {
-          if (item.cards?.type !== 'ending') {
-            counts[item.player_id] = (counts[item.player_id] || 0) + 1
-          }
-        })
-        setPlayerHandCounts(counts)
-      }
-
-      // Fetch remaining ending cards in draw pile
-      const { count: endingCount } = await supabase
-        .from('draw_pile')
-        .select(`*, cards!inner(category)`, { count: 'exact', head: true })
-        .eq('game_session_id', session.id)
-        .eq('cards.category', 'ending')
-
-      setRemainingEndingCardsCount(endingCount || 0)
-    }
-  }, [supabase, lobby.id, currentPlayer])
-
-  useEffect(() => {
-    fetchGameStateRef.current = fetchGameState
-  }, [fetchGameState])
 
   // fetch admin status
   useEffect(() => {
@@ -236,71 +138,22 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     timerSettings.duration,
   )
 
-  // Subscriptions
-  useEffect(() => {
-    const timer = setTimeout(fetchGameState, 0)
-
-    const channel = supabase.channel(`game:${lobby.id}`)
-
-    channel
-      .on<GameSession>(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'game_sessions', filter: `lobby_id=eq.${lobby.id}` },
-        (payload) => {
-          if (payload.new && isValidGameSession(payload.new)) setGameSession(payload.new)
-        },
-      )
-
-    if (gameSession?.id) {
-      channel
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'played_cards', filter: `game_session_id=eq.${gameSession.id}` },
-          () => { fetchGameStateRef.current?.() },
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'player_hands', filter: `game_session_id=eq.${gameSession.id}` },
-          () => { fetchGameStateRef.current?.() },
-        )
-    }
-
-    channel.subscribe()
-
-    return () => {
-      clearTimeout(timer)
-      supabase.removeChannel(channel)
-    }
-  }, [supabase, lobby.id, gameSession?.id, fetchGameState])
-
-  // Derived State
+  // Derived state: authoritative remote data + machine's optimistic overlay
   const currentTurnPlayerId = gameSession?.current_turn_player_id
   const isMyTurn = currentTurnPlayerId === currentPlayer?.id
   const storytellerPlayer = players.find(p => p.id === gameSession?.storyteller_id)
 
-  const displayedPlayedCards = useMemo(() => {
-    const all = [...playedCards]
-    if (optimisticCard) {
-      const opt = optimisticCard as PlayedCardData
-      if (!all.some(c => c.id === opt.id && c.played_by === opt.played_by)) {
-        all.push(opt)
-      }
-    }
-    return all
-  }, [playedCards, optimisticCard])
+  const displayed = useMemo(
+    () => mergeRemoteWithOptimistic(
+      { playedCards, hand },
+      { optimisticCard, inFlightHandId },
+    ),
+    [playedCards, hand, optimisticCard, inFlightHandId],
+  )
+  const displayedPlayedCards = displayed.playedCards
+  const displayedHand = displayed.hand
 
-  const displayedHand = useMemo(() => {
-    // Filter out cards whose hand_id is currently in flight
-    // AND cards whose ID is already present in the playedCards array (to prevent flickering)
-    return hand.filter(c =>
-      c.hand_id !== inFlightHandId
-      && !playedCards.some(pc => pc.id === c.id),
-    )
-  }, [hand, inFlightHandId, playedCards])
-
-  const storyCards = displayedHand.filter(c => c.type !== 'ending')
-  const endingCard = displayedHand.find(c => c.type === 'ending')
-  const handSize = storyCards.length
+  const { endingCard, handSize } = splitHand(displayedHand)
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
 
   // Handle timer expiration - automatically pass turn
@@ -354,17 +207,12 @@ export default function GameView({ lobby, players, currentUserId, currentGuestId
     }
   }
 
-  const cardsPlayedCount = useMemo(() => {
-    const counts: Record<string, number> = {}
-    playedCards.forEach((card) => {
-      if (card.played_by && card.status !== 'REVERTED') {
-        counts[card.played_by] = (counts[card.played_by] || 0) + 1
-      }
-    })
-    return counts
-  }, [playedCards])
+  const cardsPlayedCount = useMemo(
+    () => computeCardsPlayedCount(displayedPlayedCards),
+    [displayedPlayedCards],
+  )
 
-  const pendingCard = useMemo(() => displayedPlayedCards.find(c => c.status === 'PENDING'), [displayedPlayedCards])
+  const pendingCard = findPendingCard(displayedPlayedCards)
 
   // Storyteller confirmation and ending validation is now handled by the state machine
   const winner = gameSession?.winner_id ? players.find(p => p.id === gameSession.winner_id) : undefined

@@ -57,7 +57,6 @@ import { storytellingSetup } from './index'
  * @see {@link StorytellingEvent} for event type definitions
  */
 export const tutorialStorytellingMachine = storytellingSetup.createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcCuyD2AnAlgQwBsBlTLAT2TAIJwDsoA6WvLLPZOqAYgAUAZAIIBNAPoBhAQCUAIgG0ADAF1EoAA4ZYODhloqQAD0QBGAOwmGAJgBsAVitGLATmsBmGyccAaEGUQX5FgyORlZWACwmYS4WRvIuABxhAL5J3mik+MSkFFQ09EwsbBz0vAJERArKSCDqmtq61YYIpubWdg7OVm4e3r4Ibo4M9o4modZGRmH2KWno2Jkk2DnUnAwAxiwQPAR4ZLyCohIyIgJiANKVerVaODp6TWERDPJWFhFhRo6hNkbxVr3GUJBLo2CzxNzxRLyIwzEDpeaERbkSgrfIQMBrHDogByYH0yC4l2q13q90QZhcDF+kRs8UcoKsJjBAIQzgYYUcnPiozcLle8kcsPhuER2RReUY6MxOLxBNkRiqag0NzujUQEUpApcJkmj3B1nkJhZiXZIXCwRMAt+1hSqRAtAw6Pg1WFCzFuU4V2VpLVCAAtP8fIg-TYgpzwxGIy4hXMRVkluLVsxWOxPcTvbcGqAHhYWcFnh9wiYbDYwjEwjZBXbXaKEx78hssFsdn0lXVM2T+mDnq8IgLEmZKyz-JTC6EXC8vnY-jGMrXkfXJRisWBcfive3VdnECCgtqpr97B56Xn5AxIpzLTY4jF7PFZwj4wvUYwAGZ0HCwAAWkA3KqzBiII4hoMHS8i0jYLhGKCTg2MaRjsuG8RxBMkFmraSRAA */
   id: 'tutorialStorytelling',
   initial: 'narrating',
   context: ({ input }) => ({
@@ -67,13 +66,20 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
     canObject: false,
     lastPlayedCardId: null,
     pacingDelay: input.pacingDelay,
+    turnCompleteReason: undefined,
   }),
   states: {
     narrating: {
       on: {
         PLAY_CARD: 'cardPlay',
-        PASS: { target: 'finished' },
-        EXCHANGE: { target: 'finished' },
+        PASS: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'passed' as const }),
+        },
+        EXCHANGE: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'exchanged' as const }),
+        },
       },
     },
     cardPlay: {
@@ -99,13 +105,20 @@ export const tutorialStorytellingMachine = storytellingSetup.createMachine({
     },
     decideNext: {
       always: [
-        { target: 'finished', guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1) },
+        {
+          target: 'finished',
+          guard: ({ context }) => context.cardsPlayedThisTurn >= (context.maxCardsPerTurn || 1),
+          actions: assign({ turnCompleteReason: 'card_limit_reached' as const }),
+        },
         { target: 'narrating' },
       ],
     },
     finished: {
       type: 'final',
-      entry: sendParent({ type: 'RULES_DONE' }),
+      output: ({ context }) => ({
+        type: 'TURN_COMPLETE' as const,
+        reason: context.turnCompleteReason || 'passed',
+      }),
     },
   },
 })

@@ -1,5 +1,5 @@
 import { assign, sendParent } from 'xstate'
-import { storytellingSetup } from './index'
+import { storytellingSetup, type StorytellingEvent } from './index'
 
 /**
  * Full storytelling machine implementing the complete rule set with all game mechanics.
@@ -85,7 +85,7 @@ import { storytellingSetup } from './index'
  * @requires Parent machine must handle CONFIRM_CARD, RULES_DONE, and SYNC_ERROR events
  */
 export const fullStorytellingMachine = storytellingSetup.createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDMCuAbdBlALgewCcBPHMTASwDsoA6SgQwIPpyqgGIAFAGQEEBNAPoBhXgCUAIgG0ADAF1EoAA55Y5VnkqKQAD0QBGABwB2GgCYAbAFYLZqwBoQRRGZkyahgMzefv7wBYAX0DHNExcQhIydDY6RmZWai5eLCxZBSQQFTUNLUy9BH0LU0sbO0dnBGMZQxoavz8gkJAw7HxiUgpqOKYWNnYASQA5ABUAUTExAFVOEfTtbPVyTW0C-QBOEutbBycDTzNg0Iw2yM6Y7oBjRghOdHoidghNMBpYHBZX1oiO6Njrgi3e5EeaZRa5VYGYxbMq7SpWQzrDwNRpHFonH5RLq0AFAh40egAd3oS2ovEuAGsuHwhKJJIJeMIANKg5SqJYrfKIKxGcyefyeYxwlz+Kw0Tw2aH1VHNb7tLEXHE3O74pRgSgQfoAeQAQgApMbCObyBbsiFchCGSw0fQydaC4UITzrMV2NFys5-K7K4E0NUa-rCLVDABiAzEAFlWVkzcs8qAClaLDa7Q6Ki4LLVpSjvMZ3Rj5ed-j7VerNUkdO9PgTkKQCAAKKxuGQASnYHt+2JouJVRD9ZbY0fBcchluttvtQvTCDMrhoCJzPiax3Cha9SsBvZoeAARgArMCXRIcABqvG4A2kJrBsc5CYM-n0Zg8VknjqbSIXi8F+dXnq7Pa+ruB5Hv0wxnheV4ZGyOQjhatqGPoNAClOexOoYtReN+P6ygW-6KjQVB1gQqBKLk7AQZeQ63vGuiIP4hj+MhaZoYi85Yd+v6nJ2BFEWATCkeR4HnlR14wRytFrJs5jbOUrFIVYwTNJQeAQHA2gdgqbCmrBd50QgAC0FjTkZXGYkW3QML0x46RJo7+GY07rMu6J-jxxabsCtnmveTrWq+LGVPonjuF+i4uZpFkbnifZEiSx7khS3lwb5gpMQFqGVJYtRhTmea4W5Wnep5pYBtQyV6QU1SmBOgUZjlHF5WZa4ASWfbAYeNk3rpkmIC6SKlDs07OmKQrNfhHkxd2mjIOQBAALaQBVvWFGYwXzm+05rVmjUohFeHud0fECWRKUxj1o78ulm1oes7jZou42HbQs2UOQsAABZLd1dnwTySLGIhcmVAxYrYbmSmBEAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDMCuAbdBlALgewCcBPHMTASwDsoA6SgQwIPpyqgGIAFAGQEEBNAPoBhXgCUAIgG0ADAF1EoAA55Y5VnkqKQAD0QBGABwBmGgDYArGYBMAFivXrATgu2zAGhBFE1mTJomxs4W+iEA7C6GhgC+0Z5omLiEJGTobHSMzKzUXLxYWLIKSCAqahpaxXoI+mamljb2NsFunt4IYRamMibWVt3dRrHxGNj4xKQU1BlMLGzsAJIAcgAqAKJiYgCqnMuF2qXq5JraVfpOdQ6Nji4tXgbG+jROz8-6YdZh3bYy1kMgCaNkhM0lMAMaMCCcdD0IjsCCaMA0WA4FiIgFJcapdLggiQ6FEPbFA7lE4GMIXBoOZoeO4IWq2ALGIJmGRWfS9YxhP7osYpSa0HF4mE0egAd3oh2ovFBAGsuHwhKJJIJeMIANKE5SqQ7HSqICwyR5OGSU3yGMJmC2tHxuALdD7WTnWfT6ey-OL-EYYvkggUQqHCpRgSgQOYAeQAQgApVbCXbyfbakl69rPGhhQzsiIWCwfWyGJzWhC2b40OzPWyOlkPYwyLkenlArFg-34mhBkNzYRhxYAMXmYgAspqSkmjhVQFUIk505mPi5c2F84Xac7DDRukFjU5DPYnGZuV7ecDsa3A8HQzkR8Tx6TUzOM1mF3mC0XrGZ1xYeoZ3wazrVD0SY9mz9XEAyIdsLzmHRkVREVkFIAgAApOFVJYAHFBAkVYFQASnYRtMX5GhBXAyDO2oa8x11SdEGnWcnxzF8VzaB4GS-IJyU5FkC30QDASI30SLPCC8AAIwAKzAUFsg4AA1XhuHmaQEyJaiJ10AxKzCGh9BkJxbGMKxd05Wx9CLHN2J6MxbHeXdOgPBsjybYjSLbcSpJkuYlgUpSVKKLUylvFM9KcaxdPNHMzEsCxjWMQwi0M0xAnfKIXEsYxbH470TymKhEIIVAlHKdhfOUqigpozTi0+dN6jsE0zLrS0iwLGgOKCeKjDMY1d2y4DiPysAmCKkqfMU8rVMCnUNNOc5zEuKkbhpNpM3avwNpNV0TA6WIPUoPAIDgbRCJ9NhE0q2bEAAWhWm7HOGICXKEhgZlki6ZrvSsi3ml5njspkDQsfrntPMD8Q+5NaIQB4zACQzyTCfRTKaiwi2R-wOOcfTHRdRwHs9J7BLBoUILFCVZOlGVIeC6HjBs+HOU5ZGl1Rt9ao-IIrAzCx3k5EHiZbcHzwoqAaaqqpLRnX8bCZT5Aesdn-E56xM0ynqfisAWzqF0maA86T3rUy67ycJddP0szc05jMwkS0sl1eMJp2Ryttdy0C9dBTRkHIAgAFtIHFq7qkdcLvhsQw+nsVwEtXZ10yZZwGmRpwXXrR6BJ12ghpG4radHE2UyZBkTMRlmSz0tHaWNDdAnzTkdx6nr3ZAmhfcochYAACyD43PpCzpHnsB4DJNMwjFuNpOn8Jkgl3dl2TMrK9qAA */
   id: 'fullStorytelling',
   initial: 'narrating',
   context: ({ input }) => ({
@@ -95,13 +95,24 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
     canObject: true,
     lastPlayedCardId: null,
     pacingDelay: input.pacingDelay,
+    turnCompleteReason: undefined,
   }),
   states: {
     narrating: {
       on: {
         PLAY_CARD: 'cardPlay',
-        PASS: 'finished',
-        INTERRUPT: 'interruption',
+        PASS: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'passed' as const }),
+        },
+        EXCHANGE: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'exchanged' as const }),
+        },
+        INTERRUPT: {
+          target: 'interruption',
+          actions: assign({ nextPlayerIdOverride: ({ event }) => (event as Extract<StorytellingEvent, { type: 'INTERRUPT' }>).player_id }),
+        },
       },
     },
     cardPlay: {
@@ -116,8 +127,12 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
           },
         },
         pending: {
+          always: { target: 'confirmed', guard: ({ context }) => context.pacingDelay <= 0 },
           on: {
-            OBJECT: 'objecting',
+            OBJECT: {
+              target: 'objecting',
+              actions: assign({ nextPlayerIdOverride: ({ event }) => (event as Extract<StorytellingEvent, { type: 'OBJECT' }>).player_id }),
+            },
             CONFIRM: 'confirmed',
           },
           after: {
@@ -126,7 +141,10 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
         },
         objecting: {
           on: {
-            VALID: '#fullStorytelling.finished',
+            VALID: {
+              target: '#fullStorytelling.finished',
+              actions: assign({ turnCompleteReason: 'objected' as const }),
+            },
             INVALID: 'confirmed',
           },
         },
@@ -145,13 +163,20 @@ export const fullStorytellingMachine = storytellingSetup.createMachine({
     },
     interruption: {
       on: {
-        VALID: 'finished',
+        VALID: {
+          target: 'finished',
+          actions: assign({ turnCompleteReason: 'interrupted' as const }),
+        },
         INVALID: 'narrating',
       },
     },
     finished: {
       type: 'final',
-      entry: sendParent({ type: 'RULES_DONE' }),
+      output: ({ context }) => ({
+        type: 'TURN_COMPLETE' as const,
+        reason: context.turnCompleteReason || 'passed',
+        nextPlayerId: context.nextPlayerIdOverride,
+      }),
     },
   },
 })

@@ -16,6 +16,10 @@ export interface StorytellingContext {
   lastPlayedCardId: string | null
   /** The duration in seconds to wait before confirming a card */
   pacingDelay: number
+  /** Reason why the storytelling turn was completed */
+  turnCompleteReason?: 'passed' | 'exchanged' | 'interrupted' | 'objected' | 'card_limit_reached'
+  /** ID of the player who should take the next turn (used for interruptions/objections) */
+  nextPlayerIdOverride?: string
 }
 
 /**
@@ -25,6 +29,7 @@ export type StorytellingEvent
   = | { type: 'PLAY_CARD', cardId: string }
     | { type: 'PLAY_CARD_ACK', playedCardId: string }
     | { type: 'PASS' }
+    | { type: 'EXCHANGE' }
     | { type: 'INTERRUPT', player_id: string, card_id: string }
     | { type: 'OBJECT', player_id: string, played_card_id: string }
     | { type: 'CONFIRM' }

@@ -20,7 +20,7 @@ interface TableAreaProps {
 export default function TableArea({ playedCards, storytellerPlayer, players, deck, onShowDetails }: TableAreaProps) {
   const { t } = useTranslation()
   return (
-    <div className="grow flex items-start justify-center p-6 overflow-auto">
+    <div className="grow flex items-start justify-center p-6 overflow-auto relative">
       <div className="flex flex-col gap-6 w-full max-w-7xl">
         {/* Storyteller Info & Last Played Card */}
         <div className="flex items-start gap-4">

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // Mock Supabase client before importing anything else
 vi.mock('@/utils/supabase/client', () => ({
@@ -26,27 +26,33 @@ import { gameMachine } from '../gameMachine'
 // Mock actors
 const mockRuleMachine = createMachine({
   id: 'mockRule',
+  types: {} as {
+    context: any,
+    events: any,
+  },
   initial: 'idle',
   states: {
     idle: {},
   },
 })
 
-const mockPromiseActor = fromPromise(async () => ({ id: 'mock-id' }))
+const mockPromiseActor = fromPromise(async () => ({ success: true }))
 
 const testMachine = gameMachine.provide({
   actors: {
-    ruleTutorial: mockRuleMachine,
-    ruleSimple: mockRuleMachine,
-    ruleFull: mockRuleMachine,
-    ruleSolo: mockRuleMachine,
-    playCardActor: mockPromiseActor,
-    drawCardsActor: mockPromiseActor,
-    passTurnActor: mockPromiseActor,
-    confirmCardActor: mockPromiseActor,
-    finalizeWinActor: mockPromiseActor,
-    objectActor: mockPromiseActor,
-    exchangeCardActor: mockPromiseActor,
+    ruleTutorial: mockRuleMachine as any,
+    ruleSimple: mockRuleMachine as any,
+    ruleFull: mockRuleMachine as any,
+    ruleSolo: mockRuleMachine as any,
+    playCardActor: mockPromiseActor as any,
+    drawCardsActor: mockPromiseActor as any,
+    passTurnActor: mockPromiseActor as any,
+    confirmCardActor: mockPromiseActor as any,
+    finalizeWinActor: mockPromiseActor as any,
+    objectActor: mockPromiseActor as any,
+    exchangeCardActor: mockPromiseActor as any,
+    timerSyncActor: mockPromiseActor as any,
+    timerExtensionActor: fromPromise(async () => ({ needsExtension: false })) as any,
   },
 })
 
@@ -67,7 +73,9 @@ describe('gameMachine', () => {
       players: [
         { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
       ],
-    })
+      pacingDelay: 0,
+      timerDuration: 0,
+    } as const)
 
     expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'full', persistence: 'idle' } })
   })
@@ -83,7 +91,9 @@ describe('gameMachine', () => {
       players: [
         { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
       ],
-    })
+      pacingDelay: 0,
+      timerDuration: 0,
+    } as const)
 
     const card = { id: 'card-1', name: 'Test Card', image_url: 'http://test.com/img.png' }
 
@@ -113,6 +123,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'simple',
       currentPlayerId: 'player-1',
+      players: [],
     })
     expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'simple' } })
 
@@ -124,6 +135,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'solo',
       currentPlayerId: 'player-1',
+      players: [],
     })
     expect(actorSolo.getSnapshot().value).toMatchObject({ active: { rules: 'solo' } })
   })

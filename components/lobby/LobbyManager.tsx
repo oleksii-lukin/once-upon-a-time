@@ -26,7 +26,18 @@ export default function LobbyManager({
 }: LobbyManagerProps) {
   const [lobby, setLobby] = useState<Lobby>(initialLobby)
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
+  const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
+
+  // Prevent performance measurement issues by ensuring component is fully mounted
+  useEffect(() => {
+    // Add a small delay to ensure proper mounting before any operations
+    const timer = setTimeout(() => {
+      setIsMounted(true)
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   // Find current player's record for heartbeat
   const currentPlayer = players.find(p =>
@@ -36,9 +47,11 @@ export default function LobbyManager({
 
   // Send periodic heartbeats to track player activity
   // This is used by server-side cleanup to detect inactive lobbies
-  usePlayerHeartbeat(currentPlayer?.id)
+  usePlayerHeartbeat(currentPlayer?.id, isMounted)
 
   useEffect(() => {
+    if (!isMounted) return
+
     // Subscribe to lobby changes (e.g., status change to 'in_game')
     const lobbyChannel = supabase
       .channel(`lobby:${lobby.id}:manager`)
@@ -75,7 +88,7 @@ export default function LobbyManager({
       supabase.removeChannel(lobbyChannel)
       supabase.removeChannel(playersChannel)
     }
-  }, [lobby.id, supabase])
+  }, [lobby.id, supabase, isMounted])
 
   // Hide the global header during active gameplay and restore otherwise
   useEffect(() => {

@@ -5,70 +5,55 @@ import {
   fullStorytellingMachine,
   soloStorytellingMachine,
 } from './ruleVariants'
-import { type GameMode, type Player } from '@/types/model'
+import { playCardActor } from './actors/playCardActor'
+import { drawCardsActor } from './actors/drawCardsActor'
+import { passTurnActor } from './actors/passTurnActor'
+import { confirmCardActor } from './actors/confirmCardActor'
+import { finalizeWinActor } from './actors/finalizeWinActor'
+import { objectActor } from './actors/objectActor'
+import { exchangeCardActor } from './actors/exchangeCardActor'
+import { timerSyncActor } from './actors/timerSyncActor'
+import { timerExtensionActor } from './actors/timerExtensionActor'
+import {
+  type PlayCardActorInput,
+  type PlayCardActorOutput,
+  type DrawCardsActorInput,
+  type PassTurnActorInput,
+  type ConfirmCardActorInput,
+  type FinalizeWinActorInput,
+  type ObjectActorInput,
+  type ExchangeCardActorInput,
+  type TimerSyncInput,
+  type TimerExtensionInput,
+  type TimerExtensionOutput,
+} from './gameTypes'
+import { canPlayCard, isRulesFinished } from './guards/playGuards'
+import { isTimerEnabled, shouldSyncTimerForSolo, needsTimerExtension } from './guards/timerGuards'
+import { isSoloMode, isTutorialMode, isSimpleOrFastMode, isFullOrMainMode } from './guards/modesGuards'
+import { isRulesNotFinished } from './guards/rulesGuards'
+import {
+  isPendingCardConfirmed,
+  shouldAutoPassInTutorial,
+  isTutorialRulesFinished,
+  isTutorialWithPlayedCard,
+  hasPendingPassTurn,
+  isPacingDisabled,
+} from './guards/persistenceGuards'
+import { assignNextPlayer, assignNextPlayerFromEvent, assignNextPlayerFromActorOutput } from './actions/playerActions'
+import { assignRulesFinished, resetRulesFinished } from './actions/rulesActions'
+import { assignOptimisticCard, clearOptimisticCard, assignLastPlayedCardFromEvent, assignPendingConfirmCard } from './actions/cardActions'
+import { assignTimerSyncInput, clearTimerSyncInput } from './actions/timerActions'
+import {
+  assignPendingPassTurn,
+  clearPendingStates,
+  assignLastPlayedCardAndClearPending,
+  assignPersistenceError,
+  assignResetAfterTurnUpdate,
+} from './actions/persistenceActions'
+import { getNextPlayerId } from './utils/playerUtils'
+import { type GameContext, type GameEvent, type GameActors } from './gameTypes'
+import { type PlayedCardWithCard } from '@/types/model'
 import { type CardData } from '@/utils/gameUtils'
-import { playCardActor, type PlayCardActorInput, type PlayCardActorOutput } from './actors/playCardActor'
-import { drawCardsActor, type DrawCardsActorInput } from './actors/drawCardsActor'
-import { passTurnActor, type PassTurnActorInput } from './actors/passTurnActor'
-import { confirmCardActor, type ConfirmCardActorInput } from './actors/confirmCardActor'
-import { finalizeWinActor, type FinalizeWinActorInput } from './actors/finalizeWinActor'
-import { objectActor, type ObjectActorInput } from './actors/objectActor'
-import { exchangeCardActor, type ExchangeCardActorInput } from './actors/exchangeCardActor'
-
-/**
- * Main context interface for the XState game machine.
- * Contains all state information needed to manage a game session,
- * including player data, game flow, error handling, and UI state.
- */
-export interface GameContext {
-  /** The current game session ID - null when no game is active */
-  gameSessionId: string | null
-  /** The lobby ID this game belongs to - null when no game is active */
-  lobbyId: string | null
-  /** The current game mode (tutorial, simple, full, solo storytelling) */
-  gameMode: GameMode
-  /** General error message for display to users - null when no error */
-  error: string | null
-  /** Last database persistence error - null when no persistence error */
-  lastPersistenceError: string | null
-  /** ID of the player whose turn it currently is - null when game not started */
-  currentPlayerId: string | null
-  /** Optimistic UI: Shows card instantly on click while database saves in background */
-  /** Prevents UI delay - card appears immediately, then syncs with real database record */
-  optimisticCard: CardData | null
-  /** ID of the hand being processed for card operations - null when none in flight */
-  inFlightHandId: string | null
-  /** ID of the most recently played card - used for pacing and objections */
-  lastPlayedCardId: string | null
-  /** Whether the rules explanation phase has been completed */
-  rulesFinished: boolean
-  /** Array of all players in the current game session */
-  players: Player[]
-  /** ID of the player who will take the next turn - null when not determined */
-  nextPlayerId: string | null
-  /** The duration in seconds to wait before confirming a card (0 if disabled) */
-  pacingDelay: number
-}
-
-/**
- * Union type of all possible events that can be sent to the game machine.
- * Includes game lifecycle events, player actions, error handling, and state synchronization.
- */
-export type GameEvent
-  = | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number }
-    | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-    | { type: 'PASS', isHandEmpty?: boolean }
-    | { type: 'INTERRUPT' }
-    | { type: 'OBJECT', playedCardId: string, storytellerId: string, nextPlayerId: string }
-    | { type: 'CHALLENGE_STUTTER', storytellerId: string, nextPlayerId: string }
-    | { type: 'CONFIRM_CARD', playedCardId: string }
-    | { type: 'EXCHANGE', cardId: string, isEnding?: boolean }
-    | { type: 'WIN_GAME', card: CardData, playedCardsCount: number }
-    | { type: 'FINALIZE_WIN', winnerId: string, lobbyId: string }
-    | { type: 'RULES_DONE' }
-    | { type: 'SYNC_COMPLETE' }
-    | { type: 'SYNC_ERROR', error: string }
-    | { type: 'RESET_RULES' }
 
 export const gameMachine = setup({
   types: {
@@ -79,7 +64,6 @@ export const gameMachine = setup({
     PACING_DELAY: ({ context }) => context.pacingDelay * 1000,
   },
   actors: {
-    // ... (rest of actors)
     ruleTutorial: tutorialStorytellingMachine,
     ruleSimple: simpleStorytellingMachine,
     ruleFull: fullStorytellingMachine,
@@ -91,6 +75,17 @@ export const gameMachine = setup({
     finalizeWinActor,
     objectActor,
     exchangeCardActor,
+    timerSyncActor,
+    timerExtensionActor,
+  },
+  guards: {
+    canPlayCard,
+    isRulesFinished: ({ context }) => !context.canPlayMoreCards,
+    isTimerEnabled,
+    isSoloMode,
+  },
+  actions: {
+    assignNextPlayer,
   },
 }).createMachine({
   id: 'gameRoot',
@@ -104,10 +99,13 @@ export const gameMachine = setup({
     optimisticCard: null,
     inFlightHandId: null,
     lastPlayedCardId: null,
-    rulesFinished: false,
+    canPlayMoreCards: true,
     players: [],
     nextPlayerId: null,
     pacingDelay: 0,
+    timerDuration: 0,
+    pendingConfirmCardId: null,
+    pendingPassTurn: false,
   },
   initial: 'idle',
   states: {
@@ -115,19 +113,37 @@ export const gameMachine = setup({
       on: {
         START_GAME: {
           target: 'active',
-          actions: assign({
-            gameSessionId: ({ event }) => event.gameSessionId,
-            lobbyId: ({ event }) => event.lobbyId,
-            gameMode: ({ event }) => event.mode,
-            currentPlayerId: ({ event }) => event.currentPlayerId,
-            players: ({ event }) => event.players || [],
-            pacingDelay: ({ event }) => event.pacingDelay || 0,
-          }),
+          actions: [
+            assign({
+              gameSessionId: ({ event }) => event.gameSessionId,
+              lobbyId: ({ event }) => event.lobbyId,
+              gameMode: ({ event }) => event.mode,
+              currentPlayerId: ({ event }) => event.currentPlayerId,
+              players: ({ event }) => event.players || [],
+              pacingDelay: ({ event }) => event.pacingDelay || 0,
+              timerDuration: ({ event }) => event.timerDuration || 0,
+            }),
+            raise(({ context }) => ({
+              type: 'SYNC_TIMER' as const,
+              isEnabled: context.timerDuration > 0,
+              duration: context.timerDuration,
+            })),
+            // Start the timer if enabled
+            raise(() => ({
+              type: 'START_TIMER' as const,
+            })),
+          ],
         },
       },
     },
     active: {
       on: {
+        TIMER_EXPIRED: {
+          actions: [
+            raise({ type: 'STOP_TIMER' as const }),
+            raise({ type: 'PASS' as const, isHandEmpty: true }),
+          ],
+        },
         WIN_GAME: {
           target: 'winning',
           actions: assign({
@@ -145,175 +161,334 @@ export const gameMachine = setup({
             },
           }),
         },
+        SYNC_CURRENT_PLAYER: {
+          actions: [
+            ({ event, context }) => console.log('[SYNC_CURRENT_PLAYER]', {
+              old: context.currentPlayerId,
+              new: (event as { currentPlayerId: string }).currentPlayerId,
+            }),
+            assign({
+              currentPlayerId: ({ event }) => (event as { currentPlayerId: string }).currentPlayerId,
+            }),
+          ],
+        },
       },
       type: 'parallel',
       states: {
+        logger: {
+          on: {
+            '*': {
+              actions: [
+                ({ event }) => console.log(`[GAME_MACHINE_EVENT] ${event.type}`, event),
+              ],
+            },
+          },
+        },
         rules: {
           initial: 'decideMode',
           on: {
-            RULES_DONE: { actions: assign({ rulesFinished: true }) },
+
             PLAY_CARD: {
-              guard: ({ context }) => !context.inFlightHandId && !context.rulesFinished,
+              guard: 'canPlayCard',
               actions: [
-                assign({
-                  optimisticCard: ({ context, event }) => {
-                    const playEvent = event as { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
-                    return {
-                      ...playEvent.card,
-                      status: 'PENDING',
-                      played_by: context.currentPlayerId!,
-                    }
-                  },
-                  inFlightHandId: ({ event }) => {
-                    const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
-                    // Note: hand_id is not part of CardData type, using card id instead
-                    return playCardEvent.card.id || null
-                  },
-                }),
+                assignOptimisticCard,
                 sendTo('rulesActor', ({ event }) => {
                   const playCardEvent = event as Extract<GameEvent, { type: 'PLAY_CARD' }>
                   return { type: 'PLAY_CARD', cardId: playCardEvent.card.id }
                 }),
               ],
             },
-            PASS: {
-              actions: [
-                assign(({ context }) => {
-                  // Calculate nextPlayerId if not provided
-                  let calculatedNextPlayerId: string | null = context.currentPlayerId
-
-                  // Auto-calculate next player
-                  const players = context.players || []
-                  const sortedPlayers = players
-                    .filter((p: Player) => p.role !== 'spectator')
-                    .sort((a: Player, b: Player) => {
-                      if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-                        return a.turn_order - b.turn_order
-                      }
-                      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-                    })
-
-                  const currentIndex = sortedPlayers.findIndex((p: Player) => p.id === context.currentPlayerId)
-                  if (currentIndex === -1) {
-                    calculatedNextPlayerId = context.currentPlayerId
-                  }
-                  else {
-                    // For solo mode, keep the same player
-                    if (sortedPlayers.length === 1) {
-                      calculatedNextPlayerId = context.currentPlayerId
-                    }
-                    else {
-                      const nextIndex = (currentIndex + 1) % sortedPlayers.length
-                      calculatedNextPlayerId = sortedPlayers[nextIndex].id
-                    }
-                  }
-
-                  return {
-                    nextPlayerId: calculatedNextPlayerId,
-                  }
-                }),
-                sendTo('rulesActor', { type: 'PASS' }),
-              ],
-            },
+            PASS: [
+              {
+                guard: isRulesNotFinished,
+                actions: sendTo('rulesActor', { type: 'PASS' }),
+              },
+              {
+                actions: [
+                  assignNextPlayer,
+                  // Start timer for next player
+                  raise(() => ({ type: 'START_TIMER' as const })),
+                ],
+              },
+            ],
             CHALLENGE_STUTTER: {
               actions: [
-                assign({ nextPlayerId: ({ event }) => event.nextPlayerId }),
+                assignNextPlayerFromEvent,
+                sendTo('rulesActor', ({ event }) => event),
               ],
+            },
+            VALID: {
+              actions: sendTo('rulesActor', { type: 'VALID' as const }),
+            },
+            INVALID: {
+              actions: sendTo('rulesActor', { type: 'INVALID' as const }),
             },
             INTERRUPT: {
-              actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
-            },
-            OBJECT: {
+              guard: isRulesNotFinished,
               actions: [
-                assign({ nextPlayerId: ({ event }) => event.nextPlayerId }), // Persist for post-penalty turn update
-                sendTo('rulesActor', ({ event }) => {
-                  const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
-                  return { type: 'OBJECT', playedCardId: objectEvent.playedCardId, storytellerId: objectEvent.storytellerId }
-                }),
-              ],
-            },
-            EXCHANGE: {
-              actions: [
-                assign(({ context }) => {
-                  // Calculate next player
-                  const players = context.players || []
-                  const sortedPlayers = players
-                    .filter((p: Player) => p.role !== 'spectator')
-                    .sort((a: Player, b: Player) => {
-                      if (typeof a.turn_order === 'number' && typeof b.turn_order === 'number') {
-                        return a.turn_order - b.turn_order
-                      }
-                      return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime()
-                    })
-
-                  const currentIndex = sortedPlayers.findIndex((p: Player) => p.id === context.currentPlayerId)
-                  let nextPlayerId = context.currentPlayerId
-                  if (currentIndex !== -1 && sortedPlayers.length > 1) {
-                    const nextIndex = (currentIndex + 1) % sortedPlayers.length
-                    nextPlayerId = sortedPlayers[nextIndex].id
+                assignNextPlayerFromEvent,
+                sendTo('rulesActor', ({ context, event }) => {
+                  const intEvent = event as Extract<GameEvent, { type: 'INTERRUPT' }>
+                  return {
+                    type: 'INTERRUPT',
+                    player_id: intEvent.nextPlayerId,
+                    card_id: context.lastPlayedCardId || '',
                   }
-
-                  return { nextPlayerId }
                 }),
-                sendTo('rulesActor', { type: 'PASS' }),
               ],
             },
+            OBJECT: [
+              {
+                guard: isRulesNotFinished,
+                actions: [
+                  assignNextPlayerFromEvent,
+                  sendTo('rulesActor', ({ context, event }) => {
+                    const objectEvent = event as Extract<GameEvent, { type: 'OBJECT' }>
+                    return {
+                      type: 'OBJECT',
+                      played_card_id: objectEvent.playedCardId,
+                      player_id: objectEvent.nextPlayerId,
+                    }
+                  }),
+                ],
+              },
+              {
+                actions: assignNextPlayerFromEvent,
+              },
+            ],
+            EXCHANGE: [
+              {
+                guard: isRulesNotFinished,
+                actions: sendTo('rulesActor', { type: 'EXCHANGE' }),
+              },
+              {
+                actions: assignNextPlayer,
+              },
+            ],
             RESET_RULES: {
-              actions: assign({ rulesFinished: false }),
-              target: '.decideMode',
+              actions: assign({ canPlayMoreCards: true }),
+              target: '#rules_decide',
             },
           },
           states: {
             decideMode: {
+              id: 'rules_decide',
               always: [
-                { target: 'tutorial', guard: ({ context }) => context.gameMode === 'tutorial' },
-                { target: 'simple', guard: ({ context }) => context.gameMode === 'simple' || context.gameMode === 'fast' },
-                { target: 'full', guard: ({ context }) => context.gameMode === 'full' || context.gameMode === 'main' },
-                { target: 'solo', guard: ({ context }) => context.gameMode === 'solo' },
+                { target: 'tutorial', guard: isTutorialMode },
+                { target: 'simple', guard: isSimpleOrFastMode },
+                { target: 'full', guard: isFullOrMainMode },
+                { target: 'solo', guard: isSoloMode },
               ],
             },
             tutorial: {
+              id: 'rules_tutorial',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleTutorial',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '#rules_decide',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'SYNC_TURN' as const }),
+                  ],
+                },
               },
             },
             simple: {
+              id: 'rules_simple',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleSimple',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '#rules_decide',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'SYNC_TURN' as const }),
+                  ],
+                },
               },
             },
             full: {
+              id: 'rules_full',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleFull',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '#rules_decide',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayerFromActorOutput,
+                    raise({ type: 'SYNC_TURN' as const }),
+                  ],
+                },
               },
             },
             solo: {
+              id: 'rules_solo',
               invoke: {
                 id: 'rulesActor',
                 src: 'ruleSolo',
                 input: ({ context }) => ({ pacingDelay: context.pacingDelay }),
+                onDone: {
+                  target: '#rules_decide',
+                  actions: [
+                    assign({ canPlayMoreCards: true }),
+                    assignNextPlayer,
+                    raise({ type: 'SYNC_TURN' as const }),
+                  ],
+                },
+              },
+            },
+          },
+        },
+        timer: {
+          initial: 'idle',
+          on: {
+            PLAY_CARD: {
+              guard: ({ context }) => context.timerDuration > 0 && context.pacingDelay > 0,
+              target: '.checkingExtension',
+            },
+            CONFIRM_CARD: {
+              guard: shouldSyncTimerForSolo,
+              target: '.syncing',
+              actions: assign(({ context }) => ({
+                timerSyncInput: {
+                  gameSessionId: context.gameSessionId!,
+                  isEnabled: true,
+                  duration: context.timerDuration,
+                  currentPlayerId: context.currentPlayerId,
+                  action: 'start' as const,
+                  pacingDelay: context.pacingDelay,
+                },
+              })),
+            },
+            SYNC_TIMER: {
+              target: '.syncing',
+              actions: assign(({ context, event }) => ({
+                timerSyncInput: {
+                  gameSessionId: context.gameSessionId!,
+                  isEnabled: event.isEnabled,
+                  duration: event.duration,
+                  currentPlayerId: context.currentPlayerId,
+                  action: 'sync' as const,
+                  pacingDelay: context.pacingDelay,
+                },
+              })),
+            },
+            START_TIMER: {
+              target: '.syncing',
+              actions: assign(({ context }) => ({
+                timerSyncInput: {
+                  gameSessionId: context.gameSessionId!,
+                  isEnabled: context.timerDuration > 0,
+                  duration: context.timerDuration,
+                  currentPlayerId: context.currentPlayerId,
+                  action: 'start' as const,
+                  pacingDelay: context.pacingDelay,
+                },
+              })),
+            },
+            STOP_TIMER: {
+              target: '.syncing',
+              actions: assign(({ context }) => ({
+                timerSyncInput: {
+                  gameSessionId: context.gameSessionId!,
+                  isEnabled: false,
+                  duration: context.timerDuration,
+                  currentPlayerId: context.currentPlayerId,
+                  action: 'stop' as const,
+                  pacingDelay: context.pacingDelay,
+                },
+              })),
+            },
+            EXTEND_TIMER: {
+              target: '.syncing',
+              actions: assign(({ context }) => ({
+                timerSyncInput: {
+                  gameSessionId: context.gameSessionId!,
+                  isEnabled: context.timerDuration > 0,
+                  duration: context.timerDuration,
+                  currentPlayerId: context.currentPlayerId,
+                  action: 'extend' as const,
+                  pacingDelay: context.pacingDelay,
+                  // We don't have a specific timestamp here, but extend should handle it
+                  // Actually, let's just make extend fallback to now + pacingDelay + 5 if newExpiresAt is missing
+                },
+              })),
+            },
+          },
+          states: {
+            idle: {},
+            checkingExtension: {
+              invoke: {
+                src: 'timerExtensionActor',
+                id: 'timerExtensionActor',
+                input: ({ context }) => ({
+                  gameSessionId: context.gameSessionId!,
+                  timerDuration: context.timerDuration,
+                  pacingDelay: context.pacingDelay,
+                }),
+                onDone: [
+                  {
+                    target: 'syncing',
+                    guard: needsTimerExtension,
+                    actions: assignTimerSyncInput,
+                  },
+                  { target: 'idle' },
+                ],
+              },
+            },
+            syncing: {
+              invoke: {
+                src: 'timerSyncActor',
+                id: 'timerSyncActor',
+                input: ({ context }) => context.timerSyncInput!,
+                onDone: {
+                  target: 'idle',
+                  actions: clearTimerSyncInput,
+                },
+                onError: {
+                  target: 'idle',
+                  actions: clearTimerSyncInput,
+                },
               },
             },
           },
         },
         persistence: {
           initial: 'idle',
+          on: {
+            CONFIRM_CARD: {
+              actions: assignPendingConfirmCard,
+            },
+            PASS: {
+              actions: assignPendingPassTurn,
+            },
+            AUTO_PASS: {
+              actions: [
+                assignPendingPassTurn,
+                assign({ canPlayMoreCards: false }), // Force rules-finished state for auto-pass
+              ],
+            },
+          },
           states: {
             idle: {
               on: {
                 PLAY_CARD: 'playingCard',
                 PASS: 'passingTurn',
+                AUTO_PASS: 'passingTurn',
                 EXCHANGE: 'exchangingCard',
+                SYNC_TURN: 'updateTurn',
                 OBJECT: 'objecting',
                 CHALLENGE_STUTTER: 'challengingStutter',
                 CONFIRM_CARD: 'confirmingCard',
                 INTERRUPT: {
+                  guard: isRulesNotFinished,
                   actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
                 },
               },
@@ -321,6 +496,7 @@ export const gameMachine = setup({
             playingCard: {
               invoke: {
                 src: 'playCardActor',
+                id: 'playCardActor',
                 input: ({ context, event }): PlayCardActorInput => {
                   assertEvent(event, 'PLAY_CARD')
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -333,26 +509,44 @@ export const gameMachine = setup({
                     position: event.playedCardsCount,
                   }
                 },
-                onDone: {
-                  target: 'idle',
-                  actions: [
-                    assign({ lastPlayedCardId: ({ event }) => event.output.id }),
-                    sendTo('rulesActor', ({ event }) => ({ type: 'PLAY_CARD_ACK', playedCardId: event.output.id })),
-                  ],
-                },
+                onDone: [
+                  {
+                    target: 'confirmingCard',
+                    guard: isPendingCardConfirmed,
+                    actions: [
+                      assignLastPlayedCardAndClearPending,
+                      sendTo('rulesActor', ({ event }: { event: any }) => ({
+                        type: 'PLAY_CARD_ACK',
+                        playedCardId: event.output.id,
+                      })),
+                    ],
+                  },
+                  {
+                    target: 'idle',
+                    guard: isRulesNotFinished,
+                    actions: [
+                      assignLastPlayedCardFromEvent,
+                      sendTo('rulesActor', ({ event }: { event: any }) => ({
+                        type: 'PLAY_CARD_ACK',
+                        playedCardId: event.output.id,
+                      })),
+                    ],
+                  },
+                  {
+                    target: 'idle',
+                    actions: assignLastPlayedCardFromEvent,
+                  },
+                ],
                 onError: {
                   target: 'idle',
-                  actions: assign({
-                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
-                    inFlightHandId: null, // Clear the lock explicitly on error
-                    optimisticCard: null, // Rollback optimistic update
-                  }),
+                  actions: assignPersistenceError,
                 },
               },
             },
             passingTurn: {
               invoke: {
                 src: 'drawCardsActor',
+                id: 'drawCardsActor',
                 input: ({ context }): DrawCardsActorInput => {
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
                   if (!context.currentPlayerId) throw new Error('Current player ID is missing')
@@ -369,18 +563,14 @@ export const gameMachine = setup({
               always: [
                 {
                   target: 'updateTurn',
-                  guard: ({ context, event }) => {
-                    const passEvent = event as Extract<GameEvent, { type: 'PASS' }>
-                    return context.gameMode === 'tutorial'
-                      && context.lastPlayedCardId !== null
-                      && !passEvent.isHandEmpty
-                  },
+                  guard: shouldAutoPassInTutorial,
                 },
               ],
             },
             exchangingCard: {
               invoke: {
                 src: 'exchangeCardActor',
+                id: 'exchangeCardActor',
                 input: ({ context, event }): ExchangeCardActorInput => {
                   assertEvent(event, 'EXCHANGE')
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -396,18 +586,17 @@ export const gameMachine = setup({
                 onDone: 'updateTurn',
                 onError: {
                   target: 'idle',
-                  actions: assign({
-                    lastPersistenceError: ({ event }: { event: ErrorActorEvent<Error> }) => event.error.message || 'Unknown error',
-                  }),
+                  actions: assignPersistenceError,
                 },
               },
             },
             updateTurn: {
               invoke: {
                 src: 'passTurnActor',
+                id: 'passTurnActor',
                 input: ({ context }): PassTurnActorInput => {
-                  if (!context.gameSessionId) throw new Error('Game session ID is missing')
-                  if (!context.nextPlayerId) throw new Error('Next player ID is missing')
+                  if (!context.gameSessionId) throw new Error('Game session ID autonomy check: session ID missing')
+                  if (!context.nextPlayerId) throw new Error('Next player ID missing')
 
                   return {
                     gameSessionId: context.gameSessionId,
@@ -417,12 +606,15 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
-                    raise({ type: 'RESET_RULES' }),
-                    assign({
-                      optimisticCard: null,
-                      inFlightHandId: null,
-                      lastPlayedCardId: null,
+                    ({ context }) => console.log('[updateTurn DONE] Resetting state', {
+                      oldCurrentPlayerId: context.currentPlayerId,
+                      newCurrentPlayerId: context.nextPlayerId,
+                      inFlightHandId: context.inFlightHandId,
+                      canPlayMoreCards: context.canPlayMoreCards,
                     }),
+                    assignResetAfterTurnUpdate,
+                    () => console.log('[updateTurn DONE] State reset complete'),
+                    raise({ type: 'RESET_RULES' }),
                   ],
                 },
               },
@@ -430,6 +622,7 @@ export const gameMachine = setup({
             objecting: {
               invoke: {
                 src: 'objectActor',
+                id: 'objectActor',
                 input: ({ context, event }): ObjectActorInput => {
                   assertEvent(event, 'OBJECT')
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -447,6 +640,7 @@ export const gameMachine = setup({
             penaltyForStoryteller: {
               invoke: {
                 src: 'drawCardsActor',
+                id: 'drawCardsActor',
                 input: ({ context, event }): DrawCardsActorInput => {
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
 
@@ -466,6 +660,7 @@ export const gameMachine = setup({
             updateTurnFromObject: {
               invoke: {
                 src: 'passTurnActor',
+                id: 'passTurnActor',
                 input: ({ context }): PassTurnActorInput => {
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
                   if (!context.nextPlayerId) throw new Error('Next player ID is missing (should have been set in objecting entry)')
@@ -478,12 +673,8 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
+                    assignResetAfterTurnUpdate,
                     raise({ type: 'RESET_RULES' }),
-                    assign({
-                      optimisticCard: null,
-                      inFlightHandId: null,
-                      lastPlayedCardId: null,
-                    }),
                   ],
                 },
               },
@@ -491,6 +682,7 @@ export const gameMachine = setup({
             challengingStutter: {
               invoke: {
                 src: 'drawCardsActor',
+                id: 'drawCardsActor',
                 input: ({ context, event }): DrawCardsActorInput => {
                   assertEvent(event, 'CHALLENGE_STUTTER')
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -507,6 +699,7 @@ export const gameMachine = setup({
             updateTurnFromChallenge: {
               invoke: {
                 src: 'passTurnActor',
+                id: 'passTurnActor',
                 input: ({ context }): PassTurnActorInput => {
                   if (!context.gameSessionId) throw new Error('Game session ID is missing')
                   if (!context.nextPlayerId) throw new Error('Next player ID is missing (should have been set in challengingStutter entry)')
@@ -519,6 +712,7 @@ export const gameMachine = setup({
                 onDone: {
                   target: 'idle',
                   actions: [
+                    assignResetAfterTurnUpdate,
                     raise({ type: 'RESET_RULES' }),
                   ],
                 },
@@ -527,19 +721,30 @@ export const gameMachine = setup({
             confirmingCard: {
               invoke: {
                 src: 'confirmCardActor',
-                input: ({ event }): ConfirmCardActorInput => {
-                  assertEvent(event, 'CONFIRM_CARD')
-                  return {
-                    playedCardId: event.playedCardId,
-                  }
+                id: 'confirmCardActor',
+                input: ({ context, event }: { context: GameContext, event: GameEvent }): ConfirmCardActorInput => {
+                  if (event.type === 'CONFIRM_CARD') return { playedCardId: event.playedCardId }
+                  if (context.lastPlayedCardId) return { playedCardId: context.lastPlayedCardId }
+                  throw new Error('No card ID to confirm')
                 },
-                onDone: {
-                  target: 'idle',
-                  actions: assign({
-                    optimisticCard: null,
-                    inFlightHandId: null,
-                  }),
-                },
+                onDone: [
+                  {
+                    target: 'passingTurn',
+                    guard: hasPendingPassTurn,
+                  },
+                  {
+                    guard: isTutorialRulesFinished,
+                    target: 'passingTurn',
+                  },
+                  {
+                    guard: isTutorialWithPlayedCard,
+                    target: 'passingTurn',
+                  },
+                  {
+                    target: 'idle',
+                    actions: clearOptimisticCard,
+                  },
+                ],
               },
             },
           },
@@ -552,6 +757,7 @@ export const gameMachine = setup({
         playingCard: {
           invoke: {
             src: 'playCardActor',
+            id: 'playCardActor',
             input: ({ context, event }): PlayCardActorInput => {
               assertEvent(event, 'WIN_GAME')
               if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -566,14 +772,12 @@ export const gameMachine = setup({
             },
             onDone: {
               target: 'waiting',
-              actions: assign({
-                lastPlayedCardId: ({ event }) => ((event as unknown) as DoneActorEvent<PlayCardActorOutput>).output.id,
-              }),
+              actions: assignLastPlayedCardFromEvent,
             },
           },
         },
         waiting: {
-          always: { target: 'confirming', guard: ({ context }) => context.pacingDelay <= 0 },
+          always: { target: 'confirming', guard: isPacingDisabled },
           on: {
             OBJECT: 'objecting',
           },
@@ -584,6 +788,7 @@ export const gameMachine = setup({
         objecting: {
           invoke: {
             src: 'objectActor',
+            id: 'objectActor',
             input: ({ context, event }): ObjectActorInput => {
               assertEvent(event, 'OBJECT')
               if (!context.gameSessionId) throw new Error('Game session ID is missing')
@@ -601,6 +806,7 @@ export const gameMachine = setup({
         penalty: {
           invoke: {
             src: 'drawCardsActor',
+            id: 'drawCardsActor',
             input: ({ context, event }): DrawCardsActorInput => {
               if (!context.gameSessionId) throw new Error('Game session ID is missing')
               const output = ((event as unknown) as DoneActorEvent<ObjectActorInput>).output
@@ -609,9 +815,7 @@ export const gameMachine = setup({
               return {
                 gameSessionId: context.gameSessionId,
                 playerId: output.storytellerId,
-                count: 1, // Standard penalty, though rules say 1 story + 1 ending.
-                // For simplicity and matching current UI expectation, 1 is fine for now
-                // unless I should strictly implement dual draw.
+                count: 1,
               }
             },
             onDone: 'updateTurn',
@@ -620,6 +824,7 @@ export const gameMachine = setup({
         updateTurn: {
           invoke: {
             src: 'passTurnActor',
+            id: 'passTurnActor',
             input: ({ context }): PassTurnActorInput => {
               if (!context.gameSessionId) throw new Error('Game session ID is missing')
               if (!context.nextPlayerId) throw new Error('Next player ID is missing')
@@ -633,11 +838,7 @@ export const gameMachine = setup({
               target: '#gameRoot.active',
               actions: [
                 raise({ type: 'RESET_RULES' }),
-                assign({
-                  optimisticCard: null,
-                  inFlightHandId: null,
-                  lastPlayedCardId: null,
-                }),
+                assignResetAfterTurnUpdate,
               ],
             },
           },
@@ -645,6 +846,7 @@ export const gameMachine = setup({
         confirming: {
           invoke: {
             src: 'confirmCardActor',
+            id: 'confirmCardActor',
             input: ({ context }): ConfirmCardActorInput => {
               if (!context.lastPlayedCardId) throw new Error('No card to confirm')
               return {
@@ -657,6 +859,7 @@ export const gameMachine = setup({
         finalizing: {
           invoke: {
             src: 'finalizeWinActor',
+            id: 'finalizeWinActor',
             input: ({ context }): FinalizeWinActorInput => {
               if (!context.gameSessionId) throw new Error('Game session ID is missing')
               if (!context.currentPlayerId) throw new Error('Current player ID is missing')

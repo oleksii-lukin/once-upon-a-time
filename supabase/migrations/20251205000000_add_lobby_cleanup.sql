@@ -120,7 +120,8 @@ GRANT EXECUTE ON FUNCTION public.archive_finished_lobbies() TO postgres, service
 GRANT EXECUTE ON FUNCTION public.cleanup_abandoned_waiting_lobbies() TO postgres, service_role;
 
 -- Step 6: Schedule pg_cron jobs
--- Note: pg_cron extension must be enabled in Supabase dashboard under Database > Extensions
+-- Note: on hosted Supabase pg_cron is enabled via dashboard; locally we create it here
+CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Schedule job to mark inactive lobbies as finished (every 2 minutes)
 SELECT cron.schedule(

@@ -4,17 +4,6 @@ import { gameMachine } from '../gameMachine'
 import { mockDeck } from '@/tests/mocks/deck'
 
 // Mock Supabase client
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-        })),
-      })),
-    })),
-  })),
-}))
 
 // Mock actors that perform side effects
 const mockPromiseActor = fromPromise(async ({ input }: { input: any }) => {

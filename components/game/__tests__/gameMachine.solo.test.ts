@@ -4,27 +4,6 @@ import { gameMachine } from '../gameMachine'
 import { type GameContext, type GameEvent, type GameActors } from '../gameTypes'
 
 // Mock Supabase client
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-        })),
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => Promise.resolve({ data: {}, error: null }))
-          }))
-        }))
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => Promise.resolve({ error: null }))
-        }))
-      })),
-    })),
-  })),
-}))
 
 // Mock common actors with any casting to bypass strict types in tests
 const mockPromiseActor = fromPromise(async () => ({ success: true }))

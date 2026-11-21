@@ -10,60 +10,27 @@ import { type CardData } from '@/utils/gameUtils'
  * the DB's current_turn_player_id changes.
  */
 
-const { mockClient } = vi.hoisted(() => {
-  function makeQuery(table: string) {
-    const q: any = {
-      columns: '',
-      select(columns?: string) {
-        q.columns = columns ?? ''
-        return q
-      },
-      insert() {
-        return q
-      },
-      update() {
-        return q
-      },
-      delete() {
-        return q
-      },
-      eq() {
-        return q
-      },
-      order() {
-        return q
-      },
-      limit() {
-        return q
-      },
-      in() {
-        return q
-      },
-      single() {
-        // The win-flow's playCardActor insert must hang so the machine
-        // stays in the in-flight `winning` state deterministically.
-        if (table === 'played_cards') {
-          return new Promise(() => {})
-        }
-        return Promise.resolve({ data: null, error: null })
-      },
-      then(resolve: any, reject: any) {
-        return Promise.resolve({ data: [], count: null, error: null }).then(resolve, reject)
-      },
-    }
-    return q
-  }
-
-  return {
-    mockClient: {
-      from: (table: string) => makeQuery(table),
-    },
-  }
-})
-
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: () => mockClient,
+const { mockActions } = vi.hoisted(() => ({
+  mockActions: {
+    // The win-flow's playCard must hang so the machine stays in the
+    // in-flight `winning` state deterministically.
+    playCard: vi.fn(() => new Promise<any>(() => {})),
+    confirmCard: vi.fn(async () => ({ ok: true, data: true })),
+    passTurn: vi.fn(async () => ({ ok: true, data: true })),
+    drawCards: vi.fn(async () => ({ ok: true, data: true })),
+    exchangeCard: vi.fn(async () => ({ ok: true, data: true })),
+    objectToCard: vi.fn(async () => ({
+      ok: true,
+      data: { gameSessionId: '', playedCardId: '', storytellerId: '', nextPlayerId: '' },
+    })),
+    finalizeWin: vi.fn(async () => ({ ok: true, data: true })),
+    syncTimer: vi.fn(async () => ({ ok: true, data: { success: true } })),
+    checkTimerExtension: vi.fn(async () => ({ ok: true, data: null })),
+    initializeGame: vi.fn(async () => ({ success: true })),
+  },
 }))
+
+vi.mock('@/app/actions/game', () => mockActions)
 
 // Valid UUIDs so actor input validation passes and real actors run against
 // the mock client.

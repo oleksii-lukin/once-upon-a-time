@@ -1,8 +1,6 @@
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { passTurn } from '@/app/actions/game'
 import { validateUUID } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the passTurnActor
@@ -123,15 +121,11 @@ export const passTurnActor = fromPromise(async ({ input }: { input: PassTurnActo
   // Validate input parameters
   validatePassTurnActorInput(input)
 
-  const { error } = await supabase
-    .from('game_sessions')
-    .update({
-      current_turn_player_id: input.nextPlayerId,
-      storyteller_id: input.nextPlayerId,
-    })
-    .eq('id', input.gameSessionId)
+  const result = await passTurn({
+    gameSessionId: input.gameSessionId,
+    nextPlayerId: input.nextPlayerId,
+  })
+  if (!result.ok) throw new Error(result.error)
 
-  if (error) throw error
-
-  return true
+  return result.data
 })

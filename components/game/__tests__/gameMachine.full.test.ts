@@ -3,27 +3,6 @@ import { createActor, fromPromise } from 'xstate'
 import { gameMachine } from '../gameMachine'
 
 // Mock Supabase client
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-        })),
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => Promise.resolve({ data: {}, error: null }))
-          }))
-        }))
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => Promise.resolve({ error: null }))
-        }))
-      })),
-    })),
-  })),
-}))
 
 // Mock common actors
 const mockPromiseActor = fromPromise(async () => ({ success: true }))

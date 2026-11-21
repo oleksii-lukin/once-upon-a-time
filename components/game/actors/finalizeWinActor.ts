@@ -1,8 +1,6 @@
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { finalizeWin } from '@/app/actions/game'
 import { validateUUID } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the finalizeWinActor
@@ -183,22 +181,12 @@ export const finalizeWinActor = fromPromise(async ({ input }: { input: FinalizeW
   // Validate input parameters
   validateFinalizeWinActorInput(input)
 
-  // Update the game session with winner and completion status
-  const { error } = await supabase
-    .from('game_sessions')
-    .update({
-      winner_id: input.winnerId,
-      status: 'COMPLETED',
-    })
-    .eq('id', input.gameSessionId)
+  const result = await finalizeWin({
+    gameSessionId: input.gameSessionId,
+    winnerId: input.winnerId,
+    lobbyId: input.lobbyId,
+  })
+  if (!result.ok) throw new Error(result.error)
 
-  if (error) throw error
-
-  // Update the lobby status to finished
-  await supabase
-    .from('lobbies')
-    .update({ status: 'finished' })
-    .eq('id', input.lobbyId)
-
-  return true
+  return result.data
 })

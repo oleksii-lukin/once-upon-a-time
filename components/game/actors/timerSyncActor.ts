@@ -1,7 +1,5 @@
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
-
-const supabase = createClient()
+import { syncTimer } from '@/app/actions/game'
 
 /**
  * Input interface for the timerSyncActor
@@ -98,98 +96,12 @@ export const timerSyncActor = fromPromise(async ({ input }: { input: TimerSyncIn
   // Validate input parameters
   validateTimerSyncInput(input)
 
-  const { gameSessionId, isEnabled, duration, currentPlayerId, action, pacingDelay = 0 } = input
-  const now = new Date().toISOString()
-
   try {
-    if (action === 'start' && isEnabled && currentPlayerId) {
-      // Calculate the minimum time needed (pacing delay + 5 seconds buffer)
-      const minimumTimeNeeded = pacingDelay + 5
-      let finalDuration = duration
-
-      // If duration is less than minimum needed, extend it
-      if (duration < minimumTimeNeeded) {
-        finalDuration = minimumTimeNeeded
-      }
-
-      // Start timer for current player with potentially extended duration
-      const expiresAt = new Date(Date.now() + finalDuration * 1000).toISOString()
-
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          timer_enabled: true,
-          timer_duration: finalDuration, // Store the actual duration used
-          timer_started_at: now,
-          timer_expires_at: expiresAt,
-          updated_at: now,
-        })
-        .eq('id', gameSessionId)
-
-      if (error) throw error
-
-      return {
-        success: true,
-        timerStartedAt: now,
-        timerExpiresAt: expiresAt,
-      }
+    const result = await syncTimer(input)
+    if (!result.ok) {
+      return { success: false, error: result.error }
     }
-    else if (action === 'stop') {
-      // Stop timer
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          timer_started_at: null,
-          timer_expires_at: null,
-          updated_at: now,
-        })
-        .eq('id', gameSessionId)
-
-      if (error) throw error
-
-      return {
-        success: true,
-      }
-    }
-    else if (action === 'extend' && isEnabled) {
-      // Extend current timer without changing start time
-      const finalExpiresAt = input.newExpiresAt || new Date(Date.now() + (pacingDelay + 5) * 1000).toISOString()
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          timer_expires_at: finalExpiresAt,
-          updated_at: now,
-        })
-        .eq('id', gameSessionId)
-
-      if (error) throw error
-
-      return {
-        success: true,
-        timerExpiresAt: finalExpiresAt,
-      }
-    }
-    else if (action === 'sync') {
-      // Just update timer settings without changing timestamps
-      const { error } = await supabase
-        .from('game_sessions')
-        .update({
-          timer_enabled: isEnabled,
-          timer_duration: duration,
-          updated_at: now,
-        })
-        .eq('id', gameSessionId)
-
-      if (error) throw error
-
-      return {
-        success: true,
-      }
-    }
-
-    return {
-      success: true,
-    }
+    return result.data
   }
   catch (error) {
     return {

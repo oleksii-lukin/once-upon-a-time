@@ -9,10 +9,8 @@
  */
 
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { objectToCard } from '@/app/actions/game'
 import { validateUUID } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the objectActor
@@ -83,32 +81,13 @@ export const objectActor = fromPromise(async ({ input }: { input: ObjectActorInp
   // Validate input parameters
   validateObjectActorInput(input)
 
-  // Fetch the played card to get the card_id
-  const { data: playedCard, error: fetchError } = await supabase
-    .from('played_cards')
-    .select('*')
-    .eq('id', input.playedCardId)
-    .single()
+  const result = await objectToCard({
+    gameSessionId: input.gameSessionId,
+    playedCardId: input.playedCardId,
+    storytellerId: input.storytellerId,
+    nextPlayerId: input.nextPlayerId,
+  })
+  if (!result.ok) throw new Error(result.error)
 
-  if (fetchError || !playedCard) {
-    throw fetchError || new Error('Played card not found')
-  }
-
-  // Return the card to the storyteller's hand
-  await supabase
-    .from('player_hands')
-    .insert({
-      game_session_id: input.gameSessionId,
-      player_id: input.storytellerId,
-      card_id: playedCard.card_id,
-      position: 0,
-    })
-
-  // Remove the card from played cards
-  await supabase
-    .from('played_cards')
-    .delete()
-    .eq('id', input.playedCardId)
-
-  return input
+  return result.data
 })

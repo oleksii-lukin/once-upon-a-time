@@ -1,24 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // Mock Supabase client before importing anything else
-vi.mock('@/utils/supabase/client', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-        })),
-      })),
-      delete: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => Promise.resolve({ error: null })),
-          })),
-        })),
-      })),
-    })),
-  })),
-}))
 
 import { createActor, fromPromise, createMachine } from 'xstate'
 import { gameMachine } from '../gameMachine'

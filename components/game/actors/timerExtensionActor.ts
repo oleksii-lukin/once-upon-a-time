@@ -1,7 +1,5 @@
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
-
-const supabase = createClient()
+import { checkTimerExtension } from '@/app/actions/game'
 
 /**
  * Input interface for the timerExtensionActor
@@ -80,19 +78,15 @@ export const timerExtensionActor = fromPromise(async ({ input }: { input: TimerE
   }
 
   try {
-    // Get current timer state from database
-    const { data: gameSession } = await supabase
-      .from('game_sessions')
-      .select('timer_expires_at')
-      .eq('id', gameSessionId)
-      .single()
+    // Get current timer state from the server
+    const result = await checkTimerExtension({ gameSessionId })
 
-    if (!gameSession?.timer_expires_at) {
+    if (!result.ok || !result.data) {
       return { needsExtension: false }
     }
 
     const now = new Date().getTime()
-    const expires = new Date(gameSession.timer_expires_at).getTime()
+    const expires = new Date(result.data).getTime()
     const remainingTime = Math.max(0, Math.ceil((expires - now) / 1000))
 
     // Calculate minimum time needed (pacing delay + 5 seconds buffer)

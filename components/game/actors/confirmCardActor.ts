@@ -1,8 +1,6 @@
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { confirmCard } from '@/app/actions/game'
 import { validateUUID } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the confirmCardActor
@@ -155,12 +153,8 @@ export const confirmCardActor = fromPromise(async ({ input }: { input: ConfirmCa
   // Validate input parameters
   validateConfirmCardActorInput(input)
 
-  const { error } = await supabase
-    .from('played_cards')
-    .update({ status: 'CONFIRMED' })
-    .eq('id', input.playedCardId)
+  const result = await confirmCard({ playedCardId: input.playedCardId })
+  if (!result.ok) throw new Error(result.error)
 
-  if (error) throw error
-
-  return true
+  return result.data
 })

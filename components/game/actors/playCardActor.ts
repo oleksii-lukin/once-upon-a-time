@@ -26,11 +26,9 @@
  */
 
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { playCard } from '@/app/actions/game'
 import { PlayedCardWithCard as PlayedCardWithDetails } from '@/types/model'
 import { validateUUID, validateNonNegativeNumber } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the playCardActor
@@ -134,28 +132,13 @@ export const playCardActor = fromPromise(async ({ input }: { input: PlayCardActo
   // Validate input parameters
   validatePlayCardActorInput(input)
 
-  // Insert the card into played_cards table
-  const { data, error } = await supabase
-    .from('played_cards')
-    .insert({
-      game_session_id: input.gameSessionId,
-      player_id: input.playerId,
-      card_id: input.cardId,
-      position: input.position,
-      status: 'PENDING',
-    })
-    .select('*, cards(*)')
-    .single()
+  const result = await playCard({
+    gameSessionId: input.gameSessionId,
+    playerId: input.playerId,
+    cardId: input.cardId,
+    position: input.position,
+  })
+  if (!result.ok) throw new Error(result.error)
 
-  if (error) throw error
-
-  // Remove the card from the player's hand
-  await supabase
-    .from('player_hands')
-    .delete()
-    .eq('game_session_id', input.gameSessionId)
-    .eq('player_id', input.playerId)
-    .eq('card_id', input.cardId)
-
-  return data as PlayCardActorOutput
+  return result.data
 })

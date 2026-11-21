@@ -18,10 +18,8 @@
  */
 
 import { fromPromise } from 'xstate'
-import { createClient } from '@/utils/supabase/client'
+import { drawCards } from '@/app/actions/game'
 import { validateUUID, validatePositiveNumber } from '../validation'
-
-const supabase = createClient()
 
 /**
  * Input interface for the drawCardsActor
@@ -134,38 +132,12 @@ export const drawCardsActor = fromPromise(async ({ input }: { input: DrawCardsAc
   // Validate input parameters
   validateDrawCardsActorInput(input)
 
-  // Get the specified number of cards from the draw pile in order
-  const { data: drawCards, error: drawError } = await supabase
-    .from('draw_pile')
-    .select('*')
-    .eq('game_session_id', input.gameSessionId)
-    .order('position', { ascending: true })
-    .limit(input.count)
+  const result = await drawCards({
+    gameSessionId: input.gameSessionId,
+    playerId: input.playerId,
+    count: input.count,
+  })
+  if (!result.ok) throw new Error(result.error)
 
-  if (drawError || !drawCards || drawCards.length === 0) {
-    throw drawError || new Error('No cards in draw pile')
-  }
-
-  // Prepare cards to add to player's hand with sequential positions
-  const cardsToAdd = drawCards.map((dc, index: number) => ({
-    game_session_id: input.gameSessionId,
-    player_id: input.playerId,
-    card_id: dc.card_id,
-    position: 999 + index, // Use high position numbers to avoid conflicts
-  }))
-
-  // Add cards to player's hand
-  const { error: handError } = await supabase
-    .from('player_hands')
-    .insert(cardsToAdd)
-
-  if (handError) throw handError
-
-  // Remove the drawn cards from the draw pile
-  await supabase
-    .from('draw_pile')
-    .delete()
-    .in('id', drawCards.map(dc => dc.id))
-
-  return true
+  return result.data
 })

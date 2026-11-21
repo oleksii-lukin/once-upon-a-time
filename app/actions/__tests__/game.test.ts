@@ -104,7 +104,7 @@ describe('initializeGame', () => {
     // 8. lobby status update (via .eq)
     mockSupabase.eq.mockResolvedValueOnce({ error: null })
 
-    const result = await initializeGame('lobby-1')
+    const result = await initializeGame('11111111-1111-4111-8111-111111111111')
 
     expect(result).toEqual({ success: true, gameSessionId: 'session-1' })
 

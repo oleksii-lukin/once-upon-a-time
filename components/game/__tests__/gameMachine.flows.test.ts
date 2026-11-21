@@ -20,6 +20,7 @@ const calls: ActorCalls = { draw: [], passTurn: [], object: [], finalize: [] }
 
 const P1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const P2 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+const P3 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 const SESSION = '11111111-1111-4111-8111-111111111111'
 const LOBBY = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
 
@@ -151,6 +152,31 @@ describe('gameMachine turn flows', () => {
     expect(calls.draw[0]).toMatchObject({ playerId: P1, count: 1 })
     expect(calls.passTurn[0]).toMatchObject({ nextPlayerId: P2 })
     expect(calls.finalize).toHaveLength(0) // the win was objected, not finalized
+  })
+
+  it('rejected interrupt follows turn order, not the stale redirect', async () => {
+    // 3 players: P1 narrating, P3 interrupts OUT of turn order, the arbiter
+    // rejects (INVALID). A later pass must advance by turn order (P2), not
+    // jump to the rejected interrupter (P3) — the parent's context used to
+    // keep the stale redirect and leak it into the finished-turn output.
+    const actor = createActor(testMachine).start()
+    actor.send({
+      ...startGameEvent,
+      players: [
+        { id: P1, role: 'storyteller', turn_order: 0 },
+        { id: P2, role: 'player', turn_order: 1 },
+        { id: P3, role: 'player', turn_order: 2 },
+      ] as any,
+    })
+
+    actor.send({ type: 'INTERRUPT', nextPlayerId: P3 })
+    actor.send({ type: 'INVALID' })
+    actor.send({ type: 'PASS' })
+
+    await vi.waitFor(() => {
+      expect(actor.getSnapshot().context.currentPlayerId).toBe(P2)
+      expect(calls.passTurn[0]).toMatchObject({ gameSessionId: SESSION, nextPlayerId: P2 })
+    }, { timeout: 3000 })
   })
 
   it('win flow without objection finalizes through finalizeWinActor', async () => {

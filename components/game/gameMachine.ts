@@ -490,6 +490,9 @@ export const gameMachine = setup({
                   },
                   { target: 'idle' },
                 ],
+                // A failed extension check must not wedge the timer region:
+                // fall back to idle (the next SYNC/START retries).
+                onError: 'idle',
               },
             },
             syncing: {
@@ -582,7 +585,10 @@ export const gameMachine = setup({
                 id: 'drawCardsActor',
                 input: buildDrawCardsInput,
                 onDone: 'updateTurn',
-                onError: 'idle',
+                onError: {
+                  target: 'idle',
+                  actions: assignPersistenceError,
+                },
               },
               always: [
                 {
@@ -612,6 +618,12 @@ export const gameMachine = setup({
                   target: 'idle',
                   actions: afterTurnUpdate,
                 },
+                // Surface the failure instead of wedging: the DB keeps the
+                // old turn (authoritative), realtime sync reconciles.
+                onError: {
+                  target: 'idle',
+                  actions: assignPersistenceError,
+                },
               },
             },
             objecting: {
@@ -620,6 +632,10 @@ export const gameMachine = setup({
                 id: 'objectActor',
                 input: buildObjectInput,
                 onDone: 'penaltyForStoryteller',
+                onError: {
+                  target: 'idle',
+                  actions: assignPersistenceError,
+                },
               },
             },
             penaltyForStoryteller: {
@@ -628,6 +644,12 @@ export const gameMachine = setup({
                 id: 'drawCardsActor',
                 input: buildPenaltyDrawInput,
                 onDone: 'updateTurn',
+                // The penalty draw is best-effort: even if it fails the
+                // turn must still pass to the objector.
+                onError: {
+                  target: 'updateTurn',
+                  actions: assignPersistenceError,
+                },
               },
             },
             challengingStutter: {
@@ -636,6 +658,12 @@ export const gameMachine = setup({
                 id: 'drawCardsActor',
                 input: buildChallengeDrawInput,
                 onDone: 'updateTurn',
+                // Same as the objection penalty: the challenge is recorded,
+                // only the draw failed — keep the turn moving.
+                onError: {
+                  target: 'updateTurn',
+                  actions: assignPersistenceError,
+                },
               },
             },
             confirmingCard: {
@@ -661,6 +689,11 @@ export const gameMachine = setup({
                     actions: clearOptimisticCard,
                   },
                 ],
+                // assignPersistenceError also rolls back the optimistic card.
+                onError: {
+                  target: 'idle',
+                  actions: assignPersistenceError,
+                },
               },
             },
           },
@@ -678,6 +711,11 @@ export const gameMachine = setup({
             onDone: {
               target: 'waiting',
               actions: assignLastPlayedCardFromEvent,
+            },
+            // Nothing was persisted: abandon the win attempt and keep playing.
+            onError: {
+              target: '#gameRoot.active',
+              actions: assignPersistenceError,
             },
           },
         },
@@ -702,6 +740,12 @@ export const gameMachine = setup({
             id: 'objectActor',
             input: buildObjectInput,
             onDone: 'penalty',
+            // The objection was not persisted: the win proceeds to
+            // confirmation as if it never happened.
+            onError: {
+              target: 'waiting',
+              actions: assignPersistenceError,
+            },
           },
         },
         penalty: {
@@ -710,6 +754,11 @@ export const gameMachine = setup({
             id: 'drawCardsActor',
             input: buildPenaltyDrawInput,
             onDone: 'updateTurn',
+            // Best-effort draw: the turn must still pass to the objector.
+            onError: {
+              target: 'updateTurn',
+              actions: assignPersistenceError,
+            },
           },
         },
         updateTurn: {
@@ -721,6 +770,12 @@ export const gameMachine = setup({
               target: '#gameRoot.active',
               actions: afterTurnUpdate,
             },
+            // The DB keeps the old turn; drop back to normal play and let
+            // realtime sync reconcile.
+            onError: {
+              target: '#gameRoot.active',
+              actions: assignPersistenceError,
+            },
           },
         },
         confirming: {
@@ -729,6 +784,12 @@ export const gameMachine = setup({
             id: 'confirmCardActor',
             input: buildConfirmInput,
             onDone: 'finalizing',
+            // Do not retry from `waiting` here: with pacing disabled that
+            // would loop forever on a persistently failing confirm.
+            onError: {
+              target: '#gameRoot.active',
+              actions: assignPersistenceError,
+            },
           },
         },
         finalizing: {
@@ -737,6 +798,12 @@ export const gameMachine = setup({
             id: 'finalizeWinActor',
             input: buildFinalizeWinInput,
             onDone: '#gameRoot.gameOver',
+            // The session was not marked complete in the DB, so returning
+            // to active matches the DB state.
+            onError: {
+              target: '#gameRoot.active',
+              actions: assignPersistenceError,
+            },
           },
         },
       },

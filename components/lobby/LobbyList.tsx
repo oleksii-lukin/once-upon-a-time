@@ -10,7 +10,8 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { LobbyWithPlayerCount as Lobby, LobbySettingsSchema } from '@/types/model'
 
 import { useUser } from '@clerk/nextjs'
-import { getGuestIdentity } from '@/lib/auth/guestIdentity'
+import { resolvePlayerIdentity } from '@/lib/lobby/identity'
+import { joinLobby } from '@/app/actions/lobby'
 import { Button } from '@/components/ui/button'
 
 export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] }) {
@@ -66,46 +67,21 @@ export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] 
 
   const handleJoin = async (lobbyId: string) => {
     const guestId = getGuestId()
+    const identity = resolvePlayerIdentity(user, guestId)
 
-    // Check if already in lobby
-    const { data: existingPlayer } = await supabase
-      .from('players')
-      .select('*')
-      .eq('lobby_id', lobbyId)
-      .or(user ? `user_id.eq.${user.id},guest_id.eq.${guestId}` : `guest_id.eq.${guestId}`)
-      .maybeSingle()
+    const result = await joinLobby({
+      lobbyId,
+      joiner: {
+        userId: user?.id || null,
+        guestId,
+        displayName: identity.displayName,
+        avatarUrl: identity.avatarUrl,
+      },
+    })
 
-    if (!existingPlayer) {
-      // Determine display info
-      let displayName: string
-      let avatarUrl: string | null = null
-
-      if (user) {
-        // Logged-in user - use Clerk info as fallback (DB trigger will override if profile exists)
-        displayName = user.fullName || user.username || 'Player'
-        avatarUrl = user.imageUrl || null
-      }
-      else {
-        // Guest - generate fun identity
-        const identity = getGuestIdentity(guestId)
-        displayName = identity.name
-        avatarUrl = `emoji:${identity.emoji}:${identity.color}`
-      }
-
-      const { error } = await supabase.from('players').insert({
-        lobby_id: lobbyId,
-        user_id: user?.id || null,
-        guest_id: user ? null : guestId,
-        role: 'player', // Default to player
-        status: 'not_ready',
-        display_name: displayName,
-        avatar_url: avatarUrl,
-      })
-
-      if (error) {
-        console.error('Error joining lobby:', error)
-        return
-      }
+    if (!result.ok) {
+      console.error('Error joining lobby:', result.error)
+      return
     }
 
     router.push(`/${lng}/lobbies/${lobbyId}?view=user`)

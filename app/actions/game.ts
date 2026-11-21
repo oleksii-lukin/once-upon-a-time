@@ -3,7 +3,8 @@
 import { z } from 'zod'
 import { createClient } from '@/utils/supabase/server'
 import { LobbySettingsSchema, defaultLobbySettings, type Tables, type TablesInsert, type PlayedCardWithCard } from '@/types/model'
-import { type ActionResult, type TimerSyncResult } from '@/lib/game/types'
+import { type ActionResult } from '@/types/service'
+import { type TimerSyncResult } from '@/lib/game/types'
 import {
   handRepo,
   playedCardsRepo,

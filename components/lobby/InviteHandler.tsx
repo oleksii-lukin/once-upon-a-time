@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { AlertCircle as AlertCircleIcon } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { getGuestId } from '@/lib/auth/guest'
-import { getGuestIdentity } from '@/lib/auth/guestIdentity'
+import { resolvePlayerIdentity } from '@/lib/lobby/identity'
+import { joinLobby } from '@/app/actions/lobby'
 import { getTranslation } from '@/app/i18n/client'
 
 interface InviteHandlerProps {
@@ -18,7 +18,7 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
   const [status, setStatus] = useState<'loading' | 'error' | 'joining'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter()
-  const { getToken, userId, isLoaded: isAuthLoaded } = useAuth()
+  const { userId, isLoaded: isAuthLoaded } = useAuth()
   const { user, isLoaded: isUserLoaded } = useUser()
   const { t } = getTranslation(lng, 'common')
   const joiningRef = useRef(false)
@@ -29,82 +29,38 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
       return
     }
 
-    const joinLobby = async () => {
+    const joinByCode = async () => {
       if (joiningRef.current) return
       joiningRef.current = true
 
       try {
-        const token = await getToken({ template: 'supabase' }).catch(() => null)
-        const supabase = createClient(token || undefined)
         const guestId = getGuestId()
-
-        // 1. Find lobby by code (case-insensitive)
-        const { data: lobby, error: lobbyError } = await supabase
-          .from('lobbies')
-          .select('id')
-          .ilike('code', code)
-          .single()
-
-        if (lobbyError || !lobby) {
-          setStatus('error')
-          setErrorMessage(t('lobby_not_found', 'Lobby not found'))
-          joiningRef.current = false
-          return
-        }
+        const identity = resolvePlayerIdentity(user, guestId)
 
         setStatus('joining')
 
-        // 2. Check if already a player
-        const { data: existingPlayer } = await supabase
-          .from('players')
-          .select('id')
-          .eq('lobby_id', lobby.id)
-          .or(`user_id.eq.${userId || 'non_existent'},guest_id.eq.${guestId}`)
-          .maybeSingle()
+        const result = await joinLobby({
+          code,
+          joiner: {
+            userId: userId || null,
+            guestId,
+            displayName: identity.displayName,
+            avatarUrl: identity.avatarUrl,
+          },
+        })
 
-        if (existingPlayer) {
-          router.push(`/${lng}/lobbies/${lobby.id}`)
-          return
-        }
-
-        // Determine display info - now Clerk is definitely loaded
-        let displayName: string
-        let avatarUrl: string | null = null
-
-        if (user) {
-          // Logged-in user - use Clerk info
-          displayName = user.fullName || user.username || 'Player'
-          avatarUrl = user.imageUrl || null
-        }
-        else {
-          // Guest - generate fun identity
-          const identity = getGuestIdentity(guestId)
-          displayName = identity.name
-          avatarUrl = `emoji:${identity.emoji}:${identity.color}`
-        }
-
-        // 3. Join lobby
-        const { error: joinError } = await supabase
-          .from('players')
-          .insert({
-            lobby_id: lobby.id,
-            user_id: userId || null,
-            guest_id: userId ? null : guestId,
-            role: 'player',
-            status: 'not_ready',
-            display_name: displayName,
-            avatar_url: avatarUrl,
-          })
-
-        if (joinError) {
-          console.error('Error joining lobby:', joinError)
+        if (!result.ok) {
           setStatus('error')
-          setErrorMessage(t('failed_to_join', 'Failed to join lobby'))
+          setErrorMessage(
+            result.code === 'lobby_not_found'
+              ? t('lobby_not_found', 'Lobby not found')
+              : t('failed_to_join', 'Failed to join lobby'),
+          )
           joiningRef.current = false
           return
         }
 
-        router.push(`/${lng}/lobbies/${lobby.id}`)
+        router.push(`/${lng}/lobbies/${result.data.lobbyId}`)
       }
       catch (error) {
         console.error('Unexpected error:', error)
@@ -114,8 +70,8 @@ export default function InviteHandler({ code, lng }: InviteHandlerProps) {
       }
     }
 
-    joinLobby()
-  }, [code, lng, getToken, userId, user, router, t, isAuthLoaded, isUserLoaded])
+    joinByCode()
+  }, [code, lng, userId, user, router, t, isAuthLoaded, isUserLoaded])
 
   if (status === 'error') {
     return (

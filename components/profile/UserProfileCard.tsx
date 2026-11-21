@@ -33,7 +33,7 @@ export default function UserProfileCard({ compact = false }: UserProfileCardProp
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle() // no profile row yet is not an error
 
       if (error) {
         console.error('Error fetching user profile:', error)

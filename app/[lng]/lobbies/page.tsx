@@ -13,11 +13,12 @@ export default async function LobbiesPage({ params }: { params: Promise<{ lng: s
   const { lng } = await params
   const { t } = await getTranslation(lng, 'common')
   const supabase = await createClient()
-  const { data: lobbies } = await supabase
+  const { data: lobbies, error: lobbiesError } = await supabase
     .from('lobbies')
     .select('*, players(count)')
     .is('deleted_at', null) // Only show active (non-deleted) lobbies
     .order('created_at', { ascending: false })
+  if (lobbiesError) console.error('[lobbies page] failed to load lobbies:', lobbiesError)
 
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">

@@ -2,24 +2,34 @@
 
 import i18next from 'i18next'
 import { initReactI18next, useTranslation as getTranslationOrg } from 'react-i18next'
-import resourcesToBackend from 'i18next-resources-to-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
-import { getOptions, languages, cookieName } from './settings'
+import { getOptions, cookieName } from './settings'
 import { useEffect, useState } from 'react'
+import en from '../../public/locales/en/common.json'
+import ru from '../../public/locales/ru/common.json'
+import ua from '../../public/locales/ua/common.json'
 
 const runsOnServerSide = typeof window === 'undefined'
 
+// Locales are imported statically on purpose: with the previous async
+// backend loader, SSR could render a different language than the client
+// (changeLanguage was not awaited during render), causing hydration
+// mismatches. Static resources make i18next resolve languages synchronously
+// on both server and client.
 i18next
   .use(initReactI18next)
   .use(LanguageDetector)
-  .use(resourcesToBackend((language: string, namespace: string) => import(`../../public/locales/${language}/${namespace}.json`)))
   .init({
     ...getOptions(),
     lng: undefined, // let detect the language on client side
+    resources: {
+      en: { common: en },
+      ru: { common: ru },
+      ua: { common: ua },
+    },
     detection: {
       order: ['path', 'htmlTag', 'cookie', 'navigator'],
     },
-    preload: runsOnServerSide ? languages : [],
   })
 
 export function getTranslation(lng: string, ns: string, options?: Parameters<typeof getTranslationOrg>[1]) {

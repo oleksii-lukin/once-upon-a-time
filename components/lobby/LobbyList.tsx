@@ -14,8 +14,8 @@ import { resolvePlayerIdentity } from '@/lib/lobby/identity'
 import { joinLobby } from '@/app/actions/lobby'
 import { Button } from '@/components/ui/button'
 
-export default function LobbyList({ initialLobbies }: { initialLobbies: Lobby[] }) {
-  const [lobbies, setLobbies] = useState<Lobby[]>(initialLobbies)
+export default function LobbyList({ initialLobbies = [] }: { initialLobbies?: Lobby[] }) {
+  const [lobbies, setLobbies] = useState<Lobby[]>(initialLobbies ?? [])
   const supabase = createClient()
   const router = useRouter()
   const params = useParams()

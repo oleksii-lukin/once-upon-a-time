@@ -29,6 +29,14 @@ export default function LobbyManager({
   const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
 
+  // Pick up server-side state after a router.refresh() (e.g. when the host
+  // starts a game): the realtime UPDATE subscription is a bonus, not the
+  // only path to the updated lobby status. Adjusting state during render
+  // from changed props is the React-recommended pattern here.
+  if (initialLobby.id !== lobby.id || initialLobby.status !== lobby.status) {
+    setLobby(initialLobby)
+  }
+
   // Prevent performance measurement issues by ensuring component is fully mounted
   useEffect(() => {
     // Add a small delay to ensure proper mounting before any operations

@@ -56,6 +56,7 @@ global.fetch = vi.fn(() =>
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   useParams: vi.fn(() => ({ lng: 'en' })),
+  useRouter: vi.fn(() => ({ refresh: vi.fn(), push: vi.fn() })),
 }))
 
 // Mock i18n

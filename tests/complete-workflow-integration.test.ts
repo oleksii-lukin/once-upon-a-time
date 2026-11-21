@@ -9,7 +9,7 @@ const originalEnv = process.env
 
 beforeAll(() => {
   process.env.ENABLE_LOCAL_IMAGE_EDITOR = 'true'
-  process.env.NODE_ENV = 'development'
+  Object.assign(process.env, { NODE_ENV: 'development' })
 })
 
 afterAll(() => {

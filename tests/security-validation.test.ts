@@ -9,7 +9,7 @@ describe('Security Validation', () => {
   beforeEach(() => {
     originalEnv = { ...process.env }
     process.env.ENABLE_LOCAL_IMAGE_EDITOR = 'true'
-    process.env.NODE_ENV = 'development'
+    Object.assign(process.env, { NODE_ENV: 'development' })
     securityLogger.resetMetrics()
   })
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 import { createClient } from '@/utils/supabase/client'
 import { type Lobby, type Player, type Deck, LobbySettingsSchema, defaultLobbySettings, type LobbySettings } from '@/types/model'
@@ -37,6 +37,7 @@ export default function AdminLobbyView({
   guestId,
 }: AdminLobbyViewProps) {
   const params = useParams()
+  const router = useRouter()
   const lng = params.lng as string
   const { t } = getTranslation(lng, 'common')
 
@@ -177,7 +178,11 @@ export default function AdminLobbyView({
       return
     }
 
-    // LobbyManager will handle navigation based on lobby status
+    // Do not rely on the realtime lobbies subscription for this critical
+    // transition (the channel can lose the WebSocket handshake race at page
+    // load and strand us in the lobby view): re-render the server component
+    // so LobbyManager receives the updated status directly.
+    router.refresh()
     setIsStarting(false)
   }
 

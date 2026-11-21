@@ -6,7 +6,7 @@ import path from 'path'
 // Set up environment before importing modules
 beforeAll(() => {
   process.env.ENABLE_LOCAL_IMAGE_EDITOR = 'true'
-  process.env.NODE_ENV = 'development'
+  Object.assign(process.env, { NODE_ENV: 'development' })
 })
 
 // Import after environment setup
@@ -47,7 +47,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveHandler(request, {} as any)
+      const response = await saveHandler(request)
       expect(response.status).toBe(200)
 
       const data = await response.json()
@@ -89,7 +89,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveAsHandler(request, {} as any)
+      const response = await saveAsHandler(request)
       expect(response.status).toBe(200)
 
       const data = await response.json()
@@ -121,7 +121,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveHandler(request, {} as any)
+      const response = await saveHandler(request)
       expect(response.status).toBe(200)
 
       const data = await response.json()
@@ -160,7 +160,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveHandler(request, {} as any)
+      const response = await saveHandler(request)
       expect(response.status).toBe(200)
 
       const data = await response.json()
@@ -186,7 +186,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveHandler(request, {} as any)
+      const response = await saveHandler(request)
 
       if (response.status !== 200) {
         const errorData = await response.json()
@@ -217,7 +217,7 @@ describe('Image Format and Quality Optimization', () => {
         body: formData,
       })
 
-      const response = await saveHandler(request, {} as any)
+      const response = await saveHandler(request)
       expect(response.status).toBe(200)
 
       const data = await response.json()

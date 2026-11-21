@@ -72,13 +72,23 @@ export default function usePlayerHeartbeat(
 
     // Send heartbeat on beforeunload to update final state
     const handleBeforeUnload = () => {
-      // Use synchronous approach for beforeunload
-      if (playerId) {
-        navigator.sendBeacon(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/players?id=eq.${playerId}`,
-          JSON.stringify({ last_seen_at: new Date().toISOString() }),
-        )
-      }
+      // fetch with keepalive survives page unload; sendBeacon cannot set
+      // headers, so it always failed with a 401 and left last_seen_at stale
+      // (the pg_cron reaper then finished the lobby under active players).
+      if (!playerId) return
+      fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/players?id=eq.${playerId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ last_seen_at: new Date().toISOString() }),
+          keepalive: true,
+        },
+      ).catch(() => {})
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
 

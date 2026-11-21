@@ -28,6 +28,30 @@ export async function initializeGame(lobbyId: string) {
 
   const supabase = await createClient()
 
+  // Idempotent start: reuse the lobby's active session if one exists.
+  // Repeated Start clicks used to create a new session each time (no
+  // uniqueness on lobby_id), which poisoned later `.single()` reads.
+  const { data: existing, error: existingError } = await supabase
+    .from('game_sessions')
+    .select('id')
+    .eq('lobby_id', lobbyId)
+    .neq('status', 'COMPLETED')
+    .maybeSingle()
+
+  if (existingError) {
+    // Best effort: the unique index below still guards against duplicates.
+    console.error('Error checking existing game session:', existingError)
+  }
+
+  if (existing) {
+    const { error: statusError } = await supabase
+      .from('lobbies')
+      .update({ status: 'playing' })
+      .eq('id', lobbyId)
+    if (statusError) console.error('Error updating lobby status:', statusError)
+    return { success: true, gameSessionId: existing.id, reused: true }
+  }
+
   // Get lobby with deck info
   const { data: lobby, error: lobbyError } = await supabase
     .from('lobbies')
@@ -109,6 +133,17 @@ export async function initializeGame(lobbyId: string) {
     .single()
 
   if (sessionError || !gameSession) {
+    // Another Start click won the race between the check above and this
+    // insert — the unique index rejected ours; reuse the winner's session.
+    if ((sessionError as { code?: string } | null)?.code === '23505') {
+      const { data: raced } = await supabase
+        .from('game_sessions')
+        .select('id')
+        .eq('lobby_id', lobbyId)
+        .neq('status', 'COMPLETED')
+        .maybeSingle()
+      if (raced) return { success: true, gameSessionId: raced.id, reused: true }
+    }
     console.error('Error creating game session:', sessionError)
     return { error: 'Failed to create game session' }
   }

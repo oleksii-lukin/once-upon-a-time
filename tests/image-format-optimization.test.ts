@@ -7,7 +7,7 @@
  * (`assert(... webidl.is.File(value))`) — every request 500s before the
  * handler logic runs. API-route tests need the node runtime's own File/Blob.
  */
-import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest'
 import { NextRequest } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
@@ -30,6 +30,16 @@ describe('Image Format and Quality Optimization', () => {
   beforeEach(async () => {
     // Ensure test directory exists
     await fs.mkdir(testDecksPath, { recursive: true })
+  })
+
+  afterAll(async () => {
+    // save-as refuses to overwrite, so every run leaves a timestamped
+    // optimized-test-<ts>.jpg behind. The dir is gitignored scratch space,
+    // but the files would still accumulate on disk — clean them up.
+    const files = await fs.readdir(testDecksPath).catch(() => [] as string[])
+    await Promise.all(files
+      .filter(f => /^optimized-test-\d+\.jpg$/.test(f))
+      .map(f => fs.rm(path.join(testDecksPath, f), { force: true })))
   })
 
   describe('Format and Quality Parameters', () => {

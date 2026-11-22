@@ -127,7 +127,13 @@ async function handleSaveImage(request: NextRequest, config: EnvironmentConfig) 
     // Check if file exists and handle overwrite logic
     const pathInfo = await fileSystemHandler.validateAndResolvePath(sanitizedParams.filePath)
 
-    if (pathInfo.exists && !sanitizedParams.overwrite) {
+    // The sanitizer returns the STRING 'true'/'false' (lib/security-validator.ts),
+    // so the raw value is always truthy — compare against 'true' explicitly,
+    // otherwise the 409 branch below is dead code and existing files get
+    // silently overwritten.
+    const overwriteRequested = sanitizedParams.overwrite === 'true'
+
+    if (pathInfo.exists && !overwriteRequested) {
       securityLogger.log({
         level: 'info',
         category: 'file_access',

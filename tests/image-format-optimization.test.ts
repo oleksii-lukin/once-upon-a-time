@@ -1,7 +1,17 @@
+/**
+ * @vitest-environment node
+ *
+ * These tests exercise Next.js API routes with multipart FormData. The
+ * global jsdom environment (vitest.config.mts) provides jsdom's File/Blob
+ * classes, which fail undici's brand check inside NextRequest.formData()
+ * (`assert(... webidl.is.File(value))`) — every request 500s before the
+ * handler logic runs. API-route tests need the node runtime's own File/Blob.
+ */
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { NextRequest } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
+import sharp from 'sharp'
 
 // Set up environment before importing modules
 beforeAll(() => {
@@ -172,8 +182,13 @@ describe('Image Format and Quality Optimization', () => {
 
   describe('File Size Optimization', () => {
     it('should report compression ratio when optimization occurs', async () => {
-      // Create a larger test image to see compression effects
-      const largerImageData = Buffer.alloc(1024, 0xFF) // 1KB of data
+      // Real PNG fixture (generate with sharp — arbitrary bytes are rejected
+      // by validateImageData's signature check with 422)
+      const largerImageData = await sharp({
+        create: { width: 64, height: 64, channels: 3, background: { r: 40, g: 60, b: 140 } },
+      })
+        .png()
+        .toBuffer()
 
       const formData = new FormData()
       formData.append('image', new Blob([largerImageData], { type: 'image/png' }), 'large.png')
@@ -188,22 +203,22 @@ describe('Image Format and Quality Optimization', () => {
 
       const response = await saveHandler(request)
 
-      if (response.status !== 200) {
-        const errorData = await response.json()
-        console.error('Save handler error (compression ratio test):', response.status, errorData)
-      }
-
       expect(response.status).toBe(200)
 
       const data = await response.json()
       expect(data.success).toBe(true)
-      expect(data.file.originalSize).toBe(1024)
+      expect(data.file.originalSize).toBe(largerImageData.length)
       expect(data.file.compressionRatio).toBeDefined()
       expect(typeof data.file.compressionRatio).toBe('number')
     })
 
     it('should maintain reasonable compression ratios', async () => {
-      const testImageData = Buffer.alloc(2048, 0xAA) // 2KB of repeating data
+      // Real JPEG fixture (see comment in the test above)
+      const testImageData = await sharp({
+        create: { width: 64, height: 64, channels: 3, background: { r: 170, g: 180, b: 90 } },
+      })
+        .jpeg({ quality: 90 })
+        .toBuffer()
 
       const formData = new FormData()
       formData.append('image', new Blob([testImageData], { type: 'image/jpeg' }), 'test.jpg')

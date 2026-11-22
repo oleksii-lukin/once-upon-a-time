@@ -1,3 +1,12 @@
+/**
+ * @vitest-environment node
+ *
+ * These tests exercise Next.js API routes with multipart FormData. The
+ * global jsdom environment (vitest.config.mts) provides jsdom's File/Blob
+ * classes, which fail undici's brand check inside NextRequest.formData()
+ * (`assert(... webidl.is.File(value))`) — every request 500s before the
+ * handler logic runs. API-route tests need the node runtime's own File/Blob.
+ */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST as saveHandler } from '@/app/api/image-editor/save/route'

@@ -10,3 +10,6 @@ allowBuilds:
   msw: true
   sharp: false
   unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - i18next@27.2.3

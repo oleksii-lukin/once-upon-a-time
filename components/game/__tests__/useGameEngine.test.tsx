@@ -75,7 +75,7 @@ function Probe({ api }: { api: { current: EngineApi | null } }) {
     currentPlayerId: useGameSelector(snapshot => snapshot.context.currentPlayerId),
     inFlightHandId: useGameSelector(snapshot => snapshot.context.inFlightHandId),
     isWinning: useGameSelector(snapshot => snapshot.matches('winning')),
-    actions: useGameActions(currentPlayer, players),
+    actions: useGameActions(currentPlayer),
   }
   return null
 }

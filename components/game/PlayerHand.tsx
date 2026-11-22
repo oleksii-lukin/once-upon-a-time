@@ -42,7 +42,10 @@ function PlayerHand({ cards, onSelectCard, selectedCardId, isMyTurn, deck, onSho
       <div className="absolute inset-0 bg-black/20 dark:bg-black/30 backdrop-blur-md border-t border-white/10 pointer-events-none" />
 
       {/* Scrollable Area - Taller than the tray to allow cards to stick out without clipping */}
-      <div className="player-hand absolute inset-x-0 bottom-0 h-96 flex justify-center items-end gap-6 px-8 overflow-x-auto pb-1 overflow-y-visible scrollbar-hide">
+      {/* justify-center-safe: with a full hand the row is wider than the
+          viewport, and plain center would clip the first card off-screen
+          left where it can no longer be scrolled or clicked into view. */}
+      <div className="player-hand absolute inset-x-0 bottom-0 h-96 flex justify-center-safe items-end gap-6 px-8 overflow-x-auto pb-1 overflow-y-visible scrollbar-hide">
         {sortedCards.map((card, index) => {
           const isEnding = card.category?.toLowerCase() === 'ending'
           // Check if previous card was NOT an ending, and this one IS an ending

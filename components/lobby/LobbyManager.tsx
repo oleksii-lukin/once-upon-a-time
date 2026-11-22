@@ -26,15 +26,23 @@ export default function LobbyManager({
 }: LobbyManagerProps) {
   const [lobby, setLobby] = useState<Lobby>(initialLobby)
   const [players, setPlayers] = useState<Player[]>(initialPlayers)
+  const [prevInitialLobby, setPrevInitialLobby] = useState(initialLobby)
   const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
 
   // Pick up server-side state after a router.refresh() (e.g. when the host
-  // starts a game): the realtime UPDATE subscription is a bonus, not the
-  // only path to the updated lobby status. Adjusting state during render
-  // from changed props is the React-recommended pattern here.
-  if (initialLobby.id !== lobby.id || initialLobby.status !== lobby.status) {
-    setLobby(initialLobby)
+  // starts a game): apply the new props ONLY when they represent an actual
+  // id/status change versus the previous props. Gating on "props differ
+  // from state" would revert a realtime status update whenever any RSC
+  // re-commit delivers props that are stale relative to it — stranding the
+  // guest in the lobby view after the host starts the game.
+  if (prevInitialLobby !== initialLobby) {
+    const statusOrIdChanged = initialLobby.status !== prevInitialLobby.status
+      || initialLobby.id !== prevInitialLobby.id
+    setPrevInitialLobby(initialLobby)
+    if (statusOrIdChanged) {
+      setLobby(initialLobby)
+    }
   }
 
   // Prevent performance measurement issues by ensuring component is fully mounted
@@ -72,7 +80,20 @@ export default function LobbyManager({
           }
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status !== 'SUBSCRIBED') return
+        // postgres_changes only delivers live events: a status change that
+        // lands between page render and this subscription would be lost and
+        // strand the client in the lobby view. Refetch once on subscribe.
+        supabase
+          .from('lobbies')
+          .select('*')
+          .eq('id', lobby.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setLobby(data as Lobby)
+          })
+      })
 
     // Subscribe to player changes
     const playersChannel = supabase
@@ -90,13 +111,49 @@ export default function LobbyManager({
           if (data) setPlayers(data)
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status !== 'SUBSCRIBED') return
+        // An INSERT that lands before this subscription is established is
+        // never replayed — refetch once so a player who joined during the
+        // window is not missing from the list.
+        supabase
+          .from('players')
+          .select('*')
+          .eq('lobby_id', lobby.id)
+          .order('turn_order', { ascending: true })
+          .order('joined_at', { ascending: true })
+          .then(({ data }) => {
+            if (data) setPlayers(data as Player[])
+          }, () => {})
+      })
 
     return () => {
       supabase.removeChannel(lobbyChannel)
       supabase.removeChannel(playersChannel)
     }
   }, [lobby.id, supabase, isMounted])
+
+  // Realtime safety net: postgres_changes only delivers live events, so a
+  // status change can be lost (subscription not yet established, dropped
+  // websocket — nothing replays it) and strand the client in the lobby view.
+  // While still waiting, poll as a fallback; realtime usually wins, the
+  // poll makes the flip eventual.
+  useEffect(() => {
+    if (!isMounted || lobby.status !== 'waiting') return
+    const interval = setInterval(() => {
+      supabase
+        .from('lobbies')
+        .select('*')
+        .eq('id', lobby.id)
+        .single()
+        .then(({ data }) => {
+          if (data && data.status !== lobby.status) {
+            setLobby(data as Lobby)
+          }
+        }, () => {})
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [isMounted, lobby.status, lobby.id, supabase])
 
   // Hide the global header during active gameplay and restore otherwise
   useEffect(() => {

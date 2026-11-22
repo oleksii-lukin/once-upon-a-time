@@ -161,6 +161,18 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
     refresh()
   }, [refresh])
 
+  // Safety net for the changefeed: postgres_changes only delivers live
+  // events, so a missed INSERT/UPDATE (dropped websocket, subscription
+  // mid-rebuild) would otherwise strand the board at a stale state until
+  // the next event. Poll as a fallback; the changefeed stays the fast
+  // path, the poll makes convergence eventual.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refresh().catch(() => {})
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [refresh])
+
   // Single realtime pipeline: session rows apply directly (validated),
   // board changes trigger the serialized refetch.
   useEffect(() => {

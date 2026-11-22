@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@clerk/testing": "^1.13.33",
-    "@playwright/test": "^1.58.1",
+    "@playwright/test": "^1.65.1",
     "@stylistic/eslint-plugin": "^5.7.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",

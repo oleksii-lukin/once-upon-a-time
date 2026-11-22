@@ -34,6 +34,20 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
+      // The multiplayer suite runs standalone (guest identities, no Clerk)
+      testIgnore: '**/multiplayer/**',
+    },
+    {
+      // Two-browser-context multiplayer tests against the local Supabase
+      // stack: guest identities only, so no Clerk global setup dependency.
+      name: 'multiplayer',
+      testMatch: '**/multiplayer/**/*.spec.ts',
+      timeout: 120_000, // cold Next dev compiles + realtime + pacing windows
+      use: {
+        ...devices['Desktop Chrome'],
+        navigationTimeout: 60_000,
+        actionTimeout: 15_000,
+      },
     },
   ],
 

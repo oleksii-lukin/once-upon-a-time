@@ -6,7 +6,6 @@ import { createBrowserInspector } from '@statelyai/inspect'
 import { gameMachine } from './gameMachine'
 import { type CardData, type HandCardData } from '@/utils/gameUtils'
 import { type GameMode, type GameSession, type Player } from '@/types/model'
-import { getSortedPlayers } from './utils/playerUtils'
 import { shouldApplyRemoteTurnUpdate, selectLocalActionInFlight } from './utils/reconcile'
 
 /**
@@ -140,19 +139,8 @@ export interface GameActions {
  */
 export function useGameActions(
   currentPlayer: Player | undefined,
-  players: Player[],
 ): GameActions {
   const actor = GameEngineContext.useActorRef()
-
-  const nextPlayer = useMemo(() => {
-    if (!currentPlayer || players.length === 0) return null
-    const sortedPlayers = getSortedPlayers(players)
-    const currentIndex = sortedPlayers.findIndex(p => p.id === currentPlayer.id)
-    if (currentIndex === -1) return null
-
-    const nextIndex = (currentIndex + 1) % sortedPlayers.length
-    return sortedPlayers[nextIndex]
-  }, [currentPlayer, players])
 
   return useMemo(() => ({
     playCard: (card: HandCardData, playedCardsCount: number) => {
@@ -166,19 +154,23 @@ export function useGameActions(
       actor.send({ type: 'EXCHANGE', cardId, isEnding })
     },
     interrupt: () => {
-      if (!nextPlayer) return
-      actor.send({ type: 'INTERRUPT', nextPlayerId: nextPlayer.id })
+      // The actor takes the turn: the rules machine records the directed
+      // event's nextPlayerId as the override, so it must be the local
+      // player — not their turn-order successor (which would hand the turn
+      // back to the original storyteller and make the interrupt a no-op).
+      if (!currentPlayer) return
+      actor.send({ type: 'INTERRUPT', nextPlayerId: currentPlayer.id })
     },
     objectToCard: (playedCardId: string, storytellerId: string) => {
-      if (!nextPlayer) return
-      actor.send({ type: 'OBJECT', playedCardId, storytellerId, nextPlayerId: nextPlayer.id })
+      if (!currentPlayer) return
+      actor.send({ type: 'OBJECT', playedCardId, storytellerId, nextPlayerId: currentPlayer.id })
     },
     challengeStutter: (storytellerId: string) => {
-      if (!nextPlayer) return
-      actor.send({ type: 'CHALLENGE_STUTTER', storytellerId, nextPlayerId: nextPlayer.id })
+      if (!currentPlayer) return
+      actor.send({ type: 'CHALLENGE_STUTTER', storytellerId, nextPlayerId: currentPlayer.id })
     },
     winGame: (card: CardData, playedCardsCount: number) => {
       actor.send({ type: 'WIN_GAME', card, playedCardsCount })
     },
-  }), [actor, nextPlayer])
+  }), [actor, currentPlayer])
 }

@@ -74,7 +74,7 @@ export default function GameScreen({
   const [detailsCard, setDetailsCard] = useState<CardData | null>(null)
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
 
-  const actions = useGameActions(currentPlayer, players)
+  const actions = useGameActions(currentPlayer)
   const gameMode = useGameSelector(snapshot => snapshot.context.gameMode)
   const optimisticCard = useGameSelector(snapshot => snapshot.context.optimisticCard)
   const inFlightHandId = useGameSelector(snapshot => snapshot.context.inFlightHandId)

@@ -15,7 +15,8 @@ const runsOnServerSide = typeof window === 'undefined'
 // backend loader, SSR could render a different language than the client
 // (changeLanguage was not awaited during render), causing hydration
 // mismatches. Static resources make i18next resolve languages synchronously
-// on both server and client.
+// on both server and client. This behavior is locked by
+// tests/i18next-ssr-sync.test.ts — do not switch back to an async loader.
 i18next
   .use(initReactI18next)
   .use(LanguageDetector)

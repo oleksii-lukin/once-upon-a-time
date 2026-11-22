@@ -98,7 +98,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   ]
 
   const fetchCards = useCallback(async () => {
-    const token = await getToken({ template: 'supabase' })
+    const token = await getToken()
     if (!token) return
     const supabase = createClient(token)
     const { data } = await supabase
@@ -239,7 +239,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
     setIsSavingCard(true)
     setIsCardSaved(false)
 
-    const token = await getToken({ template: 'supabase' })
+    const token = await getToken()
     if (!token) {
       toast.error(t('auth_required'))
       setIsSavingCard(false)
@@ -313,7 +313,7 @@ export default function CardsEditor({ deckId, deckName, lng }: CardsEditorProps)
   const handleDelete = async (id: string) => {
     if (!confirm(t('admin.deckEditor.delete_confirmation'))) return
 
-    const token = await getToken({ template: 'supabase' })
+    const token = await getToken()
     if (!token) {
       toast.error(t('auth_required'))
       return

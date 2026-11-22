@@ -6,7 +6,12 @@ import type { Database } from '@/supabase/types'
 export async function createClient() {
   const cookieStore = await cookies()
   const { getToken } = await auth()
-  const token = await getToken({ template: 'supabase' })
+  // Third-party auth (Clerk session token verified by Supabase via Clerk's
+  // JWKS). Plain getToken() replaces the deprecated `supabase` JWT template.
+  // Note: the `accessToken` client option is NOT usable here — @supabase/ssr
+  // calls supabase.auth.onAuthStateChange, which supabase-js forbids when
+  // accessToken is configured.
+  const token = await getToken()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

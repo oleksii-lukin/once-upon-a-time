@@ -17,7 +17,7 @@ export default function NewDeckButton() {
   const handleCreate = async () => {
     setLoading(true)
     try {
-      const token = await getToken({ template: 'supabase' })
+      const token = await getToken()
 
       if (!token) {
         alert('Authentication required. Please sign in again.')

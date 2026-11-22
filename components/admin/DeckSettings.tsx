@@ -40,7 +40,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
 
   useEffect(() => {
     const fetchCards = async () => {
-      const token = await getToken({ template: 'supabase' })
+      const token = await getToken()
       if (!token) return
       const supabase = createClient(token)
       const { data } = await supabase
@@ -67,7 +67,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
   const handleToggleActive = async () => {
     setIsTogglingActive(true)
 
-    const token = await getToken({ template: 'supabase' })
+    const token = await getToken()
     if (!token) {
       setIsTogglingActive(false)
       return
@@ -96,7 +96,7 @@ export default function DeckSettings({ deck, lng, onDeckUpdate }: DeckSettingsPr
     setIsSavingSettings(true)
     setIsSettingsSaved(false)
 
-    const token = await getToken({ template: 'supabase' })
+    const token = await getToken()
     if (!token) {
       setIsSavingSettings(false)
       return

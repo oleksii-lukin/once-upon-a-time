@@ -7,20 +7,22 @@
 ONLY WORK IN SMALL STEPS, IF ANY ACTION REQUIRES MORE THAN SINGLE STEP FROM YOU - ASK USER FOR FEEDBACK AND PERMISSION TO PROCEED
 
 ### Database Configuration
-- **CRITICAL**: This project uses a **REMOTE Supabase database**, NOT a local one
-- The database is connected via `supabase connect`
-- **NEVER** run `npx supabase db reset` or any local database commands
-- **NEVER** attempt to apply migrations locally
-- All database changes must be applied to the remote database
+- The project supports **two Supabase environments**:
+  - **Local (development)**: Docker stack (`supabase start`), URL `http://127.0.0.1:54321`, loaded from `.env.local`. All schema work and verification happens here.
+  - **Remote (production)**: linked Supabase project `zvgehxlpakrfsbecztlz`, loaded from `.env.production`.
+- The schema changes ONLY via migration files in `supabase/migrations/`. Never alter schemas by hand, neither locally nor on production.
 
-### How to Apply Migrations
-1. Use Supabase Dashboard SQL Editor, OR
-2. Use `npx supabase db push` to push migrations to remote, OR
-3. Manually run SQL in the remote database
+### How to Apply Migrations (local first, production second)
+1. Create a migration: `pnpm db:diff` (auto-generates from local schema changes) or `pnpm db:new <name>` (write SQL manually).
+2. Apply and verify locally: `pnpm db:reset` (recreates the local DB from migrations + seed) — then test with `pnpm dev`.
+3. Commit the migration file.
+4. Preview the production push: `pnpm db:remote:push:dry`
+5. Push to production **only after local verification passes**: `pnpm db:remote:push`
+6. Confirm local/production history match: `pnpm db:remote:migration:list`
+- If production schema was ever changed manually via SQL Editor, sync the history back with `supabase db pull --remote` / `supabase migration repair`.
 
 ### Database Access
-- The application connects to the remote Supabase instance
-- Connection details are in `.env.local` (gitignored)
+- Connection details are in `.env.local` (local Docker) and `.env.production` (both gitignored)
 - Use Supabase client libraries for all database operations
 - Supabase client libraries for client and server located at `/utils/supabase` and contain integration with Clerk authentication
 - After applying migrations, re-generate types from database and update all type instances used in the code for types that cannot be generated like JSONB fields

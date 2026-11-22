@@ -14,7 +14,15 @@
     "test:e2e": "dotenv run -f .env.local playwright test",
     "test:e2e:ui": "dotenv run -f .env.local playwright test --ui",
     "test:rls": "dotenv run -f .env.local vitest run --config vitest.rls.config.mts",
-    "db:remote:push": "dotenv run -f .env.production supabase db push"
+    "db:new": "supabase migration new",
+    "db:diff": "supabase db diff -f",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "db:types": "supabase gen types typescript --local > supabase/types.ts",
+    "db:migration:list": "supabase migration list",
+    "db:remote:push": "supabase db push --remote",
+    "db:remote:push:dry": "supabase db push --remote --dry-run",
+    "db:remote:migration:list": "supabase migration list --remote"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.107",

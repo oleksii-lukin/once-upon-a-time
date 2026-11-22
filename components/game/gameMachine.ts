@@ -57,6 +57,7 @@ const buildTimerSyncInput = (context: GameContext, event: TimerSyncTrigger): Tim
     gameSessionId: context.gameSessionId!,
     duration: context.timerDuration,
     currentPlayerId: context.currentPlayerId,
+    callerPlayerId: context.localPlayerId ?? null,
     pacingDelay: context.pacingDelay,
     isEnabled: false,
     action: 'start',
@@ -119,6 +120,12 @@ const requirePlayerId = (context: GameContext): string => {
   return context.currentPlayerId
 }
 
+/** THIS client's own player row — what every ownership/caller check must use. */
+const requireLocalPlayerId = (context: GameContext): string => {
+  if (!context.localPlayerId) throw new Error('Local player ID is missing')
+  return context.localPlayerId
+}
+
 const requireNextPlayerId = (context: GameContext): string => {
   if (!context.nextPlayerId) throw new Error('Next player ID missing')
   return context.nextPlayerId
@@ -135,7 +142,7 @@ const buildPlayCardInput = (
   assertEvent(event, 'PLAY_CARD')
   return {
     gameSessionId: requireSessionId(context),
-    playerId: requirePlayerId(context),
+    playerId: requireLocalPlayerId(context),
     cardId: event.card.id,
     position: event.playedCardsCount,
   }
@@ -147,7 +154,7 @@ const buildWinCardInput = (
   assertEvent(event, 'WIN_GAME')
   return {
     gameSessionId: requireSessionId(context),
-    playerId: requirePlayerId(context),
+    playerId: requireLocalPlayerId(context),
     cardId: event.card.id,
     position: event.playedCardsCount,
   }
@@ -157,7 +164,8 @@ const buildDrawCardsInput = (
   { context }: { context: GameContext },
 ): DrawCardsActorInput => ({
   gameSessionId: requireSessionId(context),
-  playerId: requirePlayerId(context),
+  playerId: requireLocalPlayerId(context),
+  callerPlayerId: requireLocalPlayerId(context),
   count: 1,
 })
 
@@ -169,6 +177,7 @@ const buildPenaltyDrawInput = (
   return {
     gameSessionId: requireSessionId(context),
     playerId: output.storytellerId,
+    callerPlayerId: requireLocalPlayerId(context),
     count: 1,
   }
 }
@@ -180,6 +189,7 @@ const buildChallengeDrawInput = (
   return {
     gameSessionId: requireSessionId(context),
     playerId: event.storytellerId,
+    callerPlayerId: requireLocalPlayerId(context),
     count: 1,
   }
 }
@@ -192,6 +202,7 @@ const buildInterruptPenaltyInput = (
 ): DrawCardsActorInput => ({
   gameSessionId: requireSessionId(context),
   playerId: requirePlayerId(context),
+  callerPlayerId: requireLocalPlayerId(context),
   count: 1,
 })
 
@@ -204,6 +215,7 @@ const buildObjectInput = (
     playedCardId: event.playedCardId,
     storytellerId: event.storytellerId,
     nextPlayerId: event.nextPlayerId,
+    callerPlayerId: requireLocalPlayerId(context),
   }
 }
 
@@ -213,7 +225,7 @@ const buildExchangeInput = (
   assertEvent(event, 'EXCHANGE')
   return {
     gameSessionId: requireSessionId(context),
-    playerId: requirePlayerId(context),
+    playerId: requireLocalPlayerId(context),
     cardId: event.cardId,
     isEnding: event.isEnding,
   }
@@ -222,8 +234,9 @@ const buildExchangeInput = (
 const buildConfirmInput = (
   { context, event }: { context: GameContext, event: GameEvent | DoneActorEvent<unknown> },
 ): ConfirmCardActorInput => {
-  if (event.type === 'CONFIRM_CARD') return { playedCardId: event.playedCardId }
-  if (context.lastPlayedCardId) return { playedCardId: context.lastPlayedCardId }
+  const callerPlayerId = requireLocalPlayerId(context)
+  if (event.type === 'CONFIRM_CARD') return { playedCardId: event.playedCardId, callerPlayerId }
+  if (context.lastPlayedCardId) return { playedCardId: context.lastPlayedCardId, callerPlayerId }
   throw new Error('No card ID to confirm')
 }
 
@@ -232,14 +245,16 @@ const buildPassTurnInput = (
 ): PassTurnActorInput => ({
   gameSessionId: requireSessionId(context),
   nextPlayerId: requireNextPlayerId(context),
+  callerPlayerId: requireLocalPlayerId(context),
 })
 
 const buildFinalizeWinInput = (
   { context }: { context: GameContext },
 ): FinalizeWinActorInput => ({
   gameSessionId: requireSessionId(context),
-  winnerId: requirePlayerId(context),
+  winnerId: requireLocalPlayerId(context),
   lobbyId: requireLobbyId(context),
+  callerPlayerId: requireLocalPlayerId(context),
 })
 
 /** Common completion of a successful turn update in the database. */
@@ -285,6 +300,7 @@ export const gameMachine = setup({
     error: null,
     lastPersistenceError: null,
     currentPlayerId: null,
+    localPlayerId: null,
     optimisticCard: null,
     inFlightHandId: null,
     lastPlayedCardId: null,
@@ -308,6 +324,7 @@ export const gameMachine = setup({
               lobbyId: ({ event }) => event.lobbyId,
               gameMode: ({ event }) => event.mode,
               currentPlayerId: ({ event }) => event.currentPlayerId,
+              localPlayerId: ({ event }) => event.localPlayerId,
               players: ({ event }) => event.players || [],
               pacingDelay: ({ event }) => event.pacingDelay || 0,
               timerDuration: ({ event }) => event.timerDuration || 0,

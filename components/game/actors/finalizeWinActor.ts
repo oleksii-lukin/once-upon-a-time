@@ -13,6 +13,8 @@ export interface FinalizeWinActorInput {
   winnerId: string
   /** The lobby ID - must be a valid UUID */
   lobbyId: string
+  /** The local player finalizing (membership is verified server-side) */
+  callerPlayerId: string
 }
 
 /**
@@ -185,6 +187,7 @@ export const finalizeWinActor = fromPromise(async ({ input }: { input: FinalizeW
     gameSessionId: input.gameSessionId,
     winnerId: input.winnerId,
     lobbyId: input.lobbyId,
+    callerPlayerId: input.callerPlayerId,
   })
   if (!result.ok) throw new Error(result.error)
 

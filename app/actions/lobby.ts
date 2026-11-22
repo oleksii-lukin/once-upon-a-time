@@ -1,18 +1,22 @@
 'use server'
 
 import { z } from 'zod'
-import { createClient } from '@/utils/supabase/server'
+import { auth } from '@clerk/nextjs/server'
+import { createServiceClient } from '@/utils/supabase/service'
+import { getServerGuestId, getServerGuestSecret, hashGuestSecret } from '@/lib/auth/guest-server'
 import { languages } from '@/app/i18n/settings'
 import { type ActionResult } from '@/types/service'
 import { lobbies, players } from '@/lib/lobby/repos'
 
 /**
  * Lobby create/join server actions — the only write path for the
- * create-lobby and join-lobby flows. Replaces the duplicated logic that
- * lived in CreateLobbyButton, CreateLobbyLink, LobbyList and
- * InviteHandler (including their copy-pasted Clerk-vs-guest identity
- * blocks, now resolved client-side via lib/lobby/identity and passed in
- * as plain strings).
+ * create-lobby and join-lobby flows (public write policies were dropped
+ * in migration 20261122000003). They run with the service role and
+ * establish the caller's identity server-side:
+ * - Clerk users: the payload's userId must match the session's user id
+ * - guests: the guestId comes from the ouat_guest_id cookie (never from
+ *   the payload) and the row stores the hash of the ouat_guest_secret
+ *   cookie — only the holder's browser can later act as that player
  */
 
 const uuid = () => z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'must be a valid UUID')
@@ -27,6 +31,26 @@ const IdentitySchema = z.object({
 const inputError = (error: z.ZodError): string =>
   error.issues[0]?.message ?? 'Invalid input'
 
+/**
+ * Resolves the acting identity from the session/cookies instead of
+ * trusting the payload: a signed-in caller may only claim their own user
+ * id, and a guest always gets the cookie-borne guestId + secret hash.
+ */
+async function resolveIdentity(
+  claimed: { userId: string | null, guestId: string, displayName: string, avatarUrl: string | null },
+): Promise<{ ok: true, identity: { userId: string | null, guestId: string | null, secretHash: string | null } } | { ok: false, error: string }> {
+  if (claimed.userId) {
+    const { userId } = await auth()
+    if (!userId || userId !== claimed.userId) {
+      return { ok: false, error: 'Signed-in identity does not match the session' }
+    }
+    return { ok: true, identity: { userId, guestId: null, secretHash: null } }
+  }
+  const guestId = await getServerGuestId()
+  const secretHash = hashGuestSecret(await getServerGuestSecret())
+  return { ok: true, identity: { userId: null, guestId, secretHash } }
+}
+
 const CreateLobbySchema = z.object({
   language: z.string().refine(l => languages.includes(l), 'Unsupported language'),
   creator: IdentitySchema,
@@ -40,13 +64,16 @@ export async function createLobby(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = CreateLobbySchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const resolved = await resolveIdentity(parsed.data.creator)
+  if (!resolved.ok) return { ok: false, error: resolved.error, code: 'identity_failed' }
+  const supabase = createServiceClient()
   const { language, creator } = parsed.data
+  const { identity } = resolved
 
   const created = await lobbies.insert(supabase, {
     name: `Story ${Math.floor(Math.random() * 1000)}`,
     code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-    created_by: creator.userId || creator.guestId,
+    created_by: identity.userId || identity.guestId!,
     status: 'waiting',
     language,
   })
@@ -56,8 +83,9 @@ export async function createLobby(
   // Add the creator as host
   const host = await players.insert(supabase, {
     lobby_id: created.data.id,
-    user_id: creator.userId || null,
-    guest_id: creator.userId ? null : creator.guestId,
+    user_id: identity.userId,
+    guest_id: identity.guestId,
+    guest_secret_hash: identity.secretHash,
     role: 'host',
     status: 'ready',
     display_name: creator.displayName,
@@ -88,8 +116,11 @@ export async function joinLobby(
 ): Promise<ActionResult<{ lobbyId: string, alreadyMember: boolean }>> {
   const parsed = JoinLobbySchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const resolved = await resolveIdentity(parsed.data.joiner)
+  if (!resolved.ok) return { ok: false, error: resolved.error, code: 'identity_failed' }
+  const supabase = createServiceClient()
   const { lobbyId, code, joiner } = parsed.data
+  const { identity } = resolved
 
   // Resolve the target lobby (by invite code or by id)
   let lobby: { id: string } | null = null
@@ -114,18 +145,21 @@ export async function joinLobby(
   }
 
   // Already a member? Old flows still navigated — report success.
+  // (No secret-hash refresh here on purpose: it would let anyone holding
+  // a public guestId seize an existing player row by "rejoining".)
   const existing = await players.findByLobbyAndIdentity(supabase, {
     lobbyId: lobby.id,
-    userId: joiner.userId,
-    guestId: joiner.guestId,
+    userId: identity.userId,
+    guestId: identity.guestId ?? joiner.guestId,
   })
   if (existing.error) return { ok: false, error: existing.error.message, code: 'read_failed' }
   if (existing.data) return { ok: true, data: { lobbyId: lobby.id, alreadyMember: true } }
 
   const joined = await players.insert(supabase, {
     lobby_id: lobby.id,
-    user_id: joiner.userId || null,
-    guest_id: joiner.userId ? null : joiner.guestId,
+    user_id: identity.userId,
+    guest_id: identity.guestId,
+    guest_secret_hash: identity.secretHash,
     role: 'player',
     status: 'not_ready',
     display_name: joiner.displayName,

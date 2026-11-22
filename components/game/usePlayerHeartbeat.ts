@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { touchPlayer } from '@/app/actions/players'
 
 /**
  * Hook to send periodic heartbeat updates to the server.
@@ -12,6 +12,13 @@ import { createClient } from '@/utils/supabase/client'
  * This allows the server to detect inactive players and mark lobbies as finished
  * when all players have been inactive for a configurable threshold (default 5 minutes).
  *
+ * Phase 2: heartbeats go through the touchPlayer server action (the
+ * player's row is no longer directly writable from the browser). The
+ * old beforeunload beacon used a raw PostgREST PATCH with the anon key
+ * and can no longer write — closing the tab simply stops the heartbeat,
+ * and the reaper marks the player idle after the threshold as it would
+ * for any other departure.
+ *
  * @param playerId - The UUID of the player record (from the players table, not user_id)
  * @param enabled - Whether the heartbeat should be active (default: true)
  */
@@ -19,7 +26,6 @@ export default function usePlayerHeartbeat(
   playerId: string | null | undefined,
   enabled: boolean = true,
 ) {
-  const supabase = createClient()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastUpdateRef = useRef<number>(0)
 
@@ -32,19 +38,15 @@ export default function usePlayerHeartbeat(
     lastUpdateRef.current = now
 
     try {
-      const { error } = await supabase
-        .from('players')
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq('id', playerId)
-
-      if (error) {
-        console.warn('[Heartbeat] Failed to update last_seen_at:', error.message)
+      const result = await touchPlayer({ playerId })
+      if (!result.ok) {
+        console.warn('[Heartbeat] Failed to update last_seen_at:', result.error)
       }
     }
     catch (err) {
       console.warn('[Heartbeat] Error sending heartbeat:', err)
     }
-  }, [playerId, supabase])
+  }, [playerId])
 
   useEffect(() => {
     if (!playerId || !enabled) {
@@ -70,35 +72,12 @@ export default function usePlayerHeartbeat(
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // Send heartbeat on beforeunload to update final state
-    const handleBeforeUnload = () => {
-      // fetch with keepalive survives page unload; sendBeacon cannot set
-      // headers, so it always failed with a 401 and left last_seen_at stale
-      // (the pg_cron reaper then finished the lobby under active players).
-      if (!playerId) return
-      fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/players?id=eq.${playerId}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ last_seen_at: new Date().toISOString() }),
-          keepalive: true,
-        },
-      ).catch(() => {})
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [playerId, enabled, sendHeartbeat])
 

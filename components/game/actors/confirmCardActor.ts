@@ -9,6 +9,8 @@ import { validateUUID } from '../validation'
 export interface ConfirmCardActorInput {
   /** The played card ID - must be a valid UUID */
   playedCardId: string
+  /** The local player confirming (membership is verified server-side) */
+  callerPlayerId: string
 }
 
 /**
@@ -153,7 +155,7 @@ export const confirmCardActor = fromPromise(async ({ input }: { input: ConfirmCa
   // Validate input parameters
   validateConfirmCardActorInput(input)
 
-  const result = await confirmCard({ playedCardId: input.playedCardId })
+  const result = await confirmCard({ playedCardId: input.playedCardId, callerPlayerId: input.callerPlayerId })
   if (!result.ok) throw new Error(result.error)
 
   return result.data

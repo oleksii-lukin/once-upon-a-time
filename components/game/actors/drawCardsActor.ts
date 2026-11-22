@@ -30,6 +30,8 @@ export interface DrawCardsActorInput {
   gameSessionId: string
   /** The player ID - must be a valid UUID */
   playerId: string
+  /** The local player driving this draw (membership is verified server-side) */
+  callerPlayerId: string
   /** The number of cards to draw - must be > 0 */
   count: number
 }
@@ -135,6 +137,7 @@ export const drawCardsActor = fromPromise(async ({ input }: { input: DrawCardsAc
   const result = await drawCards({
     gameSessionId: input.gameSessionId,
     playerId: input.playerId,
+    callerPlayerId: input.callerPlayerId,
     count: input.count,
   })
   if (!result.ok) throw new Error(result.error)

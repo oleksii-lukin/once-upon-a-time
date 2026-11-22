@@ -40,6 +40,10 @@ export interface GameContext {
   lastPersistenceError: string | null
   /** ID of the player whose turn it currently is - null when game not started */
   currentPlayerId: string | null
+  /** ID of THIS client's own player row - null when game not started.
+   * Distinct from currentPlayerId (the turn holder): authorization must
+   * always act as the local player, never as whoever holds the turn. */
+  localPlayerId: string | null
   /** Optimistic UI: Shows card instantly on click while database saves in background */
   /** Prevents UI delay - card appears immediately, then syncs with real database record */
   optimisticCard: CardData | null
@@ -68,7 +72,7 @@ export interface GameContext {
  */
 export type GameEvent
   = /** System trigger to start a new game session */
-    | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, players?: Player[], pacingDelay?: number, timerDuration?: number }
+    | { type: 'START_GAME', gameSessionId: string, lobbyId: string, mode: GameMode, currentPlayerId: string, localPlayerId: string, players?: Player[], pacingDelay?: number, timerDuration?: number }
   /** Standard player action: play a card from hand */
     | { type: 'PLAY_CARD', card: CardData, playedCardsCount: number }
   /** Manual player action: end turn voluntarily (optionally due to empty hand) */

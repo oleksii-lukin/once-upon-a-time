@@ -25,6 +25,8 @@ export interface ObjectActorInput {
   storytellerId: string
   /** The next player ID after the objection - must be a valid UUID */
   nextPlayerId: string
+  /** The local player objecting (membership is verified server-side) */
+  callerPlayerId: string
 }
 
 /**
@@ -86,6 +88,7 @@ export const objectActor = fromPromise(async ({ input }: { input: ObjectActorInp
     playedCardId: input.playedCardId,
     storytellerId: input.storytellerId,
     nextPlayerId: input.nextPlayerId,
+    callerPlayerId: input.callerPlayerId,
   })
   if (!result.ok) throw new Error(result.error)
 

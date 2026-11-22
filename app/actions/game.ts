@@ -1,7 +1,13 @@
 'use server'
 
 import { z } from 'zod'
-import { createClient } from '@/utils/supabase/server'
+import { createServiceClient } from '@/utils/supabase/service'
+import {
+  requireOwnedPlayer,
+  requireMemberOfSession,
+  requireMemberOfLobby,
+  requireHostOfLobby,
+} from '@/lib/game/authorization'
 import { LobbySettingsSchema, defaultLobbySettings, type Tables, type TablesInsert, type PlayedCardWithCard } from '@/types/model'
 import { type ActionResult } from '@/types/service'
 import { type TimerSyncResult } from '@/lib/game/types'
@@ -20,13 +26,17 @@ const uuid = () => z.string().regex(UUID_RE, 'must be a valid UUID')
 const inputError = (error: z.ZodError): string =>
   error.issues[0]?.message ?? 'Invalid input'
 
-export async function initializeGame(lobbyId: string) {
+export async function initializeGame(lobbyId: string, callerPlayerId: string) {
   const lobbyIdParsed = z.string().regex(UUID_RE, 'must be a valid UUID').safeParse(lobbyId)
   if (!lobbyIdParsed.success) {
     return { error: 'Invalid lobby ID' }
   }
 
-  const supabase = await createClient()
+  const supabase = createServiceClient()
+
+  // Only the lobby's current host may start the game.
+  const host = await requireHostOfLobby(supabase, callerPlayerId, lobbyIdParsed.data)
+  if (!host.ok) return { error: host.error }
 
   // Idempotent start: reuse the lobby's active session if one exists.
   // Repeated Start clicks used to create a new session each time (no
@@ -289,8 +299,12 @@ export async function playCard(
 ): Promise<ActionResult<PlayedCardWithCard>> {
   const parsed = PlayCardSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // You may only play cards from your own hand.
+  const owner = await requireOwnedPlayer(supabase, values.playerId)
+  if (!owner.ok) return { ok: false, error: owner.error }
 
   // Insert first (preserves the historical order of writes); a rejected
   // play rolls the inserted row back instead of orphaning it.
@@ -319,12 +333,20 @@ export async function playCard(
   return { ok: true, data: playedRow }
 }
 
-const ConfirmCardSchema = z.object({ playedCardId: uuid() })
+const ConfirmCardSchema = z.object({ playedCardId: uuid(), callerPlayerId: uuid() })
 
-export async function confirmCard(input: { playedCardId: string }): Promise<ActionResult<true>> {
+export async function confirmCard(input: { playedCardId: string, callerPlayerId: string }): Promise<ActionResult<true>> {
   const parsed = ConfirmCardSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
+
+  // The confirming player must be a member of the played card's session.
+  const played = await playedCardsRepo.getById(supabase, parsed.data.playedCardId)
+  if (played.error || !played.data) {
+    return { ok: false, error: played.error?.message ?? 'Played card not found' }
+  }
+  const caller = await requireMemberOfSession(supabase, parsed.data.callerPlayerId, played.data.game_session_id)
+  if (!caller.ok) return { ok: false, error: caller.error }
 
   const { error } = await playedCardsRepo.confirm(supabase, parsed.data.playedCardId)
   if (error) return { ok: false, error: error.message }
@@ -334,15 +356,20 @@ export async function confirmCard(input: { playedCardId: string }): Promise<Acti
 const PassTurnSchema = z.object({
   gameSessionId: uuid(),
   nextPlayerId: uuid(),
+  callerPlayerId: uuid(),
 })
 
 export async function passTurn(
-  input: { gameSessionId: string, nextPlayerId: string },
+  input: { gameSessionId: string, nextPlayerId: string, callerPlayerId: string },
 ): Promise<ActionResult<true>> {
   const parsed = PassTurnSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // Only a member of this session's lobby may advance the turn.
+  const caller = await requireMemberOfSession(supabase, values.callerPlayerId, values.gameSessionId)
+  if (!caller.ok) return { ok: false, error: caller.error }
 
   const session = await sessionRepo.getLobbyId(supabase, values.gameSessionId)
   if (session.error) return { ok: false, error: session.error.message }
@@ -374,16 +401,31 @@ export async function passTurn(
 const DrawCardsSchema = z.object({
   gameSessionId: uuid(),
   playerId: uuid(),
+  callerPlayerId: uuid(),
   count: z.number().int().min(1),
 })
 
 export async function drawCards(
-  input: { gameSessionId: string, playerId: string, count: number },
+  input: { gameSessionId: string, playerId: string, callerPlayerId: string, count: number },
 ): Promise<ActionResult<true>> {
   const parsed = DrawCardsSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // Penalties legitimately draw for another player (the storyteller), so
+  // this is membership rather than ownership — but both the caller and
+  // the receiving player must belong to the session's lobby.
+  const caller = await requireMemberOfSession(supabase, values.callerPlayerId, values.gameSessionId)
+  if (!caller.ok) return { ok: false, error: caller.error }
+  const receiver = await supabase
+    .from('players')
+    .select('id')
+    .eq('id', values.playerId)
+    .eq('lobby_id', caller.lobbyId)
+    .maybeSingle()
+  if (receiver.error) return { ok: false, error: receiver.error.message }
+  if (!receiver.data) return { ok: false, error: 'Draw target is not in this lobby' }
 
   const pile = await drawPileRepo.drawCards(supabase, {
     gameSessionId: values.gameSessionId,
@@ -426,8 +468,12 @@ export async function exchangeCard(
 ): Promise<ActionResult<true>> {
   const parsed = ExchangeCardSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // You may only exchange cards from your own hand.
+  const owner = await requireOwnedPlayer(supabase, values.playerId)
+  if (!owner.ok) return { ok: false, error: owner.error }
 
   const drawn = await drawPileRepo.drawOne(supabase, {
     gameSessionId: values.gameSessionId,
@@ -469,15 +515,20 @@ const ObjectToCardSchema = z.object({
   playedCardId: uuid(),
   storytellerId: uuid(),
   nextPlayerId: uuid(),
+  callerPlayerId: uuid(),
 })
 
 export async function objectToCard(
-  input: { gameSessionId: string, playedCardId: string, storytellerId: string, nextPlayerId: string },
+  input: { gameSessionId: string, playedCardId: string, storytellerId: string, nextPlayerId: string, callerPlayerId: string },
 ): Promise<ActionResult<{ gameSessionId: string, playedCardId: string, storytellerId: string, nextPlayerId: string }>> {
   const parsed = ObjectToCardSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // Only a member of this session's lobby may object.
+  const caller = await requireMemberOfSession(supabase, values.callerPlayerId, values.gameSessionId)
+  if (!caller.ok) return { ok: false, error: caller.error }
 
   const fetched = await playedCardsRepo.getById(supabase, values.playedCardId)
   if (fetched.error || !fetched.data) {
@@ -505,15 +556,20 @@ const FinalizeWinSchema = z.object({
   gameSessionId: uuid(),
   winnerId: uuid(),
   lobbyId: uuid(),
+  callerPlayerId: uuid(),
 })
 
 export async function finalizeWin(
-  input: { gameSessionId: string, winnerId: string, lobbyId: string },
+  input: { gameSessionId: string, winnerId: string, lobbyId: string, callerPlayerId: string },
 ): Promise<ActionResult<true>> {
   const parsed = FinalizeWinSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // Only a member of the lobby may finalize its game.
+  const caller = await requireMemberOfLobby(supabase, values.callerPlayerId, values.lobbyId)
+  if (!caller.ok) return { ok: false, error: caller.error }
 
   const session = await sessionRepo.getLobbyId(supabase, values.gameSessionId)
   if (session.error) return { ok: false, error: session.error.message }
@@ -550,6 +606,7 @@ const SyncTimerSchema = z.object({
   isEnabled: z.boolean(),
   duration: z.number().int().min(0),
   currentPlayerId: uuid().nullable(),
+  callerPlayerId: uuid().nullable(),
   action: z.enum(['start', 'stop', 'sync', 'extend']),
   pacingDelay: z.number().int().min(0).optional(),
   newExpiresAt: z.string().optional(),
@@ -561,6 +618,7 @@ export async function syncTimer(
     isEnabled: boolean
     duration: number
     currentPlayerId: string | null
+    callerPlayerId: string | null
     action: 'start' | 'stop' | 'sync' | 'extend'
     pacingDelay?: number
     newExpiresAt?: string
@@ -568,8 +626,15 @@ export async function syncTimer(
 ): Promise<ActionResult<TimerSyncResult>> {
   const parsed = SyncTimerSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
   const values = parsed.data
+
+  // Only members of this session's lobby may touch the turn timer.
+  // (Spectators have no player row — their sync attempts fail soft.)
+  if (!values.callerPlayerId) return { ok: false, error: 'Not authorized to sync the timer' }
+  const caller = await requireMemberOfSession(supabase, values.callerPlayerId, values.gameSessionId)
+  if (!caller.ok) return { ok: false, error: caller.error }
+
   const { gameSessionId, isEnabled, duration, currentPlayerId, action, pacingDelay = 0 } = values
   const now = new Date().toISOString()
 
@@ -632,7 +697,7 @@ export async function checkTimerExtension(
 ): Promise<ActionResult<string | null>> {
   const parsed = CheckTimerExtensionSchema.safeParse(input)
   if (!parsed.success) return { ok: false, error: inputError(parsed.error) }
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { data, error } = await sessionRepo.getTimerExpiry(supabase, parsed.data.gameSessionId)
   if (error) return { ok: false, error: error.message }

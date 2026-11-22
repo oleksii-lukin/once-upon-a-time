@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { createClient } from '@/utils/supabase/client'
+import { getMyHand } from '@/app/actions/players'
 import { type CardCategory, type CardType, type GameSession } from '@/types/model'
 import { type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
 
@@ -72,8 +73,10 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
     setGameSession(gameSessionRow)
 
     // Secondary reads are independent — run them together to shrink the
-    // window where the UI shows a half-stale board.
-    const [playedRes, handRes, allHandsRes, endingRes] = await Promise.all([
+    // window where the UI shows a half-stale board. The own hand comes
+    // from a server action (player_hands is no longer readable for
+    // guests) and the counts from the public v_player_hand_counts view.
+    const [playedRes, handData, allHandsRes, endingRes] = await Promise.all([
       supabase
         .from('played_cards')
         .select('*, cards (*)')
@@ -81,16 +84,13 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
         .order('position', { ascending: true })
         .order('played_at', { ascending: true }),
       playerId
-        ? supabase
-            .from('player_hands')
-            .select('*, cards (*)')
-            .eq('game_session_id', gameSessionRow.id)
-            .eq('player_id', playerId)
-            .order('position')
-        : Promise.resolve({ data: null }),
+        ? getMyHand({ gameSessionId: gameSessionRow.id, playerId })
+            .then(r => (r.ok ? r.data : null))
+            .catch(() => null)
+        : Promise.resolve(null),
       supabase
-        .from('player_hands')
-        .select('player_id, cards (type)')
+        .from('v_player_hand_counts')
+        .select('player_id, card_count')
         .eq('game_session_id', gameSessionRow.id),
       supabase
         .from('draw_pile')
@@ -111,8 +111,8 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
       setPlayedCards(fetchedCards as PlayedCardData[])
     }
 
-    if (handRes.data) {
-      const cardsWithType = handRes.data.map(item => ({
+    if (handData) {
+      const cardsWithType = handData.map(item => ({
         ...item.cards,
         category: item.cards.category as CardCategory,
         type: item.cards.type as CardType,
@@ -125,9 +125,7 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
     if (allHandsRes.data) {
       const counts: Record<string, number> = {}
       allHandsRes.data.forEach((item) => {
-        if (item.cards?.type !== 'ending') {
-          counts[item.player_id] = (counts[item.player_id] || 0) + 1
-        }
+        counts[item.player_id] = item.card_count ?? 0
       })
       setPlayerHandCounts(counts)
     }
@@ -193,11 +191,11 @@ export function useGameState({ lobbyId, playerId }: UseGameStateArgs): GameState
           { event: '*', schema: 'public', table: 'played_cards', filter: `game_session_id=eq.${gameSession.id}` },
           () => { refresh() },
         )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'player_hands', filter: `game_session_id=eq.${gameSession.id}` },
-          () => { refresh() },
-        )
+      // No player_hands changefeed: those rows are private now (own hand
+      // via getMyHand, counts via v_player_hand_counts), so an anon
+      // subscriber would receive no events anyway. Hand changes surface
+      // through the played_cards/game_sessions events above plus the
+      // 5s poll fallback.
     }
 
     channel.subscribe()

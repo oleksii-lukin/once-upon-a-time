@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { type Lobby, type Player, type Deck, LobbySettingsSchema, defaultLobbySettings, type LobbySettings } from '@/types/model'
 import { initializeGame } from '@/app/actions/game'
+import { updateLobby } from '@/app/actions/lobbyManage'
+import { setPlayerRole } from '@/app/actions/players'
 import { getTranslation } from '@/app/i18n/client'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -65,31 +67,37 @@ export default function AdminLobbyView({
 
   // Update lobby name in database
   const updateLobbyName = async (newName: string) => {
-    const { error } = await supabase
-      .from('lobbies')
-      .update({ name: newName })
-      .eq('id', lobby.id)
+    const me = players.find(p =>
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
+    )
+    if (!me) return
 
-    if (error) {
-      console.error('Error updating lobby name:', error)
+    const result = await updateLobby({ callerPlayerId: me.id, lobbyId: lobby.id, name: newName })
+    if (!result.ok) {
+      console.error('Error updating lobby name:', result.error)
     }
   }
 
   // Update settings in database
   const updateSettings = async (newSettings: Partial<LobbySettings>) => {
+    const me = players.find(p =>
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
+    )
+    if (!me) return
+
     const updated = { ...settings, ...newSettings }
     setSettings(updated)
 
-    const { error } = await supabase
-      .from('lobbies')
-      .update({
-        settings: updated,
-        ...(newSettings.gameMode ? { game_mode: newSettings.gameMode } : {}),
-      })
-      .eq('id', lobby.id)
-
-    if (error) {
-      console.error('Error updating settings:', error)
+    const result = await updateLobby({
+      callerPlayerId: me.id,
+      lobbyId: lobby.id,
+      settings: updated,
+      ...(newSettings.gameMode ? { gameMode: newSettings.gameMode } : {}),
+    })
+    if (!result.ok) {
+      console.error('Error updating settings:', result.error)
     }
   }
 
@@ -163,14 +171,29 @@ export default function AdminLobbyView({
     // For now, we'll use the first selected deck as the primary deck
     const primaryDeckId = selectedDecks[0]
 
-    // Update lobby with primary deck
-    await supabase
-      .from('lobbies')
-      .update({ deck_id: primaryDeckId })
-      .eq('id', lobby.id)
+    const me = players.find(p =>
+      (userId && p.user_id === userId)
+      || (guestId && p.guest_id === guestId),
+    )
+    if (!me) {
+      setIsStarting(false)
+      return
+    }
+
+    // Update lobby with primary deck (host-verified server action)
+    const deckResult = await updateLobby({
+      callerPlayerId: me.id,
+      lobbyId: lobby.id,
+      ...(primaryDeckId ? { deckId: primaryDeckId } : {}),
+    })
+    if (!deckResult.ok) {
+      alert(t('failed_to_start_game', { error: deckResult.error }))
+      setIsStarting(false)
+      return
+    }
 
     // Initialize game state (create session, deal cards, etc.)
-    const result = await initializeGame(lobby.id)
+    const result = await initializeGame(lobby.id, me.id)
 
     if (result.error) {
       alert(t('failed_to_start_game', { error: result.error }))
@@ -257,13 +280,13 @@ export default function AdminLobbyView({
     )
     if (!currentPlayer) return
 
-    const { error } = await supabase
-      .from('players')
-      .update({ role: newRole })
-      .eq('id', currentPlayer.id)
-
-    if (error) {
-      console.error('Error updating host role:', error)
+    const result = await setPlayerRole({
+      callerPlayerId: currentPlayer.id,
+      targetPlayerId: currentPlayer.id,
+      role: newRole,
+    })
+    if (!result.ok) {
+      console.error('Error updating host role:', result.error)
     }
   }
 

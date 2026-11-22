@@ -11,6 +11,8 @@ export interface PassTurnActorInput {
   gameSessionId: string
   /** The next player ID - must be a valid UUID */
   nextPlayerId: string
+  /** The local player passing the turn (membership is verified server-side) */
+  callerPlayerId: string
 }
 
 /**
@@ -124,6 +126,7 @@ export const passTurnActor = fromPromise(async ({ input }: { input: PassTurnActo
   const result = await passTurn({
     gameSessionId: input.gameSessionId,
     nextPlayerId: input.nextPlayerId,
+    callerPlayerId: input.callerPlayerId,
   })
   if (!result.ok) throw new Error(result.error)
 

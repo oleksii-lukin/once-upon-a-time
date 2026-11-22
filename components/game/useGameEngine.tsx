@@ -87,6 +87,7 @@ function GameEngineLifecycle({
         lobbyId: gameSession.lobby_id,
         mode: gameSession.game_mode as GameMode || 'full',
         currentPlayerId: gameSession.current_turn_player_id || currentPlayer.id,
+        localPlayerId: currentPlayer.id,
         players,
         pacingDelay,
         timerDuration,

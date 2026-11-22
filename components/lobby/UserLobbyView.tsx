@@ -5,6 +5,7 @@ import { Check as CheckIcon } from 'lucide-react'
 import { type RealtimePostgresUpdatePayload } from '@supabase/supabase-js'
 
 import { createClient } from '@/utils/supabase/client'
+import { setPlayerStatus, leaveLobby, setPlayerRole } from '@/app/actions/players'
 import { type Lobby, type Player, type Deck, LobbySettingsSchema, defaultLobbySettings } from '@/types/model'
 import { PlayerAvatar, getPlayerDisplayName } from './PlayerDisplay'
 import { useParams } from 'next/navigation'
@@ -199,13 +200,15 @@ export default function UserLobbyView({
 
     if (!currentPlayer) return
 
-    const { error } = await supabase
-      .from('players')
-      .update({ role: newRole })
-      .eq('id', currentPlayer.id)
-
-    if (error) {
-      console.error('Error updating role:', error)
+    // Self-only role switch (spectator <-> player): the server action
+    // verifies the caller owns this row.
+    const result = await setPlayerRole({
+      callerPlayerId: currentPlayer.id,
+      targetPlayerId: currentPlayer.id,
+      role: newRole,
+    })
+    if (!result.ok) {
+      console.error('Error updating role:', result.error)
     }
   }
 
@@ -219,13 +222,9 @@ export default function UserLobbyView({
     if (!currentPlayer) return
 
     const newStatus = currentPlayer.status === 'ready' ? 'not_ready' : 'ready'
-    const { error } = await supabase
-      .from('players')
-      .update({ status: newStatus })
-      .eq('id', currentPlayer.id)
-
-    if (error) {
-      console.error('Error updating status:', error)
+    const result = await setPlayerStatus({ playerId: currentPlayer.id, status: newStatus })
+    if (!result.ok) {
+      console.error('Error updating status:', result.error)
     }
   }
 
@@ -238,13 +237,9 @@ export default function UserLobbyView({
 
     if (!currentPlayer) return
 
-    const { error } = await supabase
-      .from('players')
-      .delete()
-      .eq('id', currentPlayer.id)
-
-    if (error) {
-      console.error('Error leaving lobby:', error)
+    const result = await leaveLobby({ playerId: currentPlayer.id })
+    if (!result.ok) {
+      console.error('Error leaving lobby:', result.error)
       return
     }
 

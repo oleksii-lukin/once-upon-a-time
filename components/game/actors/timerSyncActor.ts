@@ -14,6 +14,8 @@ export interface TimerSyncInput {
   duration: number
   /** Current player ID - must be a valid UUID */
   currentPlayerId: string | null
+  /** The local player syncing (membership is verified server-side; null for spectators) */
+  callerPlayerId: string | null
   /** Action to perform: start, stop, or sync */
   action: 'start' | 'stop' | 'sync' | 'extend'
   /** Pacing delay duration in seconds (for timer extension logic) */

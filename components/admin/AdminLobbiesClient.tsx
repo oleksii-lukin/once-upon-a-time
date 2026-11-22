@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X as CrossIcon } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
+import { adminLobbyAction } from '@/app/actions/lobbyManage'
 import { getTranslation } from '@/app/i18n/client'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
@@ -21,7 +21,6 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
   const [selectedLobby, setSelectedLobby] = useState<Lobby | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
-  const supabase = createClient()
   const { t } = getTranslation(lng, 'common')
 
   const filteredLobbies = lobbies.filter((lobby) => {
@@ -67,14 +66,11 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
 
     setIsDeleting(true)
     try {
-      const { error } = await supabase
-        .from('lobbies')
-        .delete()
-        .eq('id', lobbyId)
+      const result = await adminLobbyAction({ lobbyId, action: 'delete' })
 
-      if (error) {
-        console.error('Error deleting lobby:', error)
-        alert('Failed to delete lobby: ' + error.message)
+      if (!result.ok) {
+        console.error('Error deleting lobby:', result.error)
+        alert('Failed to delete lobby: ' + result.error)
       }
       else {
         setLobbies(prev => prev.filter(l => l.id !== lobbyId))
@@ -89,14 +85,11 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
   const handleArchive = async (lobbyId: string) => {
     setIsDeleting(true)
     try {
-      const { error } = await supabase
-        .from('lobbies')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', lobbyId)
+      const result = await adminLobbyAction({ lobbyId, action: 'archive' })
 
-      if (error) {
-        console.error('Error archiving lobby:', error)
-        alert('Failed to archive lobby: ' + error.message)
+      if (!result.ok) {
+        console.error('Error archiving lobby:', result.error)
+        alert('Failed to archive lobby: ' + result.error)
       }
       else {
         setLobbies(prev => prev.map(l =>
@@ -115,14 +108,11 @@ export default function AdminLobbiesClient({ lobbies: initialLobbies, lng }: Adm
   const handleRestore = async (lobbyId: string) => {
     setIsRestoring(true)
     try {
-      const { error } = await supabase
-        .from('lobbies')
-        .update({ deleted_at: null })
-        .eq('id', lobbyId)
+      const result = await adminLobbyAction({ lobbyId, action: 'restore' })
 
-      if (error) {
-        console.error('Error restoring lobby:', error)
-        alert('Failed to restore lobby: ' + error.message)
+      if (!result.ok) {
+        console.error('Error restoring lobby:', result.error)
+        alert('Failed to restore lobby: ' + result.error)
       }
       else {
         setLobbies(prev => prev.map(l =>

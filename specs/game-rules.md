@@ -39,6 +39,21 @@ If the Storyteller passes, is interrupted correctly, or is successfully challeng
 - If the ending doesn't make sense or is challenged by others, the Ending Card returns to the hand, they draw a new Ending Card and a Story Card, and play passes.
 
 ## 6. Digital Adaptation Specifics
-- **Turn Timer**: Optional timer to prevent stalling.
-- **Configurable Pacing**: Admins can set a "Pacing Delay" (0-30s) that enforces a pause after a card is played. This allows time for narration or objections before the card is permanently confirmed.
-- **Keyword Matching**: The system could highlight playability if speech-to-text is used, or players manually trigger interruptions.
+
+### Enforcement table (actual behavior)
+
+| Setting / mode | Enforced? | Behavior |
+|---|---|---|
+| `gameMode` main / fast / tutorial / solo | Yes | Via `MODE_CONFIG`: tutorial = 1 card/turn, no interrupt/objection; fast/solo = unlimited, no interrupt/objection; main = full |
+| `enablePacingDelay` (3–30s) | Yes | Card stays `PENDING` for the window; objections possible inside it; off = instant confirm |
+| `timerPerTurn` (10–120s) | Yes | Auto-pass on expiry (unit-tested); disabled at 0 |
+| `allowInterrupts` | **No (dead flag)** | Interrupt gating comes from `MODE_CONFIG`, not this flag |
+| `allowHotJoin` | **No (dead flag)** | Mid-game joiners are undefined behavior (see `spectating-and-joining.md`) |
+| `publicGame`, `happyEnding` | **No (dead flags)** | UI toggles only |
+| `allowSpectators` | Partially | Lobby list only; the game board always renders for visitors |
+
+### Deck and draw semantics
+
+- Draw pile: story cards not dealt to hands (5 per player at start). **No reshuffle** of played cards.
+- Empty pile: a pass still passes the turn (draw 0); penalty/challenge draws are skipped; an exchange fails without consuming the turn (`deck-exhaustion.md`).
+- Keyword matching for interruptions is not enforced — an interrupt is auto-validated (no STT yet).

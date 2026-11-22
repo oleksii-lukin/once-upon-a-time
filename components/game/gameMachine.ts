@@ -23,7 +23,7 @@ import {
 } from './gameTypes'
 import { canPlayCard } from './guards/playGuards'
 import { isTimerEnabled, shouldSyncTimerForSolo, needsTimerExtension } from './guards/timerGuards'
-import { isSoloMode, isTutorialMode, isSimpleOrFastMode, isFullOrMainMode } from './guards/modesGuards'
+import { isSoloMode, isTutorialMode, isSimpleOrFastMode, isFullOrMainMode, canInterruptInMode } from './guards/modesGuards'
 import { isRulesNotFinished } from './guards/rulesGuards'
 import {
   isPendingCardConfirmed,
@@ -183,6 +183,17 @@ const buildChallengeDrawInput = (
     count: 1,
   }
 }
+
+// Penalty for an interruption: the victim is the storyteller who was
+// interrupted — context.currentPlayerId still holds them (the turn has
+// not been persisted yet on this client).
+const buildInterruptPenaltyInput = (
+  { context }: { context: GameContext },
+): DrawCardsActorInput => ({
+  gameSessionId: requireSessionId(context),
+  playerId: requirePlayerId(context),
+  count: 1,
+})
 
 const buildObjectInput = (
   { context, event }: { context: GameContext, event: GameEvent },
@@ -387,7 +398,8 @@ export const gameMachine = setup({
               actions: sendTo('rulesActor', { type: 'INVALID' as const }),
             },
             INTERRUPT: {
-              guard: isRulesNotFinished,
+              guard: ({ context }: { context: GameContext }) =>
+                isRulesNotFinished({ context }) && canInterruptInMode({ context }),
               actions: [
                 assignNextPlayerFromEvent,
                 sendTo('rulesActor', ({ context, event }) => {
@@ -398,6 +410,12 @@ export const gameMachine = setup({
                     card_id: context.lastPlayedCardId || '',
                   }
                 }),
+                // Auto-validated: keyword matching needs STT, which does not
+                // exist yet — the interrupt succeeds immediately. The rules
+                // machine keeps its VALID/INVALID arbitration as the
+                // extension point for a future vote UI; a vote UI would
+                // drop this auto-VALID send.
+                sendTo('rulesActor', { type: 'VALID' as const }),
               ],
             },
             OBJECT: [
@@ -534,9 +552,15 @@ export const gameMachine = setup({
                 OBJECT: 'objecting',
                 CHALLENGE_STUTTER: 'challengingStutter',
                 CONFIRM_CARD: 'confirmingCard',
+                // The rules region forwards the rich INTERRUPT (player_id +
+                // auto-VALID); this region draws the victim's penalty card
+                // and then persists the turn pass. The old duplicate raw
+                // sendTo here would deliver a second, player_id-less
+                // INTERRUPT to a freshly restarted rules machine.
                 INTERRUPT: {
-                  guard: isRulesNotFinished,
-                  actions: sendTo('rulesActor', { type: 'INTERRUPT' }),
+                  guard: ({ context }: { context: GameContext }) =>
+                    isRulesNotFinished({ context }) && canInterruptInMode({ context }),
+                  target: 'interruptPenalty',
                 },
               },
             },
@@ -660,6 +684,20 @@ export const gameMachine = setup({
                 onDone: 'updateTurn',
                 // Same as the objection penalty: the challenge is recorded,
                 // only the draw failed — keep the turn moving.
+                onError: {
+                  target: 'updateTurn',
+                  actions: assignPersistenceError,
+                },
+              },
+            },
+            interruptPenalty: {
+              invoke: {
+                src: 'drawCardsActor',
+                id: 'drawCardsActor',
+                input: buildInterruptPenaltyInput,
+                onDone: 'updateTurn',
+                // Best-effort penalty: even if the draw fails the turn
+                // must still pass to the interrupter.
                 onError: {
                   target: 'updateTurn',
                   actions: assignPersistenceError,

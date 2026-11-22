@@ -1,4 +1,5 @@
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
 
 /**
  * Multiplayer e2e helpers.
@@ -45,16 +46,27 @@ export async function createLobby(host: Player): Promise<string> {
 
   // The click can land before hydration attaches the handler (dev), or the
   // create action can fail transiently — retry until the navigation lands.
+  // A failed attempt reloads the page: under parallel load the hydrated
+  // handler can be dropped or the action response lost, and a fresh load
+  // recovers both (the button-visibility loop above handles the render side).
   let lobbyUrl: string | null = null
-  for (let attempt = 0; attempt < 3 && !lobbyUrl; attempt++) {
+  for (let attempt = 0; attempt < 4 && !lobbyUrl; attempt++) {
     await createButton.click()
     lobbyUrl = await host.page
       .waitForURL(/\/lobbies\/[0-9a-f-]{36}/i, { timeout: 15_000 })
       .then(() => host.page.url())
       .catch(() => null)
-    if (!lobbyUrl) await host.page.waitForTimeout(1000)
+    if (!lobbyUrl && attempt < 3) {
+      await host.page.reload({ waitUntil: 'load' }).catch(() => {})
+      await expect(createButton).toBeVisible({ timeout: 15_000 }).catch(() => {})
+      await host.page.waitForTimeout(1000)
+    }
   }
-  if (!lobbyUrl) throw new Error('Create New Story did not navigate to a lobby')
+  if (!lobbyUrl) {
+    // State dump so a genuine failure (vs a load flake) is diagnosable.
+    console.log(`[createLobby] failed: url=${host.page.url()} body=${(await host.page.locator('body').innerText().catch(() => '<unreadable>')).slice(0, 300).replace(/\n+/g, ' | ')}`)
+    throw new Error('Create New Story did not navigate to a lobby')
+  }
 
   const lobbyId = lobbyUrl.split('/').pop()!
   expect(lobbyId).toMatch(/^[0-9a-f-]{36}$/i)
@@ -249,4 +261,183 @@ export async function startTwoPlayerLobby(
     await close()
     throw error
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * Multi-player (3+) support.
+ * ------------------------------------------------------------------ */
+
+/** Full lobby setup with n players: host creates, n-1 guests join by invite. */
+export async function startLobby(
+  browser: Browser,
+  n: number,
+  opts: { pacing?: boolean, pacingDuration?: number, mode?: string } = {},
+): Promise<{ players: Player[], host: Player, lobbyId: string, close: () => Promise<void> }> {
+  expect(n).toBeGreaterThanOrEqual(2)
+  const players: Player[] = []
+  for (let i = 0; i < n; i++) players.push(await newPlayer(browser))
+  const close = async () => {
+    await Promise.all(players.map(p => p.context.close()))
+  }
+  try {
+    const [host, ...guests] = players
+    const lobbyId = await createLobby(host)
+    const inviteLink = await getInviteLink(host)
+    for (const guest of guests) await joinViaInvite(guest, inviteLink, lobbyId)
+    if (opts.pacing) {
+      const pacingToggle = host.page.getByLabel(/Enable Pacing Delay/i)
+      await pacingToggle.click()
+      await expect(pacingToggle).toBeChecked()
+      // Widen the objection window for tests that reload mid-window (the
+      // UI slider would need a drag; the DB write propagates via the lobby
+      // changefeed before Start, and the deck toggle below re-sends the
+      // refetched settings so it does not clobber this value).
+      if (opts.pacingDuration) setPacingDuration(lobbyId, opts.pacingDuration)
+    }
+    if (opts.mode) {
+      // GameModeTabs — the label is the localized tab name ("Tutorial", …).
+      await host.page.getByRole('button', { name: opts.mode, exact: true }).click()
+    }
+    await selectDeckAndStart(host)
+    return { players, host, lobbyId, close }
+  }
+  catch (error) {
+    await close()
+    throw error
+  }
+}
+
+/** Waits for the game board on every client. */
+export async function waitForGameOnAll(players: Player[]): Promise<void> {
+  await Promise.all(players.map(p => expect(gameBoard(p.page).first()).toBeVisible({ timeout: 30_000 })))
+}
+
+const passButtonOf = (p: Player) => p.page.getByRole('button', { name: 'Pass Turn' })
+
+/**
+ * Polls all clients until exactly one shows the turn control. Returns that
+ * player, or null while the turn is unsettled (multiple or none).
+ */
+async function findTurnHolder(players: Player[]): Promise<Player | null> {
+  const visible = await Promise.all(players.map(p => passButtonOf(p).isVisible().catch(() => false)))
+  const idx = visible.findIndex(v => v)
+  return visible.filter(Boolean).length === 1 && idx !== -1 ? players[idx] : null
+}
+
+/**
+ * Determines which of the given clients holds the turn (exactly one must
+ * show the turn control). The first storyteller is shuffled by
+ * initializeGame, so it cannot be assumed to be the host.
+ */
+export async function resolveStorytellerAmong(
+  players: Player[],
+): Promise<{ storyteller: Player, others: Player[] }> {
+  const deadline = Date.now() + 30_000
+  while (Date.now() < deadline) {
+    const holder = await findTurnHolder(players)
+    if (holder) return { storyteller: holder, others: players.filter(p => p !== holder) }
+    await players[0].page.waitForTimeout(500)
+  }
+  throw new Error('no unique storyteller settled')
+}
+
+/**
+ * Passes from the given storyteller and returns the player who received the
+ * turn. Same bounded-retry semantics as passAndWaitForFlip: a transient
+ * action failure re-clicks, the final state must be a unique new holder.
+ */
+export async function passAndWaitForFlipMulti(storyteller: Player, all: Player[]): Promise<Player> {
+  const tryResolve = async (budgetMs: number): Promise<Player | null> => {
+    const deadline = Date.now() + budgetMs
+    while (Date.now() < deadline) {
+      const holder = await findTurnHolder(all)
+      if (holder && holder !== storyteller) return holder
+      await storyteller.page.waitForTimeout(500)
+    }
+    return null
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await passButtonOf(storyteller).click()
+    const holder = await tryResolve(10_000)
+    if (holder) return holder
+    // If the storyteller no longer holds the button the flip happened late
+    // after the budget — the final wait below covers it; otherwise re-click.
+    if (!await passButtonOf(storyteller).isVisible().catch(() => false)) break
+    await storyteller.page.waitForTimeout(1000)
+  }
+
+  const holder = await tryResolve(15_000)
+  if (!holder) throw new Error('turn did not flip to another player')
+  return holder
+}
+
+/**
+ * The objector clicks Object and receives the turn. Bounded retries: a
+ * transient action failure leaves the PENDING card and the button in place;
+ * the final assertion stays strict (unique new holder = the objector).
+ */
+export async function objectAndWaitForFlipMulti(objector: Player, all: Player[]): Promise<void> {
+  const objectButton = objector.page.getByRole('button', { name: 'Object / Disapprove' })
+  const tryResolve = async (budgetMs: number): Promise<boolean> => {
+    const deadline = Date.now() + budgetMs
+    while (Date.now() < deadline) {
+      const holder = await findTurnHolder(all)
+      if (holder === objector) return true
+      await objector.page.waitForTimeout(500)
+    }
+    return false
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await expect(objectButton).toBeVisible({ timeout: 8_000 })
+    // The button bounces (animate-bounce) — it never satisfies Playwright's
+    // stability check, so force the click.
+    await objectButton.click({ force: true })
+    if (await tryResolve(10_000)) return
+    // The button vanished without a flip: the objection landed late or
+    // partially failed — the final wait reports it.
+    if (!await objectButton.isVisible().catch(() => false)) break
+    await objector.page.waitForTimeout(1000)
+  }
+
+  if (!await tryResolve(15_000)) throw new Error('objection did not pass the turn to the objector')
+}
+
+/* ------------------------------------------------------------------ *
+ * Direct DB seeding (deck exhaustion / win acceleration). Test
+ * environment only — runs psql inside the local Supabase container.
+ * ------------------------------------------------------------------ */
+
+/** Runs SQL against the local Supabase Postgres and returns trimmed output. */
+export function psql(sql: string): string {
+  return execFileSync(
+    'docker',
+    ['exec', 'supabase_db_once-upon-a-time', 'psql', '-U', 'postgres', '-d', 'postgres', '-t', '-A', '-v', 'ON_ERROR_STOP=1', '-c', sql],
+    { encoding: 'utf8' },
+  ).trim()
+}
+
+/** Empties the draw pile of the lobby's active game (deck exhaustion). */
+export function emptyDrawPile(lobbyId: string): void {
+  psql(`DELETE FROM draw_pile WHERE game_session_id IN (SELECT id FROM game_sessions WHERE lobby_id = '${lobbyId}' AND status <> 'COMPLETED')`)
+}
+
+/** Sets the pacing (objection) window in seconds — must run BEFORE start. */
+export function setPacingDuration(lobbyId: string, seconds: number): void {
+  psql(`UPDATE lobbies SET settings = jsonb_set(settings, '{pacingDelayDuration}', '${seconds}'::jsonb) WHERE id = '${lobbyId}'`)
+}
+
+/** Removes EVERY story card from the current storyteller's hand (win acceleration). */
+export function removeStorytellerStoryCards(lobbyId: string): void {
+  psql(`
+    WITH story AS (
+      SELECT ph.id
+      FROM player_hands ph
+      JOIN cards c ON c.id = ph.card_id
+      WHERE ph.game_session_id IN (SELECT id FROM game_sessions WHERE lobby_id = '${lobbyId}' AND status <> 'COMPLETED')
+        AND ph.player_id = (SELECT current_turn_player_id FROM game_sessions WHERE lobby_id = '${lobbyId}' AND status <> 'COMPLETED' LIMIT 1)
+        AND c.type <> 'ending'
+    )
+    DELETE FROM player_hands WHERE id IN (SELECT id FROM story)`)
 }

@@ -199,3 +199,74 @@ describe('gameMachine turn flows', () => {
     })
   })
 })
+
+describe('last-moment objection race', () => {
+  /** Confirm hangs until the test releases it — pins the machine in `confirming`. */
+  function buildHangingConfirmMachine() {
+    let releaseConfirm!: () => void
+    const confirmGate = new Promise<void>((resolve) => { releaseConfirm = resolve })
+    const machine = gameMachine.provide({
+      actors: {
+        playCardActor: fromPromise(async ({ input }: any) => ({ id: `pc-${input.cardId}` })) as any,
+        drawCardsActor: fromPromise(async ({ input }: any) => {
+          calls.draw.push(input)
+          return true
+        }) as any,
+        passTurnActor: fromPromise(async ({ input }: any) => {
+          calls.passTurn.push(input)
+          return true
+        }) as any,
+        confirmCardActor: fromPromise(async () => {
+          await confirmGate
+          return true
+        }) as any,
+        finalizeWinActor: fromPromise(async () => true) as any,
+        objectActor: fromPromise(async ({ input }: any) => {
+          calls.object.push(input)
+          return input
+        }) as any,
+        exchangeCardActor: fromPromise(async () => true) as any,
+        timerSyncActor: fromPromise(async () => ({ success: true })) as any,
+        timerExtensionActor: fromPromise(async () => ({ needsExtension: false })) as any,
+      },
+    })
+    return { machine, releaseConfirm }
+  }
+
+  it('an objection arriving while the card is confirming is dropped without wedging', async () => {
+    const { machine, releaseConfirm } = buildHangingConfirmMachine()
+    const actor = createActor(machine).start()
+    // pacingDelay 0: the card goes straight from waiting into confirming
+    actor.send({ ...startGameEvent, pacingDelay: 0 })
+
+    actor.send({ type: 'PLAY_CARD', card: { id: 'card-1', name: 'Card 1' } as any, playedCardsCount: 1 })
+
+    // The machine pins itself in confirming (confirm never resolves yet).
+    await vi.waitFor(() => {
+      expect(actor.getSnapshot().value).toMatchObject({ active: { persistence: 'confirmingCard' } })
+    }, { timeout: 2000 })
+
+    // Last-moment objection: the window just closed. It must be dropped —
+    // no objecting state, no penalty, no turn change, no wedge.
+    actor.send({
+      type: 'OBJECT',
+      playedCardId: 'card-1',
+      storytellerId: P1,
+      nextPlayerId: P2,
+    })
+    await new Promise(r => setTimeout(r, 50))
+
+    expect(actor.getSnapshot().value).toMatchObject({ active: { persistence: 'confirmingCard' } })
+    expect(calls.object).toHaveLength(0)
+    expect(calls.passTurn).toHaveLength(0)
+
+    // Confirmation completes normally afterwards.
+    releaseConfirm()
+    await vi.waitFor(() => {
+      expect(actor.getSnapshot().value).toMatchObject({ active: { persistence: 'idle' } })
+    }, { timeout: 2000 })
+
+    expect(actor.getSnapshot().context.currentPlayerId).toBe(P1)
+    expect(actor.getSnapshot().context.lastPersistenceError).toBeNull()
+  })
+})

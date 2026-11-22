@@ -17,3 +17,12 @@ export const isSimpleOrFastMode = ({ context }: { context: GameContext }) =>
  */
 export const isFullOrMainMode = ({ context }: { context: GameContext }) =>
   context.gameMode === 'full' || context.gameMode === 'main'
+
+/**
+ * Interrupts are only valid in the modes whose MODE_CONFIG enables them
+ * (full/main). The child storytelling machine guards the same condition;
+ * the parent persistence region must not draw a penalty or pass the turn
+ * for an interrupt the mode disallows.
+ */
+export const canInterruptInMode = ({ context }: { context: GameContext }) =>
+  isFullOrMainMode({ context })

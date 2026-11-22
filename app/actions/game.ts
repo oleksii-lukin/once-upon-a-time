@@ -389,8 +389,14 @@ export async function drawCards(
     gameSessionId: values.gameSessionId,
     count: values.count,
   })
-  if (pile.error || !pile.data || pile.data.length === 0) {
-    return { ok: false, error: pile.error?.message ?? 'No cards in draw pile' }
+  if (pile.error) {
+    return { ok: false, error: pile.error.message }
+  }
+  // An empty pile is a legitimate game state (deck exhaustion), not an
+  // error: the draw is best-effort — pass/penalty/challenge flows must
+  // keep moving with draw 0. See specs/user-stories/deck-exhaustion.md.
+  if (!pile.data || pile.data.length === 0) {
+    return { ok: true, data: true }
   }
 
   const rows = pile.data.map((dc, index) => ({

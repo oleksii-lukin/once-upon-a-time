@@ -10,6 +10,7 @@ import GameCompletionOverlay from './GameCompletionOverlay'
 import CardDetailsOverlay from './CardDetailsOverlay'
 import TimerDisplay from './TimerDisplay'
 import { useGameActions, useGameSelector } from './useGameEngine'
+import { MODE_CONFIG } from './actors/modes'
 import { mergeRemoteWithOptimistic, splitHand, computeCardsPlayedCount, findPendingCard } from './utils/viewState'
 import { useRouter, useParams } from 'next/navigation'
 import { type CardData, type HandCardData, type PlayedCardData } from '@/utils/gameUtils'
@@ -230,7 +231,7 @@ export default function GameScreen({
         {!isSpectator && gameSession?.status !== 'COMPLETED' && (
           <TurnControls
             isMyTurn={!!isMyTurn}
-            canInterrupt={!isMyTurn && !!currentPlayer && !pendingCard}
+            canInterrupt={!isMyTurn && !!currentPlayer && !pendingCard && MODE_CONFIG[gameMode].canInterrupt}
             handSize={handSize}
             selectedCardId={selectedCardId}
             onPlaySelected={handlePlaySelected}

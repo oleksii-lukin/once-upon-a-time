@@ -206,11 +206,12 @@ describe('drawCards', () => {
     expect(repos.drawPileRepo.removeByIds).toHaveBeenCalledWith(expect.anything(), ['pile-1', 'pile-2'])
   })
 
-  it('fails when the pile is empty', async () => {
+  it('succeeds with draw 0 when the pile is empty (deck exhaustion is not an error)', async () => {
     const result = await drawCards(input)
 
-    expect(result).toEqual({ ok: false, error: 'No cards in draw pile' })
+    expect(result).toEqual({ ok: true, data: true })
     expect(repos.handRepo.insertCards).not.toHaveBeenCalled()
+    expect(repos.drawPileRepo.removeByIds).not.toHaveBeenCalled()
   })
 })
 

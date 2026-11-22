@@ -13,8 +13,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Opt out of parallel tests on CI; locally cap at 3: the default
+     (cores/2 = 6 on this box) saturates the CPU with dev-server compiles +
+     Chromium contexts, starving 15s action waits (observed: load avg 16,
+     "element not found" timeouts across unrelated tests incl. login/solo). */
+  workers: process.env.CI ? 1 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -44,7 +47,7 @@ export default defineConfig({
       // stack: guest identities only, so no Clerk global setup dependency.
       name: 'multiplayer',
       testMatch: '**/multiplayer/**/*.spec.ts',
-      timeout: 120_000, // cold Next dev compiles + realtime + pacing windows
+      timeout: 180_000, // cold Next dev compiles + realtime + pacing windows + 3-player setups
       use: {
         ...devices['Desktop Chrome'],
         navigationTimeout: 60_000,

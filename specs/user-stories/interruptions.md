@@ -13,11 +13,12 @@
 3. **System Validation**:
     - The system pauses Player A's turn.
     - The system verifies Player B played "Forest".
-    - (Optional) Group vote or timed challenge window? *For now, assume auto-success if keyword matches.*
+    - **Auto-validated**: keyword matching needs speech-to-text, which does not exist yet — an interrupt succeeds immediately. The machine keeps a VALID/INVALID arbitration as the extension point for a future group vote.
+    - Only in modes with interrupts (`full`/`main`); other modes hide the button and ignore the event.
 4. **Outcome**:
-    - Player A draws 1 Story Card as a penalty.
-    - Player B's card is played to the Story Line.
+    - Player A draws 1 Story Card as a penalty (best-effort — a failed draw does not block the turn pass).
     - Player B becomes the new Storyteller.
+    - **Known gap (backlog)**: the classic rule plays Player B's matching card to the Story Line as part of the interruption; the machine currently only transfers the turn — Player B keeps the card in hand.
 
 **Scenario 2: Incorrect Interruption (Challenge)**
 1. Player A says something unrelated to "Forest".

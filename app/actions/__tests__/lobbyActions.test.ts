@@ -20,8 +20,16 @@ const repos = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/lobby/repos', () => repos)
-vi.mock('@/utils/supabase/server', () => ({
-  createClient: vi.fn(async () => ({})),
+vi.mock('@/utils/supabase/service', () => ({
+  createServiceClient: vi.fn(() => ({})),
+}))
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn(async () => ({ userId: 'user-123' })),
+}))
+vi.mock('@/lib/auth/guest-server', () => ({
+  getServerGuestId: vi.fn(async () => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+  getServerGuestSecret: vi.fn(async () => 'guest-secret'),
+  hashGuestSecret: vi.fn((secret: string) => `hash:${secret}`),
 }))
 
 import { createLobby, joinLobby } from '../lobby'

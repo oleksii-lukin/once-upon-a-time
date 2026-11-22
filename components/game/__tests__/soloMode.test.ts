@@ -31,6 +31,7 @@ describe('Solo Mode Workflow', () => {
       lobbyId: 'lobby-123',
       mode: 'solo',
       currentPlayerId: 'player-1',
+      localPlayerId: 'player-1',
       players: [
         { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any
       ],

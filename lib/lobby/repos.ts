@@ -44,6 +44,7 @@ export const players = {
       lobby_id: string
       user_id: string | null
       guest_id: string | null
+      guest_secret_hash?: string | null
       role: 'host' | 'player'
       status: 'ready' | 'not_ready'
       display_name: string

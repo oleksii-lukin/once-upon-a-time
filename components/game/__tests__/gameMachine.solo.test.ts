@@ -45,6 +45,7 @@ describe('gameMachine - Solo Mode Integration', () => {
     lobbyId: 'lobby-123',
     mode: 'solo' as const,
     currentPlayerId: 'player-1',
+    localPlayerId: 'player-1',
     players: [defaultPlayer as any],
     pacingDelay: 2,
     timerDuration: 30,

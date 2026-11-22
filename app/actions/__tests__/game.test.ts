@@ -31,8 +31,30 @@ const createMockSupabase = () => {
 
 const mockSupabase = createMockSupabase()
 
-vi.mock('@/utils/supabase/server', () => ({
-  createClient: vi.fn(() => Promise.resolve(mockSupabase)),
+vi.mock('@/utils/supabase/service', () => ({
+  createServiceClient: vi.fn(() => mockSupabase),
+}))
+vi.mock('@/lib/game/authorization', () => ({
+  requireOwnedPlayer: vi.fn(async (_c: unknown, id: string) => ({
+    ok: true,
+    player: { id },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireMemberOfSession: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireMemberOfLobby: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireHostOfLobby: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p', role: 'host' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
 }))
 
 describe('initializeGame', () => {
@@ -117,7 +139,7 @@ describe('initializeGame', () => {
     // 8. lobby status update (via .eq)
     mockSupabase.eq.mockResolvedValueOnce({ error: null })
 
-    const result = await initializeGame('11111111-1111-4111-8111-111111111111')
+    const result = await initializeGame('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
 
     expect(result).toEqual({ success: true, gameSessionId: 'session-1' })
 
@@ -143,7 +165,7 @@ describe('initializeGame', () => {
       error: null,
     })
 
-    const result = await initializeGame('11111111-1111-4111-8111-111111111111')
+    const result = await initializeGame('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
 
     expect(result).toEqual({ success: true, gameSessionId: 'session-existing', reused: true })
     expect(mockSupabase.insert).not.toHaveBeenCalled()
@@ -175,7 +197,7 @@ describe('initializeGame', () => {
     // race lookup
     mockSupabase.maybeSingle.mockResolvedValueOnce({ data: { id: 'session-winner' }, error: null })
 
-    const result = await initializeGame('11111111-1111-4111-8111-111111111111')
+    const result = await initializeGame('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
 
     expect(result).toEqual({ success: true, gameSessionId: 'session-winner', reused: true })
   })

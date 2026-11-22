@@ -35,6 +35,7 @@ describe('gameMachine - Tutorial Mode Integration', () => {
     lobbyId: 'lobby-123',
     mode: 'tutorial' as const,
     currentPlayerId: 'player-1',
+    localPlayerId: 'player-1',
     players: players as any,
     pacingDelay: 0, // Disable pacing for simplicity
     timerDuration: 0, // Disable timer

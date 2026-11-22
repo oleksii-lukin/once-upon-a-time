@@ -36,8 +36,38 @@ const repos = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/game/repos', () => repos)
-vi.mock('@/utils/supabase/server', () => ({
-  createClient: vi.fn(async () => ({})),
+vi.mock('@/utils/supabase/service', () => {
+  const chain: any = {}
+  chain.from = () => chain
+  chain.select = () => chain
+  chain.eq = () => chain
+  chain.maybeSingle = async () => ({
+    data: { id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' },
+    error: null,
+  })
+  return { createServiceClient: () => chain }
+})
+vi.mock('@/lib/game/authorization', () => ({
+  requireOwnedPlayer: vi.fn(async (_c: unknown, id: string) => ({
+    ok: true,
+    player: { id },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireMemberOfSession: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireMemberOfLobby: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
+  requireHostOfLobby: vi.fn(async () => ({
+    ok: true,
+    player: { id: 'p', role: 'host' },
+    lobbyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+  })),
 }))
 
 import {
@@ -129,20 +159,20 @@ describe('playCard', () => {
 
 describe('confirmCard', () => {
   it('confirms the played card', async () => {
-    const result = await confirmCard({ playedCardId: PLAYED })
+    const result = await confirmCard({ playedCardId: PLAYED, callerPlayerId: PLAYER })
     expect(result).toEqual({ ok: true, data: true })
     expect(repos.playedCardsRepo.confirm).toHaveBeenCalledWith(expect.anything(), PLAYED)
   })
 
   it('surfaces repository errors', async () => {
     repos.playedCardsRepo.confirm.mockResolvedValue({ error: { message: 'db down' } })
-    const result = await confirmCard({ playedCardId: PLAYED })
+    const result = await confirmCard({ playedCardId: PLAYED, callerPlayerId: PLAYER })
     expect(result).toEqual({ ok: false, error: 'db down' })
   })
 })
 
 describe('passTurn', () => {
-  const input = { gameSessionId: SESSION, nextPlayerId: OTHER }
+  const input = { gameSessionId: SESSION, nextPlayerId: OTHER, callerPlayerId: PLAYER }
 
   it('verifies lobby membership and advances the turn', async () => {
     const result = await passTurn(input)
@@ -188,7 +218,7 @@ describe('passTurn', () => {
 })
 
 describe('drawCards', () => {
-  const input = { gameSessionId: SESSION, playerId: PLAYER, count: 2 }
+  const input = { gameSessionId: SESSION, playerId: PLAYER, callerPlayerId: PLAYER, count: 2 }
 
   it('inserts drawn cards with high positions and clears them from the pile', async () => {
     repos.drawPileRepo.drawCards.mockResolvedValue({
@@ -250,7 +280,7 @@ describe('exchangeCard', () => {
 })
 
 describe('objectToCard', () => {
-  const input = { gameSessionId: SESSION, playedCardId: PLAYED, storytellerId: PLAYER, nextPlayerId: OTHER }
+  const input = { gameSessionId: SESSION, playedCardId: PLAYED, storytellerId: PLAYER, nextPlayerId: OTHER, callerPlayerId: PLAYER }
 
   it('returns the card to the storyteller and removes the played row', async () => {
     const result = await objectToCard(input)
@@ -276,7 +306,7 @@ describe('objectToCard', () => {
 })
 
 describe('finalizeWin', () => {
-  const input = { gameSessionId: SESSION, winnerId: PLAYER, lobbyId: LOBBY }
+  const input = { gameSessionId: SESSION, winnerId: PLAYER, lobbyId: LOBBY, callerPlayerId: PLAYER }
 
   it('finalizes the session and marks the lobby finished', async () => {
     const result = await finalizeWin(input)
@@ -315,6 +345,7 @@ describe('syncTimer', () => {
     isEnabled: true,
     duration: 10,
     currentPlayerId: PLAYER,
+    callerPlayerId: PLAYER,
     action: 'start' as const,
     pacingDelay: 10,
   }

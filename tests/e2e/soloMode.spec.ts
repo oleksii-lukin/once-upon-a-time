@@ -37,9 +37,17 @@ test.describe('Solo Game Mode', () => {
     expect(page.url()).toContain(lobbyId)
 
     // 3. Pick the Solo game mode. The mode is persisted by a fire-and-forget
-    //    update; reload so the assertion reads DB state (the description only
-    //    renders when lobby.settings.gameMode === 'solo').
+    //    update; wait for the action to complete before reloading — an
+    //    immediate reload aborts the in-flight POST and the assertion below
+    //    reads stale DB state (the description only renders when
+    //    lobby.settings.gameMode === 'solo').
     await page.getByRole('button', { name: 'Solo Mode' }).click()
+    await page.waitForResponse(
+      r => r.request().method() === 'POST'
+        && r.url().includes('/lobbies/')
+        && (r.request().postData() || '').includes('"gameMode":"solo"'),
+      { timeout: 15_000 },
+    )
     await page.reload({ waitUntil: 'load' })
     await expect(page.getByText(/Tell your story alone/)).toBeVisible({ timeout: 15_000 })
 

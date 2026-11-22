@@ -35,6 +35,7 @@ describe('gameMachine - Simple Mode Integration', () => {
     lobbyId: 'lobby-123',
     mode: 'simple' as const,
     currentPlayerId: 'player-1',
+    localPlayerId: 'player-1',
     players: players as any,
     pacingDelay: 0,
     timerDuration: 30,

@@ -54,6 +54,7 @@ function startGame(playerIds: string[], overrides: Record<string, unknown> = {})
     lobbyId: LOBBY,
     mode: 'full' as const,
     currentPlayerId: playerIds[0],
+    localPlayerId: playerIds[0],
     players: makePlayers(playerIds),
     pacingDelay: 0,
     timerDuration: 0,

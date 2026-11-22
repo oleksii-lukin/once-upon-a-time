@@ -37,6 +37,7 @@ describe('gameMachine - Full Mode Integration', () => {
     lobbyId: 'lobby-123',
     mode: 'full' as const,
     currentPlayerId: 'player-1',
+    localPlayerId: 'player-1',
     players: players as any,
     pacingDelay: 2, // Enable pacing for objections/interrupts
     timerDuration: 30,

@@ -1,576 +1,327 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
+  
+  "graphql_public": {
+          Tables: {
+            [_ in never]: never
+          }
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "graphql":
+{ Args: { "extensions"?: Json,"operationName"?: string,"query"?: string,"variables"?: Json }; Returns: Json
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        },"public": {
+          Tables: {
+            "app_settings": {
+                  Row: {
+                    "category": string,"created_at": string,"id": string,"key": string,"updated_at": string,"value": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category": string,"created_at"?: string,"id"?: string,"key": string,"updated_at"?: string,"value": string
+                  }
+                  Update: {
+                    "category"?: string,"created_at"?: string,"id"?: string,"key"?: string,"updated_at"?: string,"value"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"cards": {
+                  Row: {
+                    "category": string,"created_at": string,"deck_id": string,"description": string | null,"id": string,"image_url": string | null,"name": string,"translations": NonNullable<Json>,"type": string,"updated_at": string,"usage_examples": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category": string,"created_at"?: string,"deck_id": string,"description"?: string | null,"id"?: string,"image_url"?: string | null,"name": string,"translations"?: NonNullable<Json>,"type"?: string,"updated_at"?: string,"usage_examples"?: string | null
+                  }
+                  Update: {
+                    "category"?: string,"created_at"?: string,"deck_id"?: string,"description"?: string | null,"id"?: string,"image_url"?: string | null,"name"?: string,"translations"?: NonNullable<Json>,"type"?: string,"updated_at"?: string,"usage_examples"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cards_deck_id_fkey"
+      columns: ["deck_id"]
+isOneToOne: false
+      referencedRelation: "decks"
+      referencedColumns: ["id"]
     }
-    Views: {
-      [_ in never]: never
+                  ]
+                },"debug_auth_logs": {
+                  Row: {
+                    "auth_role": string | null,"auth_uid": string | null,"id": string,"jwt_claims": Json | null,"timestamp": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth_role"?: string | null,"auth_uid"?: string | null,"id"?: string,"jwt_claims"?: Json | null,"timestamp"?: string | null
+                  }
+                  Update: {
+                    "auth_role"?: string | null,"auth_uid"?: string | null,"id"?: string,"jwt_claims"?: Json | null,"timestamp"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"decks": {
+                  Row: {
+                    "bg_image_url": string | null,"card_back_image_url": string | null,"card_layout": Json | null,"category_images": Json | null,"created_at": string,"created_by": string | null,"description": string | null,"id": string,"is_active": boolean | null,"name": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bg_image_url"?: string | null,"card_back_image_url"?: string | null,"card_layout"?: Json | null,"category_images"?: Json | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"is_active"?: boolean | null,"name": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "bg_image_url"?: string | null,"card_back_image_url"?: string | null,"card_layout"?: Json | null,"category_images"?: Json | null,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"id"?: string,"is_active"?: boolean | null,"name"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"draw_pile": {
+                  Row: {
+                    "card_id": string,"created_at": string,"game_session_id": string,"id": string,"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "card_id": string,"created_at"?: string,"game_session_id": string,"id"?: string,"position"?: number
+                  }
+                  Update: {
+                    "card_id"?: string,"created_at"?: string,"game_session_id"?: string,"id"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "draw_pile_card_id_fkey"
+      columns: ["card_id"]
+isOneToOne: false
+      referencedRelation: "cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "draw_pile_game_session_id_fkey"
+      columns: ["game_session_id"]
+isOneToOne: false
+      referencedRelation: "game_sessions"
+      referencedColumns: ["id"]
     }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
+                  ]
+                },"game_sessions": {
+                  Row: {
+                    "created_at": string,"current_turn_player_id": string | null,"deck_id": string,"game_mode": string | null,"id": string,"is_turn_pending_confirmation": boolean | null,"last_card_played_at": string | null,"lobby_id": string,"status": string,"storyteller_id": string | null,"timer_duration": number,"timer_enabled": boolean,"timer_expires_at": string | null,"timer_started_at": string | null,"updated_at": string,"winner_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"current_turn_player_id"?: string | null,"deck_id": string,"game_mode"?: string | null,"id"?: string,"is_turn_pending_confirmation"?: boolean | null,"last_card_played_at"?: string | null,"lobby_id": string,"status"?: string,"storyteller_id"?: string | null,"timer_duration"?: number,"timer_enabled"?: boolean,"timer_expires_at"?: string | null,"timer_started_at"?: string | null,"updated_at"?: string,"winner_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"current_turn_player_id"?: string | null,"deck_id"?: string,"game_mode"?: string | null,"id"?: string,"is_turn_pending_confirmation"?: boolean | null,"last_card_played_at"?: string | null,"lobby_id"?: string,"status"?: string,"storyteller_id"?: string | null,"timer_duration"?: number,"timer_enabled"?: boolean,"timer_expires_at"?: string | null,"timer_started_at"?: string | null,"updated_at"?: string,"winner_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "game_sessions_current_turn_player_id_fkey"
+      columns: ["current_turn_player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "game_sessions_deck_id_fkey"
+      columns: ["deck_id"]
+isOneToOne: false
+      referencedRelation: "decks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "game_sessions_lobby_id_fkey"
+      columns: ["lobby_id"]
+isOneToOne: false
+      referencedRelation: "lobbies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "game_sessions_storyteller_id_fkey"
+      columns: ["storyteller_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "game_sessions_winner_id_fkey"
+      columns: ["winner_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
     }
-    Enums: {
-      [_ in never]: never
+                  ]
+                },"lobbies": {
+                  Row: {
+                    "code": string,"created_at": string,"created_by": string,"deck_id": string | null,"deleted_at": string | null,"game_mode": string | null,"id": string,"language": string,"name": string,"settings": NonNullable<Json>,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"created_at"?: string,"created_by": string,"deck_id"?: string | null,"deleted_at"?: string | null,"game_mode"?: string | null,"id"?: string,"language"?: string,"name": string,"settings"?: NonNullable<Json>,"status"?: string
+                  }
+                  Update: {
+                    "code"?: string,"created_at"?: string,"created_by"?: string,"deck_id"?: string | null,"deleted_at"?: string | null,"game_mode"?: string | null,"id"?: string,"language"?: string,"name"?: string,"settings"?: NonNullable<Json>,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lobbies_deck_id_fkey"
+      columns: ["deck_id"]
+isOneToOne: false
+      referencedRelation: "decks"
+      referencedColumns: ["id"]
     }
-    CompositeTypes: {
-      [_ in never]: never
+                  ]
+                },"played_cards": {
+                  Row: {
+                    "card_id": string,"game_session_id": string,"id": string,"played_at": string,"player_id": string,"position": number,"status": Database["public"]['Enums']["played_card_status"] | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "card_id": string,"game_session_id": string,"id"?: string,"played_at"?: string,"player_id": string,"position"?: number,"status"?: Database["public"]['Enums']["played_card_status"] | null
+                  }
+                  Update: {
+                    "card_id"?: string,"game_session_id"?: string,"id"?: string,"played_at"?: string,"player_id"?: string,"position"?: number,"status"?: Database["public"]['Enums']["played_card_status"] | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "played_cards_card_id_fkey"
+      columns: ["card_id"]
+isOneToOne: false
+      referencedRelation: "cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "played_cards_game_session_id_fkey"
+      columns: ["game_session_id"]
+isOneToOne: false
+      referencedRelation: "game_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "played_cards_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
     }
-  }
-  public: {
-    Tables: {
-      app_settings: {
-        Row: {
-          category: string
-          created_at: string
-          id: string
-          key: string
-          updated_at: string
-          value: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          id?: string
-          key: string
-          updated_at?: string
-          value: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          id?: string
-          key?: string
-          updated_at?: string
-          value?: string
-        }
-        Relationships: []
-      }
-      cards: {
-        Row: {
-          category: string
-          created_at: string
-          deck_id: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-          translations: Json
-          type: string
-          updated_at: string
-          usage_examples: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          deck_id: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          translations?: Json
-          type?: string
-          updated_at?: string
-          usage_examples?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          deck_id?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          translations?: Json
-          type?: string
-          updated_at?: string
-          usage_examples?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cards_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      debug_auth_logs: {
-        Row: {
-          auth_role: string | null
-          auth_uid: string | null
-          id: string
-          jwt_claims: Json | null
-          timestamp: string | null
-        }
-        Insert: {
-          auth_role?: string | null
-          auth_uid?: string | null
-          id?: string
-          jwt_claims?: Json | null
-          timestamp?: string | null
-        }
-        Update: {
-          auth_role?: string | null
-          auth_uid?: string | null
-          id?: string
-          jwt_claims?: Json | null
-          timestamp?: string | null
-        }
-        Relationships: []
-      }
-      decks: {
-        Row: {
-          bg_image_url: string | null
-          card_back_image_url: string | null
-          card_layout: Json | null
-          category_images: Json | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          bg_image_url?: string | null
-          card_back_image_url?: string | null
-          card_layout?: Json | null
-          category_images?: Json | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          bg_image_url?: string | null
-          card_back_image_url?: string | null
-          card_layout?: Json | null
-          category_images?: Json | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      draw_pile: {
-        Row: {
-          card_id: string
-          created_at: string
-          game_session_id: string
-          id: string
-          position: number
-        }
-        Insert: {
-          card_id: string
-          created_at?: string
-          game_session_id: string
-          id?: string
-          position?: number
-        }
-        Update: {
-          card_id?: string
-          created_at?: string
-          game_session_id?: string
-          id?: string
-          position?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "draw_pile_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "draw_pile_game_session_id_fkey"
-            columns: ["game_session_id"]
-            isOneToOne: false
-            referencedRelation: "game_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      game_sessions: {
-        Row: {
-          created_at: string
-          current_turn_player_id: string | null
-          deck_id: string
-          game_mode: string | null
-          id: string
-          is_turn_pending_confirmation: boolean | null
-          last_card_played_at: string | null
-          lobby_id: string
-          status: string
-          storyteller_id: string | null
-          timer_duration: number
-          timer_enabled: boolean
-          timer_expires_at: string | null
-          timer_started_at: string | null
-          updated_at: string
-          winner_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          current_turn_player_id?: string | null
-          deck_id: string
-          game_mode?: string | null
-          id?: string
-          is_turn_pending_confirmation?: boolean | null
-          last_card_played_at?: string | null
-          lobby_id: string
-          status?: string
-          storyteller_id?: string | null
-          timer_duration?: number
-          timer_enabled?: boolean
-          timer_expires_at?: string | null
-          timer_started_at?: string | null
-          updated_at?: string
-          winner_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          current_turn_player_id?: string | null
-          deck_id?: string
-          game_mode?: string | null
-          id?: string
-          is_turn_pending_confirmation?: boolean | null
-          last_card_played_at?: string | null
-          lobby_id?: string
-          status?: string
-          storyteller_id?: string | null
-          timer_duration?: number
-          timer_enabled?: boolean
-          timer_expires_at?: string | null
-          timer_started_at?: string | null
-          updated_at?: string
-          winner_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "game_sessions_current_turn_player_id_fkey"
-            columns: ["current_turn_player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "game_sessions_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "game_sessions_lobby_id_fkey"
-            columns: ["lobby_id"]
-            isOneToOne: false
-            referencedRelation: "lobbies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "game_sessions_storyteller_id_fkey"
-            columns: ["storyteller_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "game_sessions_winner_id_fkey"
-            columns: ["winner_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      lobbies: {
-        Row: {
-          code: string
-          created_at: string
-          created_by: string
-          deck_id: string | null
-          deleted_at: string | null
-          game_mode: string | null
-          id: string
-          language: string
-          name: string
-          settings: Json
-          status: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          created_by: string
-          deck_id?: string | null
-          deleted_at?: string | null
-          game_mode?: string | null
-          id?: string
-          language?: string
-          name: string
-          settings?: Json
-          status?: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          created_by?: string
-          deck_id?: string | null
-          deleted_at?: string | null
-          game_mode?: string | null
-          id?: string
-          language?: string
-          name?: string
-          settings?: Json
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lobbies_deck_id_fkey"
-            columns: ["deck_id"]
-            isOneToOne: false
-            referencedRelation: "decks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      played_cards: {
-        Row: {
-          card_id: string
-          game_session_id: string
-          id: string
-          played_at: string
-          player_id: string
-          position: number
-          status: Database["public"]["Enums"]["played_card_status"] | null
-        }
-        Insert: {
-          card_id: string
-          game_session_id: string
-          id?: string
-          played_at?: string
-          player_id: string
-          position?: number
-          status?: Database["public"]["Enums"]["played_card_status"] | null
-        }
-        Update: {
-          card_id?: string
-          game_session_id?: string
-          id?: string
-          played_at?: string
-          player_id?: string
-          position?: number
-          status?: Database["public"]["Enums"]["played_card_status"] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "played_cards_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "played_cards_game_session_id_fkey"
-            columns: ["game_session_id"]
-            isOneToOne: false
-            referencedRelation: "game_sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "played_cards_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      player_hands: {
-        Row: {
-          card_id: string
-          created_at: string
-          game_session_id: string
-          id: string
-          player_id: string
-          position: number
-        }
-        Insert: {
-          card_id: string
-          created_at?: string
-          game_session_id: string
-          id?: string
-          player_id: string
-          position?: number
-        }
-        Update: {
-          card_id?: string
-          created_at?: string
-          game_session_id?: string
-          id?: string
-          player_id?: string
-          position?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_hands_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_hands_game_session_id_fkey"
-            columns: ["game_session_id"]
-            isOneToOne: false
-            referencedRelation: "game_sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_hands_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      players: {
-        Row: {
-          avatar_url: string | null
-          display_name: string | null
-          guest_id: string | null
-          id: string
-          joined_at: string
-          last_seen_at: string | null
-          lobby_id: string
-          role: string
-          status: string
-          turn_order: number | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          display_name?: string | null
-          guest_id?: string | null
-          id?: string
-          joined_at?: string
-          last_seen_at?: string | null
-          lobby_id: string
-          role?: string
-          status?: string
-          turn_order?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          display_name?: string | null
-          guest_id?: string | null
-          id?: string
-          joined_at?: string
-          last_seen_at?: string | null
-          lobby_id?: string
-          role?: string
-          status?: string
-          turn_order?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "players_lobby_id_fkey"
-            columns: ["lobby_id"]
-            isOneToOne: false
-            referencedRelation: "lobbies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          display_name: string | null
-          is_admin: boolean
-          total_games_played: number | null
-          total_games_won: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          display_name?: string | null
-          is_admin?: boolean
-          total_games_played?: number | null
-          total_games_won?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          display_name?: string | null
-          is_admin?: boolean
-          total_games_played?: number | null
-          total_games_won?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+                  ]
+                },"player_hands": {
+                  Row: {
+                    "card_id": string,"created_at": string,"game_session_id": string,"id": string,"player_id": string,"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "card_id": string,"created_at"?: string,"game_session_id": string,"id"?: string,"player_id": string,"position"?: number
+                  }
+                  Update: {
+                    "card_id"?: string,"created_at"?: string,"game_session_id"?: string,"id"?: string,"player_id"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "player_hands_card_id_fkey"
+      columns: ["card_id"]
+isOneToOne: false
+      referencedRelation: "cards"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "player_hands_game_session_id_fkey"
+      columns: ["game_session_id"]
+isOneToOne: false
+      referencedRelation: "game_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "player_hands_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
     }
-    Views: {
-      [_ in never]: never
+                  ]
+                },"players": {
+                  Row: {
+                    "avatar_url": string | null,"display_name": string | null,"guest_id": string | null,"guest_secret_hash": string | null,"id": string,"joined_at": string,"last_seen_at": string | null,"lobby_id": string,"role": string,"status": string,"turn_order": number | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avatar_url"?: string | null,"display_name"?: string | null,"guest_id"?: string | null,"guest_secret_hash"?: string | null,"id"?: string,"joined_at"?: string,"last_seen_at"?: string | null,"lobby_id": string,"role"?: string,"status"?: string,"turn_order"?: number | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "avatar_url"?: string | null,"display_name"?: string | null,"guest_id"?: string | null,"guest_secret_hash"?: string | null,"id"?: string,"joined_at"?: string,"last_seen_at"?: string | null,"lobby_id"?: string,"role"?: string,"status"?: string,"turn_order"?: number | null,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "players_lobby_id_fkey"
+      columns: ["lobby_id"]
+isOneToOne: false
+      referencedRelation: "lobbies"
+      referencedColumns: ["id"]
     }
-    Functions: {
-      archive_finished_lobbies: { Args: never; Returns: undefined }
-      cleanup_abandoned_waiting_lobbies: { Args: never; Returns: undefined }
-      log_current_auth_state: { Args: never; Returns: undefined }
-      mark_inactive_lobbies_finished: { Args: never; Returns: undefined }
+                  ]
+                },"user_profiles": {
+                  Row: {
+                    "avatar_url": string | null,"bio": string | null,"created_at": string,"display_name": string | null,"is_admin": boolean,"total_games_played": number | null,"total_games_won": number | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "avatar_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name"?: string | null,"is_admin"?: boolean,"total_games_played"?: number | null,"total_games_won"?: number | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "avatar_url"?: string | null,"bio"?: string | null,"created_at"?: string,"display_name"?: string | null,"is_admin"?: boolean,"total_games_played"?: number | null,"total_games_won"?: number | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                }
+          }
+          Views: {
+            "v_player_hand_counts": {
+                  Row: {
+                    "card_count": number | null,"game_session_id": string,"player_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "player_hands_game_session_id_fkey"
+      columns: ["game_session_id"]
+isOneToOne: false
+      referencedRelation: "game_sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "player_hands_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "players"
+      referencedColumns: ["id"]
     }
-    Enums: {
-      played_card_status: "PENDING" | "CONFIRMED" | "REVERTED"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+                  ]
+                }
+          }
+          Functions: {
+            "archive_finished_lobbies":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"cleanup_abandoned_waiting_lobbies":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"log_current_auth_state":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"mark_inactive_lobbies_finished":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           }
+          }
+          Enums: {
+            "played_card_status": "PENDING"|"CONFIRMED"|"REVERTED"
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
+        }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
@@ -583,25 +334,21 @@ export type Tables<
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -611,22 +358,20 @@ export type TablesInsert<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -636,22 +381,20 @@ export type TablesUpdate<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -661,14 +404,12 @@ export type Enums<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -678,22 +419,21 @@ export type CompositeTypes<
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
-  public: {
-    Enums: {
-      played_card_status: ["PENDING", "CONFIRMED", "REVERTED"],
-    },
-  },
+  "graphql_public": {
+          Enums: {
+            
+          }
+        },"public": {
+          Enums: {
+            "played_card_status": ["PENDING", "CONFIRMED", "REVERTED"]
+          }
+        }
 } as const

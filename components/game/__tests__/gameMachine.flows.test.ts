@@ -61,6 +61,7 @@ const startGameEvent = {
   lobbyId: LOBBY,
   mode: 'full' as const,
   currentPlayerId: P1,
+  localPlayerId: P1,
   players,
   pacingDelay: 2, // keeps the objection window open (real timers, tests send within it)
   timerDuration: 0,

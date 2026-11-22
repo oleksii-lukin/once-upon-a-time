@@ -50,6 +50,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'full',
       currentPlayerId: 'player-1',
+      localPlayerId: 'player-1',
       players: [
         { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
       ],
@@ -68,6 +69,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'full',
       currentPlayerId: 'player-1',
+      localPlayerId: 'player-1',
       players: [
         { id: 'player-1', role: 'storyteller', turn_order: 0, joined_at: new Date().toISOString() } as any,
       ],
@@ -103,6 +105,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'simple',
       currentPlayerId: 'player-1',
+      localPlayerId: 'player-1',
       players: [],
     })
     expect(actor.getSnapshot().value).toMatchObject({ active: { rules: 'simple' } })
@@ -115,6 +118,7 @@ describe('gameMachine', () => {
       lobbyId: 'lobby-123',
       mode: 'solo',
       currentPlayerId: 'player-1',
+      localPlayerId: 'player-1',
       players: [],
     })
     expect(actorSolo.getSnapshot().value).toMatchObject({ active: { rules: 'solo' } })

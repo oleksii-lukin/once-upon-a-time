@@ -11,7 +11,7 @@ import { useGameState } from '../useGameState'
  * state is available to both the factory and the tests below.
  */
 
-const { queryLog, channelLog, mockClient } = vi.hoisted(() => {
+const { queryLog, channelLog, mockClient, handRows } = vi.hoisted(() => {
   interface RecordedQuery {
     table: string
     columns: string
@@ -58,11 +58,10 @@ const { queryLog, channelLog, mockClient } = vi.hoisted(() => {
     { id: 'h2', player_id: 'p1', position: 1, cards: { id: 'card-2', name: 'C2', category: 'ending', type: 'ending', translations: null } },
   ]
 
-  const allHandRows = [
-    { player_id: 'p1', cards: { type: 'story' } },
-    { player_id: 'p1', cards: { type: 'ending' } },
-    { player_id: 'p2', cards: { type: 'story' } },
-    { player_id: 'p2', cards: { type: 'story' } },
+  // Equivalent of allHandRows through v_player_hand_counts (endings excluded)
+  const allHandCounts = [
+    { player_id: 'p1', card_count: 1 },
+    { player_id: 'p2', card_count: 2 },
   ]
 
   const endingCount = 3
@@ -73,11 +72,8 @@ const { queryLog, channelLog, mockClient } = vi.hoisted(() => {
         return { data: sessionRow, count: null, error: null }
       case 'played_cards':
         return { data: playedRows, count: null, error: null }
-      case 'player_hands':
-        // counts query selects `player_id, cards (type)`
-        return q.columns.includes('player_id')
-          ? { data: allHandRows, count: null, error: null }
-          : { data: handRows, count: null, error: null }
+      case 'v_player_hand_counts':
+        return { data: allHandCounts, count: null, error: null }
       case 'draw_pile':
         return { data: null, count: endingCount, error: null }
       default:
@@ -144,11 +140,16 @@ const { queryLog, channelLog, mockClient } = vi.hoisted(() => {
     },
   }
 
-  return { queryLog, channelLog, mockClient }
+  return { queryLog, channelLog, mockClient, handRows, allHandCounts }
 })
 
 vi.mock('@/utils/supabase/client', () => ({
   createClient: () => mockClient,
+}))
+
+// The own hand now arrives via a server action instead of a direct query.
+vi.mock('@/app/actions/players', () => ({
+  getMyHand: vi.fn(async () => ({ ok: true, data: handRows })),
 }))
 
 const sessionQueries = () => queryLog.filter(q => q.table === 'game_sessions')
@@ -183,7 +184,7 @@ describe('useGameState', () => {
     expect(sessionQueries()).toHaveLength(1)
   })
 
-  it('skips the hand-row query for spectators but keeps hand counts', async () => {
+  it('skips the hand-row fetch for spectators but keeps hand counts', async () => {
     const { result } = renderHook(() => useGameState({ lobbyId: 'lobby-1', playerId: undefined }))
 
     await waitFor(() => {
@@ -191,9 +192,11 @@ describe('useGameState', () => {
       expect(result.current.playerHandCounts).toEqual({ p1: 1, p2: 2 })
     })
 
-    const handQueries = queryLog.filter(q => q.table === 'player_hands')
-    expect(handQueries).toHaveLength(1) // counts only, no hand rows
-    expect(handQueries[0].columns).not.toContain('*')
+    const countQueries = queryLog.filter(q => q.table === 'v_player_hand_counts')
+    expect(countQueries).toHaveLength(1)
+    expect(countQueries[0].columns).not.toContain('*')
+    // no direct player_hands reads at all — the action path is for members only
+    expect(queryLog.filter(q => q.table === 'player_hands')).toHaveLength(0)
   })
 
   it('re-fetches on changefeed events and coalesces overlapping triggers', async () => {
@@ -210,13 +213,12 @@ describe('useGameState', () => {
     const channel = latestChannelWith('played_cards')
     expect(channel).toBeDefined()
     const playedHandler = channel!.handlers.find(h => h.table === 'played_cards')!
-    const handsHandler = channel!.handlers.find(h => h.table === 'player_hands')!
 
     // three events in the same tick → exactly one queued follow-up pass
     act(() => {
       playedHandler.cb({})
       playedHandler.cb({})
-      handsHandler.cb({})
+      playedHandler.cb({})
     })
 
     await waitFor(() => {

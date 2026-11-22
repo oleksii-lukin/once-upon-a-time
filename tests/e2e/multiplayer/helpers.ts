@@ -28,7 +28,20 @@ export async function newPlayer(browser: Browser): Promise<Player> {
 export async function createLobby(host: Player): Promise<string> {
   await gotoWithRetry(host.page, '/en/lobbies')
   const createButton = host.page.getByRole('button', { name: 'Create New Story' })
-  await expect(createButton).toBeVisible({ timeout: 30_000 })
+  // gotoWithRetry guards against 500s on navigation, but a fresh render can
+  // still come up blank (dev under parallel load). If the button is not there,
+  // reload within a 30s budget instead of failing on the first wait.
+  const deadline = Date.now() + 30_000
+  while (true) {
+    try {
+      await expect(createButton).toBeVisible({ timeout: 10_000 })
+      break
+    }
+    catch (error) {
+      if (Date.now() >= deadline) throw error
+      await host.page.reload({ waitUntil: 'load' }).catch(() => {})
+    }
+  }
 
   // The click can land before hydration attaches the handler (dev), or the
   // create action can fail transiently — retry until the navigation lands.
@@ -76,25 +89,30 @@ export async function joinViaInvite(guest: Player, inviteLink: string, lobbyId: 
 }
 
 /**
- * Navigates with retries on transient network-layer failures
- * (ERR_NETWORK_CHANGED etc. — machine-level interface/DNS churn can hit
- * any navigation; all parallel tests failing their first goto at once is
- * the classic signature).
+ * Navigates with retries on transient failures:
+ * - network-layer failures (ERR_NETWORK_CHANGED etc. — machine-level
+ *   interface/DNS churn can hit any navigation; all parallel tests failing
+ *   their first goto at once is the classic signature), and
+ * - HTTP 5xx responses (dev under parallel load intermittently 500s
+ *   routes; page.goto resolves normally on a 500, so the status must be
+ *   checked explicitly or the blank page fails the next assertion).
  */
 export async function gotoWithRetry(page: Page, url: string, attempts = 3): Promise<void> {
   let lastError: unknown
   for (let i = 0; i < attempts; i++) {
     try {
-      await page.goto(url, { waitUntil: 'load' })
-      return
+      const response = await page.goto(url, { waitUntil: 'load' })
+      const status = response?.status() ?? 0
+      if (status < 500) return
+      lastError = new Error(`GET ${url} responded ${status}`)
     }
     catch (error) {
       lastError = error
       if (!/ERR_NETWORK_CHANGED|ERR_CONNECTION|ECONNRESET|EHOSTUNREACH|ETIMEDOUT|ERR_TIMED_OUT/.test(String(error))) {
         throw error
       }
-      await page.waitForTimeout(2000)
     }
+    if (i < attempts - 1) await page.waitForTimeout(2000)
   }
   throw lastError
 }

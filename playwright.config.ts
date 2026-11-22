@@ -5,6 +5,8 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  /* Warm dev compilation serially before parallel projects stampede it. */
+  globalSetup: './tests/e2e/global.warmup.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

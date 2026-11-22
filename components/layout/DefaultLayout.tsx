@@ -32,11 +32,12 @@ interface DefaultLayoutProps {
 
 export default function DefaultLayout({ children, lng, dir }: DefaultLayoutProps) {
   return (
-    <ClerkProvider>
-      <html lang={lng} dir={dir} className={`${jetbrainsMono.variable} ${epilogue.variable}`} suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
-        >
+    <html lang={lng} dir={dir} className={`${jetbrainsMono.variable} ${epilogue.variable}`} suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased font-display bg-background-light dark:bg-background-dark`}
+      >
+        {/* Clerk Core 3: ClerkProvider must live inside <body>, not wrap <html> */}
+        <ClerkProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -49,8 +50,8 @@ export default function DefaultLayout({ children, lng, dir }: DefaultLayoutProps
             {children}
             <Toaster />
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }

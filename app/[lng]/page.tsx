@@ -1,4 +1,4 @@
-import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
+import { SignInButton, Show } from '@clerk/nextjs'
 import { getTranslation } from '../i18n/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -20,20 +20,20 @@ export default async function Home({ params }: { params: Promise<{ lng: string }
           </p>
 
           <div className="flex gap-4 justify-center">
-            <SignedOut>
+            <Show when="signed-out">
               <SignInButton mode="modal">
                 <Button className="px-16 py-8 text-2xl font-semibold shadow-lg">
                   {t('get_started')}
                 </Button>
               </SignInButton>
-            </SignedOut>
-            <SignedIn>
+            </Show>
+            <Show when="signed-in">
               <Button asChild className="px-16 py-8 text-2xl font-semibold shadow-lg">
                 <Link href={`/${lng}/lobbies`}>
                   {t('join_lobby')}
                 </Link>
               </Button>
-            </SignedIn>
+            </Show>
             <Button asChild className="px-16 py-8 text-2xl font-semibold shadow-lg bg-info text-info-foreground hover:bg-info/80">
               <Link href={`/${lng}/rules`}>
                 {t('learn_more')}

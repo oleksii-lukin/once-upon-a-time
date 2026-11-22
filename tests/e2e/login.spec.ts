@@ -21,12 +21,20 @@ test.describe('Login System', () => {
     await page.goto('/en')
 
     const getStartedButton = page.getByRole('button', { name: /Get Started/i })
-    await getStartedButton.click()
+    await expect(getStartedButton).toBeVisible()
 
-    // Verify modal interaction
-    // Clerk's modal usually contains "Sign in" or "Continue" text.
-    // We look for a common Clerk element or text to confirm the modal opened.
+    // Clerk's JS loads from its CDN — under parallel dev load it can lag
+    // behind the page render, and clicks before Clerk finishes init are
+    // silent no-ops. Wait for the global to be ready, then verify the
+    // modal interaction (Clerk's modal contains "Sign in" / "Continue").
+    await page.waitForFunction(() => (window as any).Clerk?.loaded === true, { timeout: 20_000 })
+
     const clerkModal = page.locator('.cl-rootBox, .cl-card, :text("Sign in")').first()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await getStartedButton.click()
+      if (await clerkModal.isVisible().catch(() => false)) break
+      await page.waitForTimeout(1000)
+    }
     await expect(clerkModal).toBeVisible()
   })
 })

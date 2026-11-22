@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Check as CheckIcon } from 'lucide-react'
-import { useUser } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { createClient } from '@/utils/supabase/client'
 import { getTranslation } from '@/app/i18n/client'
 import { useParams } from 'next/navigation'
@@ -18,6 +18,7 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ onSave }: ProfileEditorProps) {
   const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -76,7 +77,11 @@ export default function ProfileEditor({ onSave }: ProfileEditorProps) {
       updated_at: new Date().toISOString(),
     }
 
-    const { error } = await supabase
+    // RLS only lets you write your own profile, and only with a Clerk
+    // session token — the anon client (used for the public read above)
+    // can no longer write at all.
+    const token = await getToken()
+    const { error } = await createClient(token ?? undefined)
       .from('user_profiles')
       .upsert(profileData, { onConflict: 'user_id' })
 
